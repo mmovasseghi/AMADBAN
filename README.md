@@ -50,7 +50,7 @@ docker compose exec -T db pg_dump -U amadban -d amadban -Fc > amadban-backup.dum
 
 فایل پشتیبان شامل مدارک پیوست است. بازیابی را روی پایگاه جدا انجام دهید تا داده عملیاتی درگیر آزمون نشود.
 
-[معماری و معیارهای پذیرش](docs/architecture.md) · [وضعیت تحویل](docs/status.md)
+[معماری و معیارهای پذیرش](docs/architecture.md) · [وضعیت تحویل](docs/status.md) · [راهنمای نصب آزمایشی جدا از فروشگاه](docs/deployment-handoff.md)
 
 ## راهنمای شروع گردش کار
 

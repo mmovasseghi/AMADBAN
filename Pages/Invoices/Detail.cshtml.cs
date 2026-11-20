@@ -102,6 +102,13 @@ public sealed class DetailModel(Store store) : PageModel
         return RedirectToPage(new { id });
     }
 
+    public async Task<IActionResult> OnPostTaxUnlinkAsync(long id)
+    {
+        if(!HandlesFinance)return Forbid();
+        Message=await store.UnlinkTaxBatchAsync(id,Actor);
+        return RedirectToPage(new{id});
+    }
+
     public async Task<IActionResult> OnPostPosAsync(long id, bool embedded)
     {
         if (!HandlesFinance) return Forbid();

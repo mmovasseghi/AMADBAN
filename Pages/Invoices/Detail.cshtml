@@ -76,6 +76,10 @@
                     {
                         <a asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id" target="_blank" rel="noopener">چاپ صورت‌جلسه</a>
                     }
+                    else if (item.Kind == "tax" && Model.Entry.TaxBatchId is long batch)
+                    {
+                        <a asp-page="/TaxBatch" asp-page-handler="File" asp-route-id="@batch" asp-route-invoice="@row.Id" target="_blank" rel="noopener">برگه مالیات گروهی @batch</a>
+                    }
                     else
                     {
                         <span>@item.Label</span> <span class="badge returned">پیوست نشده</span>
@@ -184,6 +188,11 @@
     @foreach (var file in Model.Entry.Attachments)
     {
         <p><a asp-page-handler="Attachment" asp-route-attachment="@file.Id">@Amadban.Pages.Invoices.DetailModel.AttachmentKinds[file.Kind] · @file.Name</a></p>
+    }
+    @if(Model.Entry.TaxBatchId is long batchId)
+    { <p><a asp-page="/TaxBatch" asp-page-handler="File" asp-route-id="@batchId" asp-route-invoice="@row.Id" target="_blank" rel="noopener">برگه مالیات گروهی @batchId</a></p>
+        @if(Model.HandlesFinance && Model.Editable)
+        { <form method="post" asp-page-handler="TaxUnlink"><button class="button quiet" type="submit" data-confirm="پیوند این سند با برگه مالیات گروهی برداشته شود؟">اصلاح پیوند برگه مالیات</button></form> }
     }
     @if (Model.HandlesFinance && Model.Editable && row.Kind == "credit")
     {

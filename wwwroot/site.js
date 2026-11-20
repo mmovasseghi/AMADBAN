@@ -35,6 +35,11 @@
     };
     window.addEventListener('beforeprint', fitDocumentPrint);
 
+    const taxSelectAll = document.querySelector('[data-tax-select-all]');
+    if (taxSelectAll) taxSelectAll.addEventListener('change', () => {
+        document.querySelectorAll('[data-tax-select]').forEach(box => { box.checked = taxSelectAll.checked; });
+    });
+
     const notificationBadge = document.querySelector('[data-notification-badge]');
     if (notificationBadge) setInterval(async () => {
         if (document.hidden) return;

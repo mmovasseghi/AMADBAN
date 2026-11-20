@@ -13,7 +13,7 @@ public sealed record InvoiceEntry(Guid Submission, string Number, string Vendor,
 public sealed record Attachment(long Id, string Kind, string Name);
 public sealed record InvoiceEvent(string Action, string Actor, DateTime At);
 public sealed record InvoiceDetail(InvoiceSummary Summary, bool Meeting, bool Account, bool Tax, bool Proxy, bool PosInInvoice,
-    DateOnly? KardexDate, DateOnly? WarehouseReceiptDate, bool HasManualStock,
+    DateOnly? KardexDate, DateOnly? WarehouseReceiptDate, bool HasManualStock, long? TaxBatchId,
     IReadOnlyList<InvoiceLine> Lines, IReadOnlyList<Attachment> Attachments, IReadOnlyList<InvoiceEvent> Events);
 
 public sealed partial class Store(NpgsqlDataSource source)
@@ -44,7 +44,7 @@ public sealed partial class Store(NpgsqlDataSource source)
         "kardex-current" => " AND warehouse_required AND kardex_number IS NULL AND invoice_date >= $7",
         "document" => " AND document_number IS NULL",
         "paid" => " AND paid_at IS NOT NULL",
-        "tax-pending" => " AND document_number IS NOT NULL AND NOT EXISTS (SELECT 1 FROM invoice_attachments a WHERE a.invoice_id=i.id AND a.kind='tax')",
+        "tax-pending" => " AND document_number IS NOT NULL AND NOT EXISTS (SELECT 1 FROM invoice_attachments a WHERE a.invoice_id=i.id AND a.kind='tax') AND NOT EXISTS (SELECT 1 FROM tax_batch_invoices t WHERE t.invoice_id=i.id)",
         "ready" => " AND delivery_state IN ('open','returned') AND " + ReadyConditions,
         "delivered" => " AND delivery_state='delivered'",
         "closed" => " AND delivery_state='closed'",
@@ -199,8 +199,9 @@ public sealed partial class Store(NpgsqlDataSource source)
             warehouseReceiptDate = r.IsDBNull(0) ? null : r.GetFieldValue<DateOnly>(0);
             hasManualStock = r.GetBoolean(1);
         }
+        var taxBatch=await Scalar(conn,null,"SELECT batch_id FROM tax_batch_invoices WHERE invoice_id=$1",id) as long?;
         return new(summary, meeting, account, tax, proxy, posInInvoice, kardexDate, warehouseReceiptDate,
-            hasManualStock, lines, attachments, events);
+            hasManualStock, taxBatch, lines, attachments, events);
     }
 
     public async Task<bool> IssueDocumentAsync(long id, long actor, string role)
@@ -276,7 +277,7 @@ public sealed partial class Store(NpgsqlDataSource source)
         if (entry.Meeting && !own.Contains("meeting")) missing.Add("صورت‌جلسه");
         if (entry.Account && !own.Contains("account")) missing.Add("تأییدیه حساب");
         if (entry.Tax && entry.Summary.Kind == "credit" && !own.Contains("taxpayer")) missing.Add("برگه مؤدیان");
-        if (!own.Contains("tax")) missing.Add("برگه ثبت مالیات");
+        if (!own.Contains("tax") && entry.TaxBatchId is null) missing.Add("برگه ثبت مالیات");
         if (entry.Proxy && !own.Contains("proxy")) missing.Add("برگه نیابتی");
         if (entry.Summary.Warehouse && entry.WarehouseReceiptDate is null && !entry.HasManualStock) missing.Add("ورود اقلام به انبار");
         if (entry.Summary.Warehouse && entry.Summary.Kardex is null) missing.Add("ثبت کارتکس");

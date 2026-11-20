@@ -84,6 +84,23 @@ CREATE TABLE IF NOT EXISTS invoice_attachments (
 );
 CREATE INDEX IF NOT EXISTS invoice_attachments_lookup ON invoice_attachments(invoice_id,kind);
 
+CREATE TABLE IF NOT EXISTS tax_batches (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    submission_id uuid NOT NULL UNIQUE,
+    batch_date date NOT NULL,
+    reference text NOT NULL DEFAULT '',
+    filename text NOT NULL,
+    content_type text NOT NULL CHECK(content_type IN ('application/pdf','image/jpeg','image/png')),
+    content bytea NOT NULL,
+    actor_id bigint NOT NULL REFERENCES staff(id),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS tax_batch_invoices (
+    invoice_id bigint PRIMARY KEY REFERENCES invoices(id),
+    batch_id bigint NOT NULL REFERENCES tax_batches(id)
+);
+CREATE INDEX IF NOT EXISTS tax_batch_invoices_batch ON tax_batch_invoices(batch_id);
+
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS proxy_required boolean NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS credit_codes (

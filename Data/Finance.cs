@@ -13,7 +13,8 @@ public sealed partial class Store
           AND NOT EXISTS (
             SELECT 1 FROM (VALUES
                 ('invoice',true), ('pos',i.kind='cash' AND NOT i.pos_in_invoice), ('taxpayer',tax_required AND i.kind='credit'),
-                ('tax',true), ('proxy',proxy_required), ('meeting',meeting_required), ('account',account_required)
+                ('tax',NOT EXISTS(SELECT 1 FROM tax_batch_invoices t WHERE t.invoice_id=i.id)),
+                ('proxy',proxy_required), ('meeting',meeting_required), ('account',account_required)
             ) required(name,needed)
             WHERE needed AND NOT EXISTS (
                 SELECT 1 FROM invoice_attachments a WHERE a.invoice_id=i.id AND a.kind=required.name

@@ -11,9 +11,7 @@ namespace Amadban.Pages;
 public sealed class DispatchModel(Store store) : PageModel
 {
     public List<Department> Departments { get; private set; } = [];
-    public List<Person> People { get; private set; } = [];
     public List<(long Id, string Name)> WarehouseStaff { get; private set; } = [];
-    public List<Product> Hints { get; private set; } = [];
     public List<DispatchRecord> Recent { get; private set; } = [];
     public Guid Submission { get; private set; } = Guid.NewGuid();
     [TempData] public string? Message { get; set; }
@@ -22,10 +20,19 @@ public sealed class DispatchModel(Store store) : PageModel
     public async Task OnGetAsync()
     {
         Departments = await store.DepartmentsAsync();
-        People = await store.PeopleAsync();
         WarehouseStaff = await store.WarehouseStaffAsync();
-        Hints = await store.ProductHintsAsync("");
         Recent = await store.RecentDispatchesAsync();
+    }
+
+    public async Task<IActionResult> OnGetRecipientsAsync(long department)
+    {
+        if (department <= 0) return new JsonResult(Array.Empty<object>());
+        var people = await store.RecipientsByDepartmentAsync(department);
+        return new JsonResult(people.Select(p => new
+        {
+            id = p.Id,
+            label = $"{p.Department} · {p.Rank} {p.Name}{(p.Position.Length > 0 ? " · " + p.Position : "")}"
+        }));
     }
 
     public async Task<IActionResult> OnGetProductsAsync(string? search)

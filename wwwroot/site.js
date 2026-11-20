@@ -107,9 +107,11 @@
         const template = document.querySelector('[data-dispatch-template]');
         const add = document.querySelector('[data-dispatch-add]');
         const list = document.getElementById('dispatch-products');
-        const department = document.querySelector('[name="department"]');
-        const recipient = document.querySelector('[name="recipient"]');
+        const form = document.getElementById('dispatch-form');
+        const department = form?.querySelector('[name="department"]');
+        const recipient = form?.querySelector('[data-dispatch-recipient]');
         let timer;
+        let recipientRequest = 0;
         const reindex = () => Array.from(dispatch.rows).forEach((row, index) =>
             row.querySelectorAll('[data-dispatch-field]').forEach(input => {
                 input.name = 'lines[' + index + '].' + input.dataset.dispatchField;
@@ -156,16 +158,51 @@
             const next = inputs[inputs.indexOf(event.target) + 1];
             if (next) next.focus(); else addRow();
         });
-        const filterRecipients = () => {
-            recipient.value = '';
-            Array.from(recipient.options).forEach(option => {
-                if (!option.value) return;
-                option.disabled = option.dataset.department !== department.value;
-                option.hidden = option.disabled;
-            });
+        const loadRecipients = async () => {
+            if (!department || !recipient) return;
+            const departmentId = department.value;
+            recipient.textContent = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            if (!departmentId) {
+                placeholder.textContent = 'ابتدا بخش مقصد را انتخاب کنید';
+                recipient.appendChild(placeholder);
+                recipient.disabled = true;
+                return;
+            }
+            placeholder.textContent = 'در حال بارگذاری تحویل‌گیرندگان…';
+            recipient.appendChild(placeholder);
+            recipient.disabled = true;
+            const requestId = ++recipientRequest;
+            try {
+                const response = await fetch('/Dispatch?handler=Recipients&department=' + encodeURIComponent(departmentId), { cache: 'no-store' });
+                if (!response.ok || requestId !== recipientRequest) return;
+                const people = await response.json();
+                if (requestId !== recipientRequest) return;
+                recipient.textContent = '';
+                const pick = document.createElement('option');
+                pick.value = '';
+                pick.textContent = people.length > 0 ? 'تحویل‌گیرنده همان بخش را انتخاب کنید' : 'برای این بخش هنوز تحویل‌گیرنده ثبت نشده است';
+                recipient.appendChild(pick);
+                people.forEach(person => {
+                    const option = document.createElement('option');
+                    option.value = String(person.id);
+                    option.textContent = person.label;
+                    recipient.appendChild(option);
+                });
+                recipient.disabled = people.length === 0;
+            } catch (_) {
+                if (requestId !== recipientRequest) return;
+                recipient.textContent = '';
+                const failed = document.createElement('option');
+                failed.value = '';
+                failed.textContent = 'بارگذاری تحویل‌گیرنده ممکن نشد؛ دوباره بخش را انتخاب کنید';
+                recipient.appendChild(failed);
+                recipient.disabled = true;
+            }
         };
-        department.addEventListener('change', filterRecipients);
-        filterRecipients();
+        department?.addEventListener('change', loadRecipients);
+        loadRecipients();
     }
 
     const receiptInputs = document.querySelectorAll('[data-receipt-product]');

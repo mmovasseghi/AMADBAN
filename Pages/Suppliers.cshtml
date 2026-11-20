@@ -1,0 +1,59 @@
+@page
+@model Amadban.Pages.SuppliersModel
+@{
+    ViewData["Title"] = "فروشندگان";
+    var company = Model.Supplier;
+}
+<header class="hero"><h1>پرونده فروشندگان</h1><p>اطلاعات هویتی، حساب‌ها و مدارک قابل استفاده در سند</p></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>@(company is null ? "تعریف فروشنده" : company.Name)</h2>
+    <form method="post" class="fields">
+        <label>نام فروشنده<input name="name" value="@company?.Name" required maxlength="180" readonly="@(company is not null)"></label>
+        <label>نوع<select name="kind"><option value="company">حقوقی</option><option value="person" selected="@(company?.Kind == "person")">حقیقی</option></select></label>
+        <label>شناسه یا کد ملی<input name="national" value="@company?.National" maxlength="30"></label>
+        <label>کد اقتصادی<input name="economic" value="@company?.Economic" maxlength="40"></label>
+        <label>شماره تماس<input name="phone" value="@company?.Phone" maxlength="40"></label>
+        <label>نشانی<input name="address" value="@company?.Address" maxlength="500"></label>
+        <div><button class="button primary" type="submit">ذخیره اطلاعات</button></div>
+    </form>
+</section>
+@if (company is not null)
+{
+    <section class="card">
+        <h2>حساب‌ها</h2>
+        <div class="table-wrap"><table><thead><tr><th>صاحب حساب</th><th>بانک</th><th>شماره حساب</th><th>شبا</th></tr></thead><tbody>
+        @foreach (var account in Model.Accounts)
+        { <tr><td>@account.Owner</td><td>@account.Bank</td><td>@account.Account</td><td><bdi>@account.Sheba</bdi></td></tr> }
+        </tbody></table></div>
+        <form method="post" asp-page-handler="Account" class="filters">
+            <input type="hidden" name="id" value="@company.Id">
+            <label>صاحب حساب<input name="owner" required maxlength="140"></label>
+            <label>بانک<input name="bank" required maxlength="100"></label>
+            <label>شماره حساب<input name="account" maxlength="50"></label>
+            <label>شبا<input name="sheba" dir="ltr" required maxlength="32"></label>
+            <button class="button" type="submit">افزودن یا اصلاح حساب</button>
+        </form>
+    </section>
+    <section class="card">
+        <h2>مدارک فروشنده</h2>
+        @foreach (var file in Model.Documents)
+        { <a asp-page-handler="Document" asp-route-id="@company.Id" asp-route-kind="@file.Kind">@file.Name</a> }
+        <form method="post" asp-page-handler="Document" enctype="multipart/form-data" class="filters">
+            <input type="hidden" name="id" value="@company.Id">
+            <label>نوع<select name="kind"><option value="account">تأییدیه حساب</option><option value="taxpayer">برگه مؤدیان</option></select></label>
+            <label>مدرک<input name="file" type="file" required accept=".pdf,.jpg,.jpeg,.png"></label>
+            <button class="button" type="submit">ثبت مدرک</button>
+        </form>
+    </section>
+}
+<section class="card">
+    <h2>فهرست فروشندگان</h2>
+    <form method="get" class="filters"><label>جست‌وجو<input name="Search" value="@Model.Search" maxlength="100"></label><button class="button" type="submit">نمایش</button></form>
+    @foreach (var row in Model.Rows.Take(25))
+    { <a asp-route-id="@row.Id" asp-route-search="@Model.Search">@row.Name</a> }
+    <nav class="pagination" aria-label="صفحه فروشنده">
+        @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)" asp-route-search="@Model.Search">قبلی</a> }
+        @if (Model.Rows.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)" asp-route-search="@Model.Search">بعدی</a> }
+    </nav>
+</section>

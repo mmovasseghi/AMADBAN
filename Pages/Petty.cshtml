@@ -1,0 +1,53 @@
+@page
+@model Amadban.Pages.PettyModel
+@{
+    ViewData["Title"] = "گزارش تنخواه";
+}
+<header class="hero"><h1>گردش تنخواه</h1><p>دریافت تنخواه، خرید نقدی و مانده</p></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>ثبت تنخواه دریافتی</h2>
+    <form method="post" class="filters">
+        <input type="hidden" name="submission" value="@Model.Submission">
+        <label>دریافت‌کننده<select name="recipient" required>@foreach (var agent in Model.Agents) { <option value="@agent.Id">@agent.Name</option> }</select></label>
+        <label>شماره رسید<input name="number" maxlength="80" required></label>
+        <label>تاریخ دریافت<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+        <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
+        <button class="button primary" type="submit">ثبت دریافت</button>
+    </form>
+</section>
+@if (!Model.IsChief)
+{
+    <section class="card"><h2>چاپ برگه درخواست تنخواه</h2>
+        <form method="get" asp-page="/PrintForms" asp-antiforgery="false" class="filters">
+            <input type="hidden" name="kind" value="petty"><label>شماره برگه<input name="receipt" required></label>
+            <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
+            <button class="button" type="submit">پیش‌نمایش A4</button>
+        </form>
+    </section>
+}
+<section class="card">
+    <h2>گزارش بازه</h2>
+    <form method="get" class="filters">
+        @if (Model.IsChief)
+        {
+            <label>افسرعامل<select name="Recipient"><option value="0">همه</option>@foreach (var agent in Model.Agents) { <option value="@agent.Id" selected="@(agent.Id == Model.Recipient)">@agent.Name</option> }</select></label>
+        }
+        <label>از تاریخ<input name="From" value="@Model.From" placeholder="۱۴۰۵/۰۱/۰۱" dir="ltr"></label>
+        <label>تا تاریخ<input name="To" value="@Model.To" placeholder="۱۴۰۵/۱۲/۲۹" dir="ltr"></label>
+        <button class="button" type="submit">نمایش گزارش</button>
+    </form>
+    <div asp-validation-summary="All" class="validation"></div>
+    <div class="table-wrap"><table><thead><tr><th>افسرعامل</th><th>مانده اول</th><th>دریافتی</th><th>خرید</th><th>مانده پایان</th></tr></thead>
+    <tbody>@foreach (var balance in Model.Balances)
+    { <tr><td>@balance.Name</td><td>@Persian.Money(balance.Opening)</td><td>@Persian.Money(balance.Received)</td><td>@Persian.Money(balance.Spent)</td><td>@Persian.Money(balance.Opening + balance.Received - balance.Spent)</td></tr> }</tbody>
+    </table></div>
+    <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>شخص</th><th>شماره</th><th>شرح</th><th>مبلغ (ریال)</th></tr></thead>
+    <tbody>@foreach (var entry in Model.Entries.Take(25))
+    { <tr><td>@Persian.Date(entry.Date)</td><td>@entry.Person</td><td>@entry.Reference</td><td>@if (entry.Invoice is long id) { <a asp-page="/Invoices/Detail" asp-route-id="@id">@entry.Description</a> } else { @entry.Description }</td><td>@Persian.Money(entry.Amount)</td></tr> }</tbody>
+    </table></div>
+    <nav class="pagination" aria-label="صفحه گردش تنخواه">
+        @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P - 1)" asp-route-Recipient="@Model.Recipient" asp-route-From="@Model.From" asp-route-To="@Model.To">قبلی</a> }
+        @if (Model.Entries.Count > 25) { <a class="button" asp-route-P="@(Model.P + 1)" asp-route-Recipient="@Model.Recipient" asp-route-From="@Model.From" asp-route-To="@Model.To">بعدی</a> }
+    </nav>
+</section>

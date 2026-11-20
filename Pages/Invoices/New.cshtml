@@ -1,0 +1,59 @@
+@page
+@model Amadban.Pages.Invoices.NewModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "ثبت فاکتور" : "اصلاح فاکتور";
+}
+<header class="hero"><div><div class="eyebrow">خرید و فاکتورها</div><h1>@ViewData["Title"]</h1></div><a asp-page="/Index" class="button">بازگشت به کارتابل</a></header>
+<form method="post" class="card invoice-form">
+    <input type="hidden" asp-for="Submission">
+    <input type="hidden" asp-for="Id">
+    <div asp-validation-summary="All" class="validation"></div>
+    <div class="fields">
+        <label>شماره فاکتور<input asp-for="Number" required autofocus maxlength="80"></label>
+        <label>تاریخ فاکتور (شمسی)<input asp-for="Date" required dir="ltr" maxlength="10"></label>
+        <label>نام فروشنده<input asp-for="Vendor" required maxlength="180" list="supplier-names" data-supplier autocomplete="off"><datalist id="supplier-names"></datalist></label>
+        <label>موضوع خرید<input asp-for="Subject" required maxlength="250"></label>
+        <label>نوع پرداخت<select asp-for="Kind"><option value="credit">اعتباری / چکی</option><option value="cash">نقدی</option></select></label>
+        <label data-cash-code>کد موضوعی خرید نقدی<select asp-for="CashCredit"><option value="0">انتخاب نشده</option>
+            @foreach (var c in Model.Codes) { <option value="@c.Id">@c.Code · @c.Title</option> }
+        </select></label>
+    </div>
+    <div class="checks">
+        <label><input asp-for="Warehouse"> ورود به انبار</label>
+        <label><input asp-for="Meeting"> صورت‌جلسه لازم است</label>
+        <label><input asp-for="Account"> تأییدیه حساب لازم است</label>
+        <label><input asp-for="Tax"> مالیات یا ارزش افزوده دارد</label>
+    </div>
+    <h2>اقلام فاکتور</h2>
+    <div class="table-wrap">
+        <table class="entry-table">
+            <thead><tr><th>نام کالا یا خدمت</th><th>واحد</th><th>تعداد</th><th>قیمت واحد (ریال)</th><th>حذف</th></tr></thead>
+            <tbody data-lines>
+            @for (var i = 0; i < Model.Lines.Count; i++)
+            {
+                <tr>
+                    <td><input asp-for="Lines[i].Title" data-field="Title" aria-label="نام کالا یا خدمت" maxlength="250"></td>
+                    <td><input asp-for="Lines[i].Unit" data-field="Unit" aria-label="واحد" placeholder="عدد" maxlength="30"></td>
+                    <td><input asp-for="Lines[i].Quantity" data-field="Quantity" aria-label="تعداد" inputmode="decimal" maxlength="14"></td>
+                    <td><input asp-for="Lines[i].Price" data-field="Price" aria-label="قیمت واحد" inputmode="numeric" maxlength="20"></td>
+                    <td><button class="button quiet" type="button" data-remove aria-label="حذف قلم">×</button></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <template data-line-template>
+        <tr>
+            <td><input data-field="Title" aria-label="نام کالا یا خدمت" maxlength="250"></td>
+            <td><input data-field="Unit" aria-label="واحد" placeholder="عدد" maxlength="30"></td>
+            <td><input data-field="Quantity" aria-label="تعداد" inputmode="decimal" maxlength="14" value="1"></td>
+            <td><input data-field="Price" aria-label="قیمت واحد" inputmode="numeric" maxlength="20"></td>
+            <td><button class="button quiet" type="button" data-remove aria-label="حذف قلم">×</button></td>
+        </tr>
+    </template>
+    <div class="actions between">
+        <button type="button" class="button" data-add-line><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> افزودن قلم</button>
+        <div>جمع تقریبی <output data-total>۰</output> ریال</div>
+        <button type="submit" class="button primary"><svg aria-hidden="true"><use href="/icons.svg#check"></use></svg> ذخیره فاکتور</button>
+    </div>
+</form>

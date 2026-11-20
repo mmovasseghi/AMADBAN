@@ -1,0 +1,17 @@
+@page
+@model Amadban.Pages.LoginModel
+@{
+    ViewData["Title"] = "ورود";
+}
+<section class="login card">
+    <partial name="_BrandMarks" />
+    <div class="eyebrow">بیمارستان امام سجاد (ع) فراجا</div>
+    <h1>ورود به آمادبان</h1>
+    <p>دایره آماد و پشتیبانی</p>
+    <form method="post">
+        <div asp-validation-summary="All" class="validation"></div>
+        <label>نام کاربری<input asp-for="Username" autocomplete="username" maxlength="100" required></label>
+        <label>رمز ورود<input asp-for="Password" type="password" autocomplete="current-password" maxlength="256" required></label>
+        <button class="primary" type="submit">ورود</button>
+    </form>
+</section>

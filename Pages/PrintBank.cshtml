@@ -1,0 +1,49 @@
+@page
+@model Amadban.Pages.PrintBankModel
+@{
+    Layout = null;
+    var title = Model.Slip ? "فیش بانکی" : "فرم درخواست عملیات چک در سامانه صیاد";
+}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>@title · آمادبان</title>
+    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
+    @if (Model.Slip) { <link rel="stylesheet" href="~/a5.css" asp-append-version="true"> }
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+<nav class="print-controls"><button type="button" data-print>چاپ @(Model.Slip ? "A5" : "A4")</button><a asp-page="/Bank">بازگشت</a></nav>
+<article>
+    <header><h1>@title</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
+    @if (Model.Slip)
+    {
+        var c = Model.Checks[0];
+        <table><tbody>
+            <tr><th>بانک و شعبه</th><td>@c.Bank · @c.Branch</td></tr>
+            <tr><th>نام ذی‌نفع</th><td>@c.Recipient</td></tr>
+            <tr><th>شماره حساب</th><td><bdi>@c.Account</bdi></td></tr>
+            <tr><th>شناسه صیاد</th><td><bdi>@c.Sayad</bdi></td></tr>
+            <tr><th>تاریخ</th><td>@Persian.Date(c.Date)</td></tr>
+            <tr><th>مبلغ</th><td>@Persian.Money(c.Amount) ریال · @PersianWords.Number(c.Amount) ریال</td></tr>
+        </tbody></table>
+    }
+    else
+    {
+        <p>شعبه محترم بانک سپه ـ تاریخ @Persian.Date(Persian.Today)</p>
+        <p>با احترام، بیمارستان امام سجاد (ع) فراجا درخواست ثبت @Model.Checks.Count فقره چک با مشخصات زیر در سامانه صیاد را دارد.</p>
+        <table>
+            <thead><tr><th>ردیف</th><th>شناسه صیاد</th><th>شماره حساب</th><th>بانک و شعبه</th><th>تاریخ</th><th>مبلغ ریالی</th><th>در وجه</th></tr></thead>
+            <tbody>@for (var i = 0; i < Model.Checks.Count; i++)
+            {
+                var c = Model.Checks[i];
+                <tr><td>@(i + 1)</td><td>@c.Sayad</td><td>@c.Account</td><td>@c.Bank · @c.Branch</td>
+                    <td>@Persian.Date(c.Date)</td><td>@Persian.Money(c.Amount)</td><td>@c.Recipient</td></tr>
+            }</tbody>
+        </table>
+    }
+    <section class="signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section>
+</article>
+</body>
+</html>

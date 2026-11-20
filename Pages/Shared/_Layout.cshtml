@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>@ViewData["Title"] · آمادبان</title>
+    <link rel="stylesheet" href="~/site.css" asp-append-version="true">
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="app">
+        <aside class="sidebar">
+            <a class="brand" asp-page="/Index">
+                <svg class="brand-mark" aria-hidden="true"><use href="/icons.svg#box"></use></svg>
+                <span><b>آمادبان</b><small>دایره آماد و پشتیبانی</small></span>
+            </a>
+            <nav aria-label="منو">
+                <a asp-page="/Index"><svg aria-hidden="true"><use href="/icons.svg#dashboard"></use></svg> کارتابل</a>
+                @if (User.IsInRole("agent") || User.IsInRole("chief"))
+                {
+                    <a asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
+                }
+                @if (User.IsInRole("warehouse") || User.IsInRole("chief"))
+                {
+                    <a asp-page="/Stock"><svg aria-hidden="true"><use href="/icons.svg#box"></use></svg> انبار</a>
+                }
+                <a asp-page="/Index" asp-route-Status="kardex"><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتابل کارتکس</a>
+                <a asp-page="/Index" asp-route-Report="true"><svg aria-hidden="true"><use href="/icons.svg#chart"></use></svg> گزارش فاکتورها</a>
+                @if (User.IsInRole("agent") || User.IsInRole("chief"))
+                {
+                    <a asp-page="/Suppliers"><svg aria-hidden="true"><use href="/icons.svg#user"></use></svg> فروشندگان</a>
+                    <a asp-page="/Bank"><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> چک و فیش بانکی</a>
+                    <a asp-page="/Petty"><svg aria-hidden="true"><use href="/icons.svg#chart"></use></svg> تنخواه</a>
+                    <a asp-page="/Credit"><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> اعتبار و پیش‌پرداخت</a>
+                }
+                @if (User.IsInRole("chief"))
+                {
+                    <a asp-page="/Organization"><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> نشان و امضا</a>
+                    <a asp-page="/Staff"><svg aria-hidden="true"><use href="/icons.svg#user"></use></svg> کاربران</a>
+                }
+            </nav>
+            <partial name="_BrandMarks" />
+            <div class="org">بیمارستان امام سجاد (ع) فراجا</div>
+        </aside>
+        <div class="workspace">
+            <header class="toolbar">
+                <span><svg aria-hidden="true"><use href="/icons.svg#user"></use></svg> @User.Identity.Name</span>
+                <form method="post" asp-page="/Logout"><button class="button quiet" type="submit">خروج</button></form>
+            </header>
+            <main id="content">@RenderBody()</main>
+        </div>
+    </div>
+}
+else
+{
+    <main class="guest">@RenderBody()</main>
+}
+</body>
+</html>

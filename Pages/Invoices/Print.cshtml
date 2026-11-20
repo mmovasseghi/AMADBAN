@@ -1,0 +1,57 @@
+@page "{id:long}"
+@model Amadban.Pages.Invoices.PrintModel
+@inject Store Store
+@{
+    Layout = null;
+    var row = Model.Entry.Summary;
+    var signers = await Store.SignersAsync();
+}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>سند @row.Document · آمادبان</title>
+    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+        <nav class="print-controls">
+        <button type="button" data-print>چاپ سند A4</button><a asp-page="Detail" asp-route-id="@row.Id">بازگشت به پرونده</a>
+        <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Documents)
+        { <option value="@key" selected="@(key==Model.Template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
+        <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
+            <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
+    </nav>
+    <article>
+        <header>
+            <partial name="_BrandMarks" />
+            <p>بسمه‌تعالی</p>
+            <h1>درخواست خرید، گزارش دریافت، سند هزینه فرعی خرید کالا و خدمات</h1>
+            <p>بیمارستان امام سجاد (ع) فراجا ـ دایره آماد و پشتیبانی</p>
+        </header>
+        <section class="metadata">
+            <span>شماره سند <b>@row.Document</b></span><span>شماره فاکتور <b>@row.Number</b></span>
+            <span>تاریخ فاکتور <bdi>@Persian.Date(row.Date)</bdi></span><span>نوع خرید <b>@(row.Kind == "cash" ? "نقدی" : "اعتباری")</b></span>
+            <span>فروشنده <b>@row.Vendor</b></span><span>شرح <b>@row.Subject</b></span>
+        </section>
+        <table>
+            <thead><tr><th>ردیف</th><th>مشخصات کالا یا خدمت</th><th>واحد</th><th>تعداد</th><th>قیمت واحد (ریال)</th><th>مبلغ کل (ریال)</th></tr></thead>
+            <tbody>
+                @for (var i = 0; i < Model.Entry.Lines.Count; i++)
+                {
+                    var line = Model.Entry.Lines[i];
+                    <tr><td>@(i + 1)</td><td>@line.Title</td><td>@line.Unit</td><td>@line.Quantity.ToString("0.###")</td><td>@Persian.Money(line.Price)</td><td>@Persian.Money(line.Amount)</td></tr>
+                }
+                @for (var i = Model.Entry.Lines.Count; i < Model.Rows; i++)
+                { <tr><td>@(i + 1)</td><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr> }
+            </tbody>
+        </table>
+        <section class="metadata totals"><span>جمع کل به عدد <b>@Persian.Money(row.Total) ریال</b></span><span>جمع کل به حروف <b>@PersianWords.Number(row.Total) ریال</b></span><span>شماره رسید یا کارتکس <b>@(row.Kardex ?? "................")</b></span></section>
+        <section class="signatures">
+            @foreach (var role in new[] {"agent","expert","warehouse","chief","auditor","finance"})
+            { <div>@Amadban.Pages.OrganizationModel.Roles[role]<p>@signers.GetValueOrDefault(role)</p></div> }
+        </section>
+    </article>
+</body>
+</html>

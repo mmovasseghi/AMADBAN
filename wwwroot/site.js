@@ -1,0 +1,111 @@
+(() => {
+    'use strict';
+    const printButton = document.querySelector('[data-print]');
+    if (printButton) printButton.addEventListener('click', () => window.print());
+
+    const supplier = document.querySelector('[data-supplier]');
+    if (supplier) {
+        const suggestions = document.getElementById(supplier.getAttribute('list'));
+        let timer;
+        supplier.addEventListener('input', () => {
+            clearTimeout(timer);
+            const term = supplier.value.trim();
+            suggestions.textContent = '';
+            if (term.length < 2) return;
+            timer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/Suppliers?handler=Names&search=' + encodeURIComponent(term));
+                    if (!response.ok) return;
+                    const names = await response.json();
+                    if (supplier.value.trim() !== term) return;
+                    names.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        suggestions.appendChild(option);
+                    });
+                } catch (_) {
+                    // Manual supplier entry remains available.
+                }
+            }, 220);
+        });
+    }
+
+    const account = document.querySelector('[data-account]');
+    if (account) account.addEventListener('change', () => {
+        const selected = account.options[account.selectedIndex];
+        if (!selected.value) return;
+        ['owner', 'bank', 'sheba'].forEach(field => {
+            account.form.elements.namedItem(field).value = selected.dataset[field];
+        });
+    });
+
+    const paymentKind = document.getElementById('Kind');
+    if (paymentKind) {
+        const cashCode = document.querySelector('[data-cash-code]');
+        const updateCashCode = () => { cashCode.hidden = paymentKind.value !== 'cash'; };
+        paymentKind.addEventListener('change', updateCashCode);
+        updateCashCode();
+    }
+
+    const lines = document.querySelector('[data-lines]');
+    if (!lines) return;
+    const template = document.querySelector('[data-line-template]');
+    const total = document.querySelector('[data-total]');
+    const currency = new Intl.NumberFormat('fa-IR');
+    const normalize = text => text.replace(/[۰-۹٠-٩]/g, char =>
+        String(char.charCodeAt(0) - (char >= '۰' ? 1776 : 1632)))
+        .replace(/[,٬]/g, '').replace('٫', '.').trim();
+
+    const updateTotal = () => {
+        let amount = 0;
+        for (const row of lines.rows) {
+            const price = Number(normalize(row.querySelector('[data-field="Price"]').value));
+            const quantity = Number(normalize(row.querySelector('[data-field="Quantity"]').value));
+            if (Number.isFinite(price) && Number.isFinite(quantity)) amount += Math.round(price * quantity);
+        }
+        total.textContent = currency.format(amount);
+    };
+
+    const reindex = () => {
+        Array.from(lines.rows).forEach((row, index) => {
+            row.querySelectorAll('[data-field]').forEach(input => {
+                input.name = 'Lines[' + index + '].' + input.dataset.field;
+            });
+        });
+    };
+    const addLine = () => {
+        if (lines.rows.length >= 100) return;
+        lines.appendChild(template.content.cloneNode(true));
+        reindex();
+        lines.lastElementChild.querySelector('input').focus();
+    };
+
+    document.querySelector('[data-add-line]').addEventListener('click', addLine);
+    lines.addEventListener('click', event => {
+        const remove = event.target.closest('[data-remove]');
+        if (!remove) return;
+        const row = remove.closest('tr');
+        if (lines.rows.length === 1) {
+            row.querySelectorAll('input').forEach(input => { input.value = input.dataset.field === 'Quantity' ? '1' : ''; });
+            row.querySelector('input').focus();
+        } else {
+            const next = row.nextElementSibling || row.previousElementSibling;
+            row.remove();
+            reindex();
+            next.querySelector('input').focus();
+        }
+        updateTotal();
+    });
+    lines.addEventListener('input', event => {
+        if (event.target.matches('[data-field="Price"],[data-field="Quantity"]')) updateTotal();
+    });
+    lines.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' || event.isComposing || !event.target.matches('[data-field]')) return;
+        event.preventDefault();
+        const fields = Array.from(lines.querySelectorAll('[data-field]'));
+        const next = fields[fields.indexOf(event.target) + 1];
+        if (next) next.focus();
+        else addLine();
+    });
+    updateTotal();
+})();

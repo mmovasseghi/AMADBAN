@@ -1,0 +1,22 @@
+@font-face{font-family:Vazirmatn;src:url('/vazirmatn-fa.woff2') format('woff2');font-display:swap}
+*{box-sizing:border-box}
+body{color:#000;background:#eef1ef;margin:0;font:12px/1.6 Vazirmatn,Tahoma,sans-serif}
+.print-controls{display:flex;gap:14px;align-items:center;max-width:277mm;margin:12px auto}
+.print-controls button{font:inherit;padding:7px 12px;cursor:pointer}
+article{max-width:277mm;margin:0 auto 14px;padding:5mm;background:#fff}
+header{text-align:center;border:1px solid #222;padding:2mm}
+h1,p{margin:0}h1{font-size:17px}
+.metadata{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2mm;border:1px solid #333;border-top:0;padding:2mm}
+table{border-collapse:collapse;width:100%;margin-top:3mm}
+th,td{text-align:right;border:1px solid #333;padding:1mm 2mm}
+th{font-weight:700}
+tr{break-inside:avoid;page-break-inside:avoid}
+.totals,.signatures{break-inside:avoid;page-break-inside:avoid}
+.signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #333;border-inline-start:1px solid #333;margin-top:4mm}
+.signatures div{min-height:21mm;border-inline-end:1px solid #333;border-bottom:1px solid #333;text-align:center;padding:2mm}
+@page{size:A4 landscape;margin:9mm}
+@media print{body{background:#fff}.print-controls{display:none}article{max-width:none;margin:0;padding:0}thead{display:table-header-group}}
+.print-controls{flex-wrap:wrap}
+.print-controls form{display:flex;align-items:center;gap:5px}
+.brand-marks{display:flex;align-items:center;justify-content:center;gap:2mm}
+.brand-marks img{object-fit:contain}

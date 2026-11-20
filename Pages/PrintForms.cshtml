@@ -1,0 +1,48 @@
+@page
+@model Amadban.Pages.PrintFormsModel
+@{ Layout = null; }
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>@Model.Title · آمادبان</title>
+    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
+    @if (Model.Kind != "proxy") { <link rel="stylesheet" href="~/portrait.css" asp-append-version="true"> }
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+<nav class="print-controls"><button type="button" data-print>چاپ A4</button><a asp-page="/Index">کارتابل</a></nav>
+<article>
+<header><p>بسمه‌تعالی</p><h1>@Model.Title</h1><p>بیمارستان امام سجاد (ع) فراجا ـ آماد و پشتیبانی</p></header>
+@if (Model.Invoice is { } invoice)
+{
+    <section class="metadata"><span>شماره سند @invoice.Summary.Document</span><span>شماره فاکتور @invoice.Summary.Number</span><span>موضوع @invoice.Summary.Subject</span></section>
+    <table><thead><tr><th>شرح اقلام یا کار انجام شده</th><th>واحد</th><th>مبلغ (ریال)</th><th>توضیحات</th></tr></thead>
+        <tbody>@foreach (var item in invoice.Lines) { <tr><td>@item.Title</td><td>@item.Unit</td><td>@Persian.Money(item.Amount)</td><td></td></tr> }</tbody>
+    </table>
+    <p>جمع کل @Persian.Money(invoice.Summary.Total) ریال · @PersianWords.Number(invoice.Summary.Total) ریال</p>
+    <section class="signatures"><div>رئیس واحد</div><div>کارشناس مرکز</div><div>افسرعامل</div></section>
+}
+else if (Model.Kind == "proxy")
+{
+    <table><thead><tr><th>ردیف</th><th>نام صاحب حساب</th><th>شماره شبا</th><th>نام بانک</th><th>بابت</th><th>مبلغ ریال</th><th>شناسه واریز</th></tr></thead>
+        <tbody>@for (var i = 0; i < Model.Payments.Count; i++)
+        { var entry = Model.Payments[i]; <tr><td>@(i+1)</td><td>@entry.Owner</td><td><bdi>@entry.Sheba</bdi></td><td>@entry.Bank</td><td>پیش‌پرداخت @entry.Number · @entry.Vendor</td><td>@Persian.Money(entry.Amount)</td><td></td></tr> }</tbody>
+    </table>
+    <p>جمع کل @Persian.Money(Model.Payments.Sum(p => p.Amount)) ریال</p>
+    <section class="signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section>
+}
+else
+{
+    <section class="metadata"><span>شماره برگه @Model.Receipt</span><span>تاریخ @Persian.Date(Persian.Today)</span><span>موضوع شارژ تنخواه افسرعامل</span></section>
+    <table><tbody>
+        <tr><th>در وجه</th><td>بیمارستان امام سجاد (ع) فراجا</td></tr>
+        <tr><th>دریافت‌کننده</th><td>@Model.Recipient</td></tr>
+        <tr><th>مبلغ ریال</th><td>@Persian.Money(Model.Amount)</td></tr>
+        <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(Model.Amount) ریال</td></tr>
+    </tbody></table>
+    <section class="signatures"><div>افسرعامل</div><div>مقام مجاز</div><div>عامل ذی‌حساب</div></section>
+}
+</article>
+</body>
+</html>

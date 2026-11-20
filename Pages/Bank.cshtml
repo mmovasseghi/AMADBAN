@@ -1,0 +1,56 @@
+@page
+@model Amadban.Pages.BankModel
+@{
+    ViewData["Title"] = "ثبت چک و چاپ بانکی";
+}
+<header class="hero"><h1>ثبت چک و چاپ بانکی</h1><p>فرم صیاد A4 و فیش بانکی A5</p></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>اطلاعات چک</h2>
+    <form method="post" class="filters">
+        <label>شناسه صیاد<input name="sayad" inputmode="numeric" maxlength="16" required dir="ltr"></label>
+        <label>شماره حساب<input name="account" maxlength="50" required dir="ltr"></label>
+        <label>بانک<input name="bank" maxlength="80" required></label>
+        <label>شعبه<input name="branch" maxlength="80" required></label>
+        <label>تاریخ چک<input name="date" value="@Persian.Date(Persian.Today)" required dir="ltr"></label>
+        <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
+        <label>در وجه<input name="recipient" maxlength="150" required></label>
+        <button type="submit" class="button primary">ثبت مشخصات چک</button>
+    </form>
+</section>
+<section class="card">
+    <h2>چک‌های ثبت‌شده</h2>
+    <form method="get" asp-page="/PrintBank" asp-antiforgery="false">
+        <div class="table-wrap"><table>
+            <thead><tr><th>انتخاب</th><th>شناسه صیاد</th><th>ذی‌نفع</th><th>بانک</th><th>مبلغ ریال</th><th>فیش</th></tr></thead>
+            <tbody>
+            @foreach (var c in Model.Checks.Take(25))
+            {
+                <tr><td><input type="checkbox" name="ids" value="@c.Id" aria-label="انتخاب چک @c.Sayad"></td><td>@c.Sayad</td>
+                    <td>@c.Recipient</td><td>@c.Bank</td><td>@Persian.Money(c.Amount)</td>
+                    <td><a asp-page="/PrintBank" asp-route-ids="@c.Id" asp-route-kind="slip">فیش A5</a></td></tr>
+            }
+            </tbody>
+        </table></div>
+        @if (Model.Checks.Count > 0) { <button class="button" type="submit">چاپ فرم صیاد برای چک‌های انتخابی</button> }
+    </form>
+    <nav class="pagination" aria-label="صفحه چک‌ها">
+        @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)">قبلی</a> }
+        @if (Model.Checks.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)">بعدی</a> }
+    </nav>
+</section>
+
+@if (Model.Paid.Count > 0)
+{
+    <section class="card">
+        <h2>برگه نیابتی برای پرداخت‌های ثبت‌شده</h2>
+        <form method="get" asp-page="/PrintForms" asp-antiforgery="false">
+            <input type="hidden" name="kind" value="proxy">
+            <div class="table-wrap"><table><thead><tr><th>انتخاب</th><th>پیش‌پرداخت</th><th>فروشنده</th><th>مبلغ</th></tr></thead>
+            <tbody>@foreach (var item in Model.Paid)
+            { <tr><td><input type="checkbox" name="ids" value="@item.Number" aria-label="انتخاب پیش‌پرداخت @item.Number"></td>
+                <td>@item.Number</td><td>@item.Vendor</td><td>@Persian.Money(item.Amount)</td></tr> }</tbody></table></div>
+            <button class="button" type="submit">پیش‌نمایش برگه نیابتی A4</button>
+        </form>
+    </section>
+}

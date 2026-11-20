@@ -1,0 +1,63 @@
+@page "{number:long}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "agent,chief")]
+@inject Store Store
+@using System.Security.Claims
+@{
+    Layout = null;
+    var number = long.Parse(RouteData.Values["number"]!.ToString()!);
+    var payment = await Store.ReadPrepaymentAsync(number, false);
+    if (payment is null)
+    {
+        Response.StatusCode = 404;
+        return;
+    }
+    var template = Request.Query["template"].ToString();
+    if (!Amadban.Pages.PrintSettingsModel.Prepayments.ContainsKey(template))
+        template = await Store.PrintPreferenceAsync(long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!), "prepayment") ?? "readable";
+    var signers = await Store.SignersAsync();
+    var document = payment.Invoice is long invoice ? (await Store.DetailAsync(invoice))?.Summary.Document : null;
+}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>پیش‌پرداخت @payment.Number · آمادبان</title>
+    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/portrait.css" asp-append-version="true">
+    <script src="~/site.js" asp-append-version="true" defer></script>
+</head>
+<body>
+<nav class="print-controls">
+    <button type="button" data-print>چاپ پیش‌پرداخت A4</button><a asp-page="/Credit" asp-route-number="@number">بازگشت</a>
+    <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Prepayments)
+    { <option value="@key" selected="@(key==template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
+    <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="prepayment"><input type="hidden" name="id" value="@number">
+        <input type="hidden" name="template" value="@template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
+</nav>
+<article>
+    <header><partial name="_BrandMarks" /><p>بسمه‌تعالی</p><h1>پیش‌پرداخت</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
+    <section class="metadata">
+        <span>شماره پیش‌پرداخت <b>@payment.Number</b></span>
+        <span>شماره سند <b>@(document?.ToString() ?? "—")</b></span>
+        <span>شماره پیش‌فاکتور <b>@(payment.Proforma ?? "—")</b></span>
+    </section>
+    <table>
+        <tbody>
+            <tr><th>کد ردیف اعتباری</th><td>@payment.Code · @payment.CodeTitle</td></tr>
+            <tr><th>فروشنده</th><td>@payment.Vendor</td></tr>
+            <tr><th>صاحب حساب</th><td>@payment.Owner</td></tr>
+            <tr><th>بانک و شبا</th><td>@payment.Bank · <bdi>@payment.Sheba</bdi></td></tr>
+            @if (template == "permit") { <tr><th>شماره و تاریخ مجوز</th><td>@payment.Permit · @payment.PermitDate</td></tr> }
+            @if (template == "tax") { <tr><th>مالیات</th><td>@Persian.Money(payment.Tax) ریال</td></tr> }
+            <tr><th>مبلغ</th><td>@Persian.Money(payment.Amount) ریال</td></tr>
+            <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(payment.Amount) ریال</td></tr>
+            @if (payment.State == "void") { <tr><th>وضعیت</th><td>باطل‌شده</td></tr> }
+        </tbody>
+    </table>
+    <section class="signatures">
+        @foreach (var role in new[] {"agent","chief","auditor","finance","recipient"})
+        { <div>@Amadban.Pages.OrganizationModel.Roles[role]<p>@signers.GetValueOrDefault(role)</p></div> }
+    </section>
+</article>
+</body>
+</html>

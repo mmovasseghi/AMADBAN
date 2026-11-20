@@ -1,0 +1,27 @@
+@page
+@model Amadban.Pages.OrganizationModel
+@{
+    ViewData["Title"] = "نشان و نام‌های چاپی";
+}
+<header class="hero"><h1>نشان‌ها و نام امضاکنندگان</h1></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>فایل اصلی نشان</h2>
+    <form method="post" asp-page-handler="Logo" enctype="multipart/form-data" class="filters">
+        <label>جایگاه نشان<select name="code"><option value="faraja">فراجا</option><option value="health">معاونت بهداشت، امداد و درمان</option></select></label>
+        <label>فایل اصلی<input type="file" name="file" accept=".png,.jpg,.jpeg" required></label>
+        <button type="submit" class="button primary">ذخیره نشان</button>
+    </form>
+</section>
+<section class="card">
+    <h2>نام چاپی امضاکننده</h2>
+    <form method="post" asp-page-handler="Signer" class="filters">
+        <label>جایگاه<select name="role">@foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles) { <option value="@role">@label</option> }</select></label>
+        <label>نام و سمت<input name="name" maxlength="120"></label>
+        <button type="submit" class="button primary">ذخیره نام</button>
+    </form>
+    <div class="table-wrap"><table><thead><tr><th>جایگاه</th><th>نام چاپی</th></tr></thead><tbody>
+    @foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles)
+    { <tr><td>@label</td><td>@(Model.Signers.GetValueOrDefault(role) ?? "—")</td></tr> }
+    </tbody></table></div>
+</section>

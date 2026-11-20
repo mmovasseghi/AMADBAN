@@ -1,0 +1,21 @@
+@page
+@model Amadban.Pages.StaffModel
+@{
+    ViewData["Title"] = "کاربران";
+}
+<header class="hero"><h1>کاربران آمادبان</h1></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>حساب جدید</h2>
+    <form method="post" class="filters">
+        <label>نام و نام خانوادگی<input required name="name" maxlength="120"></label>
+        <label>نام کاربری<input required name="username" dir="ltr" minlength="3" maxlength="50"></label>
+        <label>رمز ورود<input required name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password"></label>
+        <label>نقش<select name="role">@foreach (var (role, label) in Amadban.Pages.StaffModel.Roles) { <option value="@role">@label</option> }</select></label>
+        <button class="button primary" type="submit">ساخت حساب</button>
+    </form>
+    <div class="table-wrap"><table><thead><tr><th>نام کاربری</th><th>نام</th><th>نقش</th></tr></thead>
+        <tbody>@foreach (var person in Model.Users)
+        { <tr><td>@person.Username</td><td>@person.Name</td><td>@Amadban.Pages.StaffModel.Roles[person.Role]</td></tr> }</tbody>
+    </table></div>
+</section>

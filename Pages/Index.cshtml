@@ -1,0 +1,68 @@
+@page
+@model Amadban.Pages.IndexModel
+@{
+    ViewData["Title"] = Model.Report ? "گزارش فاکتورها" : "کارتابل";
+    var tabs = new[] {
+        ("", "همه", "dashboard"), ("due", "سررسید پرداخت", "clock"), ("returned", "برگشتی از مالی", "return"),
+        ("document", "در انتظار سند", "file"), ("kardex", "کارتکس ثبت‌نشده", "archive"), ("paid", "پرداخت‌شده", "check"),
+        ("ready", "آماده تحویل", "check"), ("delivered", "تحویل‌شده", "archive"), ("closed", "بسته‌شده", "check")
+    };
+}
+<header class="hero">
+    <div><div class="eyebrow">آماد و پشتیبانی</div><h1>@ViewData["Title"]</h1>
+        <p>خرید، سررسید پرداخت و پیگیری اسناد</p></div>
+    @if (User.IsInRole("agent") || User.IsInRole("chief"))
+    {
+        <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
+    }
+</header>
+<section class="card">
+    <div class="tabs" aria-label="وضعیت پرونده">
+        @foreach (var (code, label, icon) in tabs)
+        {
+            <a class="tab @(Model.Status == code ? "selected" : "")" asp-page="/Index" asp-route-Status="@code"
+               asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">
+                <svg aria-hidden="true"><use href="/icons.svg#@icon"></use></svg> @label
+            </a>
+        }
+    </div>
+    <form method="get" class="filters">
+        <input type="hidden" name="Status" value="@Model.Status">
+        <input type="hidden" name="Report" value="@Model.Report">
+        <label>جست‌وجو <input name="Search" value="@Model.Search" maxlength="100" placeholder="فروشنده، موضوع یا شماره"></label>
+        <label>از تاریخ <input name="From" value="@Model.From" dir="ltr" placeholder="۱۴۰۵/۰۱/۰۱" maxlength="10"></label>
+        <label>تا تاریخ <input name="To" value="@Model.To" dir="ltr" placeholder="۱۴۰۵/۱۲/۲۹" maxlength="10"></label>
+        <button type="submit" class="button"><svg aria-hidden="true"><use href="/icons.svg#search"></use></svg> نمایش</button>
+    </form>
+    <div asp-validation-summary="All" class="validation"></div>
+    @if (Model.Report && ViewData.ModelState.IsValid)
+    {
+        <p class="notice">نتیجه کل بازه: @Model.Count پرونده · @Persian.Money(Model.Total) ریال</p>
+    }
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>سند</th><th>فروشنده و موضوع</th><th>تاریخ فاکتور</th><th>مبلغ (ریال)</th><th>وضعیت</th><th>اقدام</th></tr></thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr>
+                        <td>@(row.Document?.ToString() ?? "—")</td>
+                        <td><strong>@row.Vendor</strong><small>@row.Subject · @(row.Kind == "cash" ? "نقدی" : "اعتباری")</small></td>
+                        <td class="numbers">@Persian.Date(row.Date)</td>
+                        <td class="numbers">@Persian.Money(row.Total)</td>
+                        <td><span class="badge @row.Delivery">@(Model.Status == "ready" ? "آماده تحویل" : Amadban.Pages.IndexModel.Badge(row))</span></td>
+                        <td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id" class="button quiet">مشاهده</a></td>
+                    </tr>
+                }
+                @if (Model.Rows.Count == 0) { <tr><td colspan="6" class="empty">پرونده‌ای برای نمایش نیست.</td></tr> }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.P > 1 || Model.HasNext)
+    {
+        <nav class="pagination" aria-label="صفحه گزارش">
+            @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P - 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">قبلی</a> }
+            @if (Model.HasNext) { <a class="button" asp-route-P="@(Model.P + 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">بعدی</a> }
+        </nav>
+    }
+</section>

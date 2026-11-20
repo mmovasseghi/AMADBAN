@@ -1,0 +1,100 @@
+@page "{id:long}"
+@model Amadban.Pages.Invoices.DetailModel
+@{
+    ViewData["Title"] = "پرونده خرید";
+    var row = Model.Entry.Summary;
+    var missing = Model.Missing;
+}
+<header class="hero">
+    <div><div class="eyebrow">فاکتور @row.Number @(row.Document is long number ? $" · سند {number}" : "")</div><h1>@row.Subject</h1><p>@row.Vendor · @Persian.Date(row.Date)</p></div>
+    <div class="actions">
+        @if (row.Document is not null) { <a class="button primary" asp-page="Print" asp-route-id="@row.Id"><svg aria-hidden="true"><use href="/icons.svg#print"></use></svg> چاپ سند</a> }
+        @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }
+        @if (row.Kind == "credit" && row.Document is not null && Model.HandlesFinance)
+        {
+            <a class="button" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت</a>
+        }
+        @if (Model.HandlesFinance && Model.Editable) { <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a> }
+        <a class="button" asp-page="/Index">بازگشت</a>
+    </div>
+</header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <div class="stage"><span>فاکتور ثبت شد</span><span>@(row.Document is null ? "منتظر صدور سند" : "سند صادر شد")</span><span>@(row.Paid ? "پرداخت شد" : "منتظر پرداخت")</span><strong>@(missing.Count == 0 && row.Delivery == "open" ? "آماده تحویل" : Amadban.Pages.IndexModel.Badge(row))</strong></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>قلم</th><th>واحد</th><th>تعداد</th><th>قیمت واحد</th><th>مبلغ (ریال)</th></tr></thead>
+        <tbody>@foreach (var line in Model.Entry.Lines)
+        { <tr><td>@line.Title</td><td>@line.Unit</td><td class="numbers">@line.Quantity.ToString("0.###")</td><td class="numbers">@Persian.Money(line.Price)</td><td class="numbers">@Persian.Money(line.Amount)</td></tr> }</tbody>
+        <tfoot><tr><th colspan="4">جمع کل</th><td class="numbers">@Persian.Money(row.Total)</td></tr></tfoot>
+    </table></div>
+    @if (Model.CanIssue)
+    {
+        <form method="post" asp-page-handler="Issue" class="actions"><button class="button primary" type="submit">صدور شماره سند</button></form>
+    }
+</section>
+<div class="detail-grid">
+<section class="card">
+    <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس و تحویل</h2>
+    @if (row.Warehouse)
+    {
+        <p>مهلت کارتکس: <bdi>@Persian.Date(Persian.MonthEnd(row.Date))</bdi></p>
+        @if (row.Kardex is not null) { <p>شماره کارتکس @row.Kardex @if (Model.Entry.KardexDate is DateOnly k && k > Persian.MonthEnd(row.Date)) { <span class="badge returned">ثبت با تأخیر</span> }</p> }
+        else if (Persian.Today > Persian.MonthEnd(row.Date)) { <p class="badge returned">کارتکس از موعد گذشته است</p> }
+        @if (Model.CanKardex && Model.Editable)
+        {
+            <form method="post" asp-page-handler="Kardex" class="filters">
+                <label>شماره کارتکس<input name="number" required maxlength="80" value="@row.Kardex"></label>
+                <label>تاریخ ثبت<input name="date" required dir="ltr" value="@Persian.Date(Model.Entry.KardexDate ?? Persian.Today)"></label>
+                <button class="button primary" type="submit">ثبت کارتکس</button>
+            </form>
+        }
+    }
+    @if (missing.Count > 0) { <p>مانده تا آماده تحویل</p><ul class="missing">@foreach (var item in missing) { <li>@item</li> }</ul> }
+    @if (Model.HandlesFinance && row.Document is not null)
+    {
+        <form method="post" asp-page-handler="Finance" class="actions">
+            @if (!row.Paid && Model.Editable && row.Kind == "cash" && User.IsInRole("agent")) { <button class="button" name="action" value="pay">ثبت پرداخت</button> }
+            @if (row.Delivery is "open" or "returned" && missing.Count == 0) { <button class="button primary" name="action" value="deliver">ثبت تحویل به مالی</button> }
+            @if (row.Paid && row.Kind == "credit" && Model.Editable)
+            {
+                @if (Model.Entry.Proxy) { <button class="button" name="action" value="clear-proxy">رفع نیاز به نیابتی</button> }
+                else { <button class="button" name="action" value="require-proxy">پرداخت گروهی در بانک</button> }
+            }
+            @if (row.Delivery == "delivered")
+            {
+                <button class="button" name="action" value="return">ثبت برگشت</button>
+                <button class="button primary" name="action" value="close">ثبت تأیید و بستن</button>
+            }
+        </form>
+    }
+</section>
+<section class="card">
+    <h2><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> مدارک پرونده</h2>
+    @if (Model.Entry.Attachments.Count == 0) { <p>هنوز مدرکی پیوست نشده است.</p> }
+    @foreach (var file in Model.Entry.Attachments)
+    {
+        <p><a asp-page-handler="Attachment" asp-route-attachment="@file.Id">@Amadban.Pages.Invoices.DetailModel.AttachmentKinds[file.Kind] · @file.Name</a></p>
+    }
+    @if (Model.HandlesFinance && Model.Editable && row.Kind == "credit")
+    {
+        <form method="post" asp-page-handler="SupplierDocument" class="actions">
+            @if (Model.Entry.Account) { <button class="button" name="kind" value="account">افزودن تأییدیه از پرونده فروشنده</button> }
+            @if (Model.Entry.Tax) { <button class="button" name="kind" value="taxpayer">افزودن مؤدیان از پرونده فروشنده</button> }
+        </form>
+    }
+    @if (Model.CanAttach && Model.Editable)
+    {
+        <form method="post" enctype="multipart/form-data" asp-page-handler="Attach" class="filters">
+            <label>نوع مدرک<select name="kind">@foreach (var (kind, label) in Amadban.Pages.Invoices.DetailModel.AttachmentKinds) { <option value="@kind">@label</option> }</select></label>
+            <label>فایل<input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png"></label>
+            <button class="button" type="submit">پیوست مدرک</button>
+        </form>
+    }
+</section>
+</div>
+
+<section class="card"><h2>سابقه پرونده</h2>
+    <div class="table-wrap"><table><thead><tr><th>زمان</th><th>اقدام</th><th>ثبت‌کننده</th></tr></thead>
+    <tbody>@foreach (var entry in Model.Entry.Events)
+    { <tr><td>@Persian.Time(entry.At)</td><td>@entry.Action</td><td>@entry.Actor</td></tr> }</tbody></table></div>
+</section>

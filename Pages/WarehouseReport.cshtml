@@ -1,0 +1,48 @@
+@page
+@model Amadban.Pages.WarehouseReportModel
+@{ ViewData["Title"] = "گزارش تحویل انبار"; }
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/chart.webp" width="82" height="82" alt=""></span>
+    <div><div class="eyebrow">گزارش انبار</div><h1>کدام کالا به کدام بخش رفت؟</h1>
+        <p>بازه و بخش را انتخاب کنید تا مقدار تحویلی، تحویل‌گیرنده و برگه‌های امضاشده را پیگیری کنید.</p></div></div>
+    <a class="button" asp-page="/Dispatch">ثبت حواله تازه</a></header>
+<section class="card"><h2>انتخاب بازه و مقصد</h2>
+    <form method="get" class="filters">
+        <label>از تاریخ شمسی<input name="From" value="@Model.From" dir="ltr" maxlength="10" required></label>
+        <label>تا تاریخ شمسی<input name="To" value="@Model.To" dir="ltr" maxlength="10" required></label>
+        <label>بخش مقصد<select name="Department"><option value="0">همه بخش‌ها</option>
+            @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(Model.Department==department.Id)">@department.Name</option> }
+        </select></label>
+        <label>نام یا کد کالا<input name="Search" value="@Model.Search" maxlength="100" placeholder="در صورت نیاز"></label>
+        <button class="button primary" type="submit">نمایش گزارش</button>
+    </form>
+    <div asp-validation-summary="All" class="validation"></div>
+    @if (ViewData.ModelState.IsValid)
+    {
+        <p class="notice">@Model.Overview.Dispatches حواله · @Model.Overview.Departments بخش · @Model.Overview.Recipients تحویل‌گیرنده</p>
+        <a class="button" asp-page-handler="Export" asp-route-From="@Model.From" asp-route-To="@Model.To"
+           asp-route-Department="@Model.Department" asp-route-Search="@Model.Search">دریافت ردیف‌های گزارش برای اکسل</a>
+    }
+</section>
+@if (ViewData.ModelState.IsValid)
+{
+    <section class="card"><h2>جمع تحویل کالا به هر بخش</h2>
+        <div class="table-wrap"><table><thead><tr><th>بخش</th><th>کالا و کد</th><th>تعداد تحویلی</th><th>تعداد حواله</th></tr></thead><tbody>
+        @foreach (var row in Model.Usage)
+        { <tr><td>@row.Department</td><td><strong>@row.Product</strong><small>@row.Code</small></td>
+              <td>@row.Quantity.ToString("0.###") @row.Unit</td><td>@row.DispatchCount</td></tr> }
+        @if (Model.Usage.Count==0) { <tr><td colspan="4" class="empty">در این بازه تحویلی ثبت نشده است.</td></tr> }
+        </tbody></table></div><p>تا ۱۵۰ ترکیب بخش و کالا در صفحه نشان داده می‌شود؛ فایل اکسل همه ردیف‌های منطبق را دارد.</p>
+    </section>
+    <section class="card"><h2>برگه‌های تحویل</h2>
+        <div class="table-wrap"><table><thead><tr><th>شماره</th><th>تاریخ</th><th>بخش</th><th>تحویل‌گیرنده</th><th>انباردار</th><th>برگه</th></tr></thead><tbody>
+        @foreach (var issue in Model.Issues)
+        { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td>
+              <td>@issue.Warehouse</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
+        @if (Model.Issues.Count==0) { <tr><td colspan="6" class="empty">برگه‌ای در این بازه نیست.</td></tr> }
+        </tbody></table></div>
+        <nav class="pagination" aria-label="صفحه گزارش انبار">
+            @if (Model.P>1) { <a class="button" asp-route-P="@(Model.P-1)" asp-route-From="@Model.From" asp-route-To="@Model.To" asp-route-Department="@Model.Department" asp-route-Search="@Model.Search">جدیدتر</a> }
+            @if (Model.HasNext) { <a class="button" asp-route-P="@(Model.P+1)" asp-route-From="@Model.From" asp-route-To="@Model.To" asp-route-Department="@Model.Department" asp-route-Search="@Model.Search">قدیمی‌تر</a> }
+        </nav>
+    </section>
+}

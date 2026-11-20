@@ -144,7 +144,15 @@ public sealed partial class Store
         }
         var available = await Available(conn, tx, code);
         if (available is null) return (null, "کد اعتباری را انتخاب کنید.");
-        if (available < amount) return (null, $"مانده قابل استفاده {Persian.Money(available.Value)} ریال و کسری {Persian.Money(amount - available.Value)} ریال است.");
+        if (available < amount)
+        {
+            var codeName = await Scalar(conn, tx, "SELECT code FROM credit_codes WHERE id=$1", code) as string ?? code.ToString();
+            var shortage = amount - available.Value;
+            await Activity(conn, tx, actor, "کسری اعتبار برای پیش‌پرداخت",
+                $"کد {codeName} · کسری {Persian.Money(shortage)} ریال · {vendor}", "credit");
+            await tx.CommitAsync();
+            return (null, $"مانده قابل استفاده {Persian.Money(available.Value)} ریال و کسری {Persian.Money(shortage)} ریال است. رئیس آماد از کسری مطلع شد؛ می‌توانید اعتبار کد را افزایش دهید یا منتقل کنید.");
+        }
         var number = (long)(await Scalar(conn, tx, "UPDATE counters SET last_value=last_value+1 WHERE name='prepayment' RETURNING last_value"))!;
         await Exec(conn, tx, """
             INSERT INTO prepayments(number,invoice_id,proforma_number,vendor,code_id,owner,bank,sheba,amount,state,created_by,permit_number,permit_date,tax_amount,submission_id)

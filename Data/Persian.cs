@@ -6,6 +6,7 @@ public static class Persian
 {
     private static readonly TimeZoneInfo Tehran = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tehran");
     public static DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Tehran));
+    public static DateOnly LocalDate(DateTime utc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utc.ToUniversalTime(), Tehran));
 
     public static string Latin(string? value) => string.Concat((value ?? "").Trim().Select(c =>
         c is >= '۰' and <= '۹' ? (char)('0' + c - '۰') :

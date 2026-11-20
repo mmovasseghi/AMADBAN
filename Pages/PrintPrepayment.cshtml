@@ -26,7 +26,7 @@
     var payee = supplier?.Kind == "person" && payment.Owner != payment.Vendor
         ? payment.Owner + " (" + payment.Vendor + ")" : payment.Owner;
     var official = new OfficialPrepaymentPrint(payment.Number, linked?.Summary.Number ?? payment.Proforma ?? "",
-        linked is null ? Persian.Date(DateOnly.FromDateTime(payment.CreatedAt)) : Persian.Date(linked.Summary.Date),
+        linked is null ? Persian.Date(Persian.LocalDate(payment.CreatedAt)) : Persian.Date(linked.Summary.Date),
         payment.Code,payment.CodeTitle,purpose,payment.Sheba,payment.Bank,payee,
         linked?.Summary.Total ?? payment.Amount,document,payment.State,signers,false,template,
         payment.Permit,payment.PermitDate,payment.Tax);

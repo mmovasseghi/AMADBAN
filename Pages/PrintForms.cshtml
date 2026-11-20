@@ -17,12 +17,18 @@
 <header><p>بسمه‌تعالی</p><h1>@Model.Title</h1><p>بیمارستان امام سجاد (ع) فراجا ـ آماد و پشتیبانی</p></header>
 @if (Model.Invoice is { } invoice)
 {
-    <section class="metadata"><span>شماره سند @invoice.Summary.Document</span><span>شماره فاکتور @invoice.Summary.Number</span><span>موضوع @invoice.Summary.Subject</span></section>
+    var request = await Store.RequestSignerAsync(invoice.Summary.Id);
+    var extra = await Store.MeetingExtraAsync(invoice.Summary.Id);
+    <section class="metadata"><span>شماره سند @invoice.Summary.Document</span><span>شماره فاکتور @invoice.Summary.Number</span><span>تاریخ صورت‌جلسه @Persian.Date(invoice.Summary.Date.AddDays(-1))</span></section>
+    <p>بدین‌وسیله گواهی می‌شود اقلام یا خدمت مندرج در سند، بررسی و مفاد زیر مورد تأیید امضاکنندگان است.</p>
     <table><thead><tr><th>شرح اقلام یا کار انجام شده</th><th>واحد</th><th>مبلغ (ریال)</th><th>توضیحات</th></tr></thead>
         <tbody>@foreach (var item in invoice.Lines) { <tr><td>@item.Title</td><td>@item.Unit</td><td>@Persian.Money(item.Amount)</td><td></td></tr> }</tbody>
     </table>
     <p>جمع کل @Persian.Money(invoice.Summary.Total) ریال · @PersianWords.Number(invoice.Summary.Total) ریال</p>
-    <section class="signatures"><div>رئیس واحد<p>@signers.GetValueOrDefault("chief")</p></div><div>کارشناس مرکز<p>@signers.GetValueOrDefault("expert")</p></div><div>افسرعامل<p>@signers.GetValueOrDefault("agent")</p></div></section>
+    <section class="signatures"><div>کارشناس / رئیس قسمت<p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>
+        <div>رئیس آماد<p>@signers.GetValueOrDefault("chief")</p></div><div>افسرعامل پرداخت<p>@signers.GetValueOrDefault("agent")</p></div>
+        @if (extra.Name is not null) { <div>امضاکننده اضافه<p>@extra.Name</p></div> }
+    </section>
 }
 else if (Model.Kind == "proxy")
 {
@@ -32,17 +38,6 @@ else if (Model.Kind == "proxy")
     </table>
     <p>جمع کل @Persian.Money(Model.Payments.Sum(p => p.Amount)) ریال</p>
     <section class="signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section>
-}
-else
-{
-    <section class="metadata"><span>شماره برگه @Model.Receipt</span><span>تاریخ @Persian.Date(Persian.Today)</span><span>موضوع شارژ تنخواه افسرعامل</span></section>
-    <table><tbody>
-        <tr><th>در وجه</th><td>بیمارستان امام سجاد (ع) فراجا</td></tr>
-        <tr><th>دریافت‌کننده</th><td>@Model.Recipient</td></tr>
-        <tr><th>مبلغ ریال</th><td>@Persian.Money(Model.Amount)</td></tr>
-        <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(Model.Amount) ریال</td></tr>
-    </tbody></table>
-    <section class="signatures"><div>افسرعامل<p>@signers.GetValueOrDefault("agent")</p></div><div>مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div></section>
 }
 </article>
 </body>

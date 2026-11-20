@@ -14,7 +14,9 @@ public sealed class OrganizationModel(Store store) : PageModel
     {
         ["agent"] = "افسرعامل / مسئول خرید", ["expert"] = "کارشناس / رئیس قسمت", ["warehouse"] = "انباردار",
         ["chief"] = "رئیس / دارنده مجوز ماده ۵۳", ["auditor"] = "ممیز اسناد هزینه",
-        ["finance"] = "مسئول مالی / عامل ذی‌حساب", ["recipient"] = "گیرنده وجه"
+        ["finance"] = "مسئول مالی / عامل ذی‌حساب", ["requester"] = "مسئول قسمت درخواست‌کننده",
+        ["kardex"] = "کارمند کارتکس", ["credit_officer"] = "مسئول اعتبارات", ["accounting"] = "حسابداری",
+        ["petty_authorizer"] = "گواهی تقاضای هزینه"
     };
     public Dictionary<string, string> Signers { get; private set; } = [];
     public List<Person> People { get; private set; } = [];
@@ -27,13 +29,14 @@ public sealed class OrganizationModel(Store store) : PageModel
         People = await store.PeopleAsync();
     }
 
-    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position)
+    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank)
     {
         name = name?.Trim() ?? "";
         position = position?.Trim() ?? "";
-        Message = name.Length is < 2 or > 120 || position.Length > 120
+        rank = rank?.Trim() ?? "";
+        Message = name.Length is < 2 or > 120 || position.Length > 120 || rank.Length > 80
             ? "نام و سمت شخص را بررسی کنید."
-            : await store.AddPersonAsync(name, position, 0, Actor);
+            : await store.AddPersonAsync(name, position, rank, 0, Actor);
         return RedirectToPage();
     }
 

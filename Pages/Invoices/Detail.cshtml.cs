@@ -9,6 +9,11 @@ namespace Amadban.Pages.Invoices;
 public sealed class DetailModel(Store store) : PageModel
 {
     public InvoiceDetail Entry { get; private set; } = null!;
+    public RequestSigner RequestSigner { get; private set; } = new(null,null,null,null);
+    public List<Department> Departments { get; private set; } = [];
+    public List<Person> People { get; private set; } = [];
+    public List<ReceiptMatch> ReceiptMatches { get; private set; } = [];
+    public (long? Id, string? Name) MeetingExtra { get; private set; }
     public IReadOnlyList<string> Missing => Store.Missing(Entry);
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string Role => User.FindFirstValue(ClaimTypes.Role)!;
@@ -32,6 +37,10 @@ public sealed class DetailModel(Store store) : PageModel
         var entry = await store.DetailAsync(id);
         if (entry is null) return NotFound();
         Entry = entry;
+        RequestSigner = await store.RequestSignerAsync(id);
+        if (HandlesFinance) { Departments = await store.DepartmentsAsync(); People = await store.PeopleAsync(); }
+        if (entry.Summary.Warehouse && CanReceive) ReceiptMatches = await store.ReceiptMatchesAsync(id);
+        if (entry.Meeting) MeetingExtra = await store.MeetingExtraAsync(id);
         return Page();
     }
 
@@ -97,16 +106,30 @@ public sealed class DetailModel(Store store) : PageModel
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostReceiptAsync(long id, string? date, string? operation)
+    public async Task<IActionResult> OnPostReceiptAsync(long id, string? date, string? operation, List<string?>? productCodes)
     {
         if (!CanReceive) return Forbid();
         var day = Persian.ParseDate(date);
         Message = day is null ? "تاریخ شمسی ورود یا اصلاح انبار را بررسی کنید." : operation switch
         {
-            "receive" => await store.ReceiveInvoiceAsync(id, day.Value, Actor),
+            "receive" => await store.ReceiveInvoiceAsync(id, day.Value, productCodes ?? [], Actor),
             "void" => await store.VoidInvoiceReceiptAsync(id, day.Value, Actor),
             _ => "اقدام انبار معتبر نیست."
         };
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostRequestSignerAsync(long id, long department, long expert)
+    {
+        if (!HandlesFinance) return Forbid();
+        Message = await store.SetRequestSignerAsync(id,department,expert,Actor);
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostMeetingExtraAsync(long id,long person)
+    {
+        if (!HandlesFinance) return Forbid();
+        Message = await store.SetMeetingExtraAsync(id,person,Actor);
         return RedirectToPage(new { id });
     }
 }

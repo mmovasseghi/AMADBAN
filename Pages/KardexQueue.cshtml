@@ -1,0 +1,19 @@
+@page
+@model Amadban.Pages.KardexQueueModel
+@{ ViewData["Title"]="ثبت سریع کارتکس"; }
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/notebook.webp" width="82" height="82" alt=""></span>
+<div><div class="eyebrow">سامانه کارتکس فراجا جداگانه است</div><h1>ثبت سریع کارتکس در آمادبان</h1>
+<p>بعد از ثبت در سامانه فراجا، همان شماره‌ای را که با خودکار روی سند نوشته‌اید همین‌جا وارد کنید. هر ردیف فقط یک ثبت می‌خواهد.</p></div></div></header>
+@if(Model.Message is not null){<p class="notice" role="status">@Model.Message</p>}
+<section class="card"><h2>سندهای منتظر شماره کارتکس</h2>
+<div class="table-wrap"><table><thead><tr><th>سند</th><th>تاریخ فاکتور</th><th>مهلت</th><th>فروشنده و موضوع</th><th>شماره درج‌شده روی سند</th><th>ثبت</th></tr></thead><tbody>
+@foreach(var row in Model.Rows){<tr><td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id">@row.Document</a></td>
+<td>@Persian.Date(row.Date)</td><td>@Persian.Date(Persian.MonthEnd(row.Date))</td><td>@row.Vendor<small>@row.Subject</small></td>
+<td colspan="2">@if(User.IsInRole("kardex")){<form method="post" class="filters"><input type="hidden" name="id" value="@row.Id">
+<input name="number" maxlength="80" required aria-label="شماره کارتکس سند @row.Document" placeholder="شماره روی سند">
+<input name="date" value="@Persian.Date(Persian.Today)" dir="ltr" required aria-label="تاریخ ثبت کارتکس">
+<button class="button primary" type="submit">ثبت شد</button></form>}else{<span>در انتظار کاربر کارتکس</span>}</td></tr>}
+@if(Model.Rows.Count==0){<tr><td colspan="6" class="empty">همه سندهای این فهرست کارتکس شده‌اند.</td></tr>}
+</tbody></table></div>
+<nav class="pagination">@if(Model.P>1){<a class="button" asp-route-P="@(Model.P-1)">جدیدتر</a>}
+@if(Model.HasNext){<a class="button" asp-route-P="@(Model.P+1)">بعدی</a>}</nav></section>

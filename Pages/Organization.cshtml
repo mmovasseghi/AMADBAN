@@ -18,13 +18,14 @@
     <p>نام و سمت هر شخص را یک‌بار ثبت کنید. سپس جایگاه امضا را به او وصل کنید.</p>
     <form method="post" asp-page-handler="Person" class="filters">
         <label>نام و نام خانوادگی<input name="name" maxlength="120" required></label>
+        <label>درجه یا رتبه<input name="rank" maxlength="80" placeholder="مثلاً کارمند ۱۷ یا سرهنگ"></label>
         <label>سمت اداری<input name="position" maxlength="120" placeholder="مثلاً رئیس آماد"></label>
         <button type="submit" class="button primary">ثبت شخص</button>
     </form>
     <form method="post" asp-page-handler="Assign" class="filters">
         <label>جایگاه امضا<select name="role">@foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles) { <option value="@role">@label</option> }</select></label>
         <label>شخص<select name="person" required><option value="">انتخاب کنید</option>
-            @foreach (var person in Model.People) { <option value="@person.Id">@person.Name · @person.Position @(person.Department is null ? "" : "· " + person.Department)</option> }
+            @foreach (var person in Model.People) { <option value="@person.Id">@person.Rank @person.Name · @person.Position @(person.Department is null ? "" : "· " + person.Department)</option> }
         </select></label>
         <button type="submit" class="button primary">قرار دادن در برگه‌های چاپی</button>
     </form>

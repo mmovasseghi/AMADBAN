@@ -32,6 +32,25 @@
         <form method="post" asp-page-handler="Issue" class="actions"><button class="button primary" type="submit">صدور شماره سند</button></form>
     }
 </section>
+@if (Model.HandlesFinance && Model.Editable)
+{
+    <section class="card"><h2>بخش درخواست‌کننده و کارشناس امضاکننده</h2>
+        <p>کارشناس این سند از بخش درخواست‌کننده انتخاب می‌شود. تحویل‌گیرنده کالا از انبار جداگانه در حواله خروج ثبت می‌شود.</p>
+        <form method="post" asp-page-handler="RequestSigner" class="filters">
+            <label>بخش درخواست‌کننده<select name="department"><option value="0">انتخاب نشده</option>
+                @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(Model.RequestSigner.DepartmentId==department.Id)">@department.Name</option> }
+            </select></label>
+            <label>کارشناس / رئیس قسمت<select name="expert"><option value="0">انتخاب نشده</option>
+                @foreach (var person in Model.People.Where(p=>p.DepartmentId is not null)) { <option value="@person.Id" selected="@(Model.RequestSigner.ExpertId==person.Id)">@person.Department · @person.Rank @person.Name</option> }
+            </select></label><button type="submit" class="button">ثبت نام روی سند</button>
+        </form>
+        @if (Model.Entry.Meeting) { <form method="post" asp-page-handler="MeetingExtra" class="filters">
+            <label>امضاکننده اضافه صورت‌جلسه<select name="person"><option value="0">بدون نفر اضافه</option>
+                @foreach (var person in Model.People) { <option value="@person.Id" selected="@(Model.MeetingExtra.Id==person.Id)">@person.Rank @person.Name · @person.Position</option> }
+            </select></label><button class="button" type="submit">ثبت روی صورت‌جلسه</button>
+        </form> }
+    </section>
+}
 @if (row.Document is not null)
 {
     var printItems = new[] {
@@ -89,6 +108,13 @@
                 <label>تاریخ شمسی گردش<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
                 @if (Model.Entry.WarehouseReceiptDate is null)
                 {
+                    <p>نام روی فاکتور در سند عیناً حفظ می‌شود. اگر همین کالا در انبار نام دیگری دارد، کد آن را انتخاب کنید؛ آمادبان این ارتباط را برای فاکتورهای بعدی به خاطر می‌سپارد. کد خالی یعنی ساخت کالای تازه.</p>
+                    <datalist id="receipt-products"></datalist>
+                    <div class="table-wrap"><table><thead><tr><th>نام عین فاکتور</th><th>تعداد و واحد</th><th>کالای متناظر در انبار</th></tr></thead><tbody>
+                    @foreach (var item in Model.ReceiptMatches) { <tr><td>@item.Title</td><td>@item.Quantity.ToString("0.###") @item.Unit</td>
+                        <td><input name="productCodes[@(item.Position-1)]" value="@item.Code" list="receipt-products" data-receipt-product
+                                   placeholder="خالی = کالای جدید" aria-label="کد انبار برای @item.Title"><small>@(item.Product ?? "کالای جدید ساخته می‌شود")</small></td></tr> }
+                    </tbody></table></div>
                     <button class="button primary" name="operation" value="receive" type="submit">ثبت ورود همه اقلام فاکتور</button>
                 }
                 else
@@ -97,7 +123,7 @@
                 }
             </form>
         }
-        <p>کالای هم‌نام و هم‌واحد به موجودی موجود افزوده می‌شود؛ برای کالای جدید، شناسه انبار خودکار ساخته می‌شود.</p>
+        <p>برای کالای جدید، شناسه انبار خودکار ساخته می‌شود. شرح اصلی فاکتور و گزارش دریافت تغییر نمی‌کند.</p>
     </section>
 }
 <section class="card">

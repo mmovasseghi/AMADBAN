@@ -228,7 +228,8 @@ public sealed partial class Store(NpgsqlDataSource source)
         await using var tx = await conn.BeginTransactionAsync();
         var updated = await Exec(conn, tx, """
             UPDATE invoices SET kardex_number=$2, kardex_date=$3
-            WHERE id=$1 AND warehouse_required AND delivery_state NOT IN ('closed','delivered')
+            WHERE id=$1 AND warehouse_required AND document_number IS NOT NULL
+              AND delivery_state NOT IN ('closed','delivered')
             """, id, number, date);
         if (updated == 0) return false;
         await Event(conn, tx, id, actor, "ثبت کارتکس");

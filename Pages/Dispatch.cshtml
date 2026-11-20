@@ -50,7 +50,7 @@
     <div class="detail-grid">
         <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش جدید<input name="name" maxlength="120" required placeholder="مثلاً بخش جراحی"></label><button class="button" type="submit">ثبت بخش</button></form>
         <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
-            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>سمت یا توضیح<input name="position" maxlength="120" placeholder="مثلاً مسئول بخش"></label>
+            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>درجه یا رتبه<input name="rank" maxlength="80" placeholder="در صورت وجود"></label><label>سمت یا توضیح<input name="position" maxlength="120" placeholder="مثلاً مسئول بخش"></label>
             <button class="button" type="submit">ثبت شخص</button></form>
     </div>
 </details></section>

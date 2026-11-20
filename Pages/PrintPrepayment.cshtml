@@ -18,7 +18,13 @@
     var supplier = await Store.SupplierByNameAsync(payment.Vendor);
     var confirmation = supplier is not null
         && (await Store.SupplierDocumentsAsync(supplier.Id)).Any(file => file.Kind == "account");
-    var document = payment.Invoice is long invoice ? (await Store.DetailAsync(invoice))?.Summary.Document : null;
+    var linked = payment.Invoice is long invoice ? await Store.DetailAsync(invoice) : null;
+    var document = linked?.Summary.Document;
+    var first = linked?.Lines.FirstOrDefault()?.Title;
+    var last = linked?.Lines.LastOrDefault()?.Title;
+    var purpose = first is null ? (payment.Proforma ?? "—") : first == last ? first : first + " - " + last;
+    var payee = supplier?.Kind == "person" && payment.Owner != payment.Vendor
+        ? payment.Owner + " (" + payment.Vendor + ")" : payment.Owner;
 }
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -47,25 +53,30 @@
     <section class="metadata">
         <span>شماره پیش‌پرداخت <b>@payment.Number</b></span>
         <span>شماره سند <b>@(document?.ToString() ?? "—")</b></span>
-        <span>شماره پیش‌فاکتور <b>@(payment.Proforma ?? "—")</b></span>
+        <span>تاریخ فاکتور <b>@(linked is null ? "—" : Persian.Date(linked.Summary.Date))</b></span>
+        <span>شماره فاکتور <b>@(linked?.Summary.Number ?? payment.Proforma ?? "—")</b></span>
     </section>
     <table>
         <tbody>
-            <tr><th>کد ردیف اعتباری</th><td>@payment.Code · @payment.CodeTitle</td></tr>
-            <tr><th>فروشنده</th><td>@payment.Vendor</td></tr>
-            <tr><th>صاحب حساب</th><td>@payment.Owner</td></tr>
-            <tr><th>بانک و شبا</th><td>@payment.Bank · <bdi>@payment.Sheba</bdi></td></tr>
+            <tr><th>کد ردیف اعتباری</th><td>@payment.Code</td></tr>
+            <tr><th>برنامه / طرح</th><td>@payment.CodeTitle</td></tr>
+            <tr><th>بابت</th><td>@purpose</td></tr>
+            <tr><th>دروجه شماره شبا</th><td><bdi>@payment.Sheba</bdi></td></tr>
+            <tr><th>بانک</th><td>@payment.Bank</td></tr>
+            <tr><th>به نام</th><td>@payee</td></tr>
             @if (template == "permit") { <tr><th>شماره و تاریخ مجوز</th><td>@payment.Permit · @payment.PermitDate</td></tr> }
             @if (template == "tax") { <tr><th>مالیات</th><td>@Persian.Money(payment.Tax) ریال</td></tr> }
-            <tr><th>مبلغ</th><td>@Persian.Money(payment.Amount) ریال</td></tr>
-            <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(payment.Amount) ریال</td></tr>
+            <tr><th>مبلغ</th><td>@Persian.Money(linked?.Summary.Total ?? payment.Amount) ریال</td></tr>
+            <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(linked?.Summary.Total ?? payment.Amount) ریال</td></tr>
             @if (payment.State == "void") { <tr><th>وضعیت</th><td>باطل‌شده</td></tr> }
         </tbody>
     </table>
-    <section class="signatures">
-        @foreach (var role in new[] {"agent","chief","auditor","finance","recipient"})
-        { <div>@Amadban.Pages.OrganizationModel.Roles[role]<p>@signers.GetValueOrDefault(role)</p></div> }
-    </section>
+    <section class="signatures"><div>تقاضای هزینه<p>@signers.GetValueOrDefault("petty_authorizer")</p></div>
+        <div>گواهی مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div></section>
+    <section class="signatures"><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
+        <div>اعتبارات<p>@signers.GetValueOrDefault("credit_officer")</p></div>
+        <div>حسابداری<p>@signers.GetValueOrDefault("accounting")</p></div>
+        <div>افسرعامل پرداخت<p>@signers.GetValueOrDefault("agent")</p></div></section>
 </article>
 </body>
 </html>

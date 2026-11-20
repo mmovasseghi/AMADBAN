@@ -166,3 +166,7 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .stage span,.stage strong{display:grid;place-items:center;min-height:46px;padding:8px;text-align:center;border:1px solid #d6e8dd;border-radius:11px;background:#fff;color:#275d50;font-size:12px;font-weight:700}
 .stage strong{border-color:#aadac0;background:#dff3e5;color:#0d6043}
 .payment-form{display:grid;gap:14px}
+.login-intro{background:linear-gradient(145deg,#d9eee4 0%,#eef8f1 55%,#e4eef7 100%)}
+.login-emblem{display:grid;place-items:center;width:180px;height:180px;border:1px solid #cce4d9;border-radius:42px;background:linear-gradient(145deg,#fff,#dcefe6);box-shadow:12px 12px 25px rgba(36,85,71,.12),-9px -9px 22px #fff}
+.login-emblem img{width:140px;height:140px;object-fit:contain}
+.login-illustration img:first-child{width:140px;height:140px}

@@ -18,14 +18,28 @@
 </section>
 @if (!Model.IsChief)
 {
-    <section class="card"><h2>چاپ برگه درخواست تنخواه</h2>
-        <form method="get" asp-page="/PrintForms" asp-antiforgery="false" class="filters">
-            <input type="hidden" name="kind" value="petty"><label>شماره برگه<input name="receipt" required></label>
+    <section class="card"><h2>پیش‌پرداخت تنخواه افسرعامل</h2>
+        <p>این برگه قالب پیش‌پرداخت دارد، ولی از کد اعتباری کم نمی‌کند. شماره پیش‌پرداخت خودکار است؛ شماره فاکتور تنخواه را فقط برای اولین برگه از عدد دلخواه شروع کنید.</p>
+        <form method="post" asp-page-handler="Advance" class="fields">
+            <input type="hidden" name="submission" value="@Model.Submission">
+            @if (Model.NextInvoiceNumber==1) { <label>شماره شروع فاکتور تنخواه<input name="invoiceStart" required inputmode="numeric" placeholder="مثلاً ۴۹"></label> }
+            else { <input type="hidden" name="invoiceStart" value="0"><p>شماره فاکتور بعدی: <b>@Model.NextInvoiceNumber</b></p> }
+            <label>تاریخ شمسی<input name="date" value="@Persian.Date(Persian.Today)" dir="ltr" required></label>
             <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
-            <button class="button" type="submit">پیش‌نمایش A4</button>
+            <label>صاحب حساب / به نام<input name="owner" value="بیمارستان امام سجاد(ع) فراجا" required maxlength="140"></label>
+            <label>نام بانک<input name="bank" required maxlength="100"></label>
+            <label>شماره شبا<input name="sheba" required dir="ltr" maxlength="32"></label>
+            <label>بابت<input name="description" value="خرید اقلام آمادی" required maxlength="250"></label>
+            <div><button class="button primary" type="submit">ثبت و بازکردن پیش‌پرداخت تنخواه</button></div>
         </form>
     </section>
 }
+@if (Model.Advances.Count>0) { <section class="card"><h2>پیش‌پرداخت‌های تنخواه اخیر</h2>
+    <div class="table-wrap"><table><thead><tr><th>شماره پیش‌پرداخت</th><th>شماره فاکتور</th><th>تاریخ</th><th>مبلغ</th><th>چاپ</th></tr></thead><tbody>
+    @foreach (var advance in Model.Advances) { <tr><td>@advance.Number</td><td>@advance.InvoiceNumber</td><td>@Persian.Date(advance.Date)</td>
+        <td>@Persian.Money(advance.Amount) ریال</td><td><a asp-page="/PrintPettyAdvance" asp-route-number="@advance.Number">بازکردن برگه</a></td></tr> }
+    </tbody></table></div>
+</section> }
 <section class="card">
     <h2>گزارش بازه</h2>
     <form method="get" class="filters">

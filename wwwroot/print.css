@@ -26,3 +26,11 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .print-copy{display:none;break-before:page;page-break-before:always}
 @media print{.print-copy{display:block}}
 .dispatch-signatures{grid-template-columns:repeat(2,minmax(0,1fr))}
+.document-sheet{font-size:9px;line-height:1.25}
+.document-sheet header{padding:1mm}.document-sheet h1{font-size:12px}
+.document-sheet .metadata{gap:1mm;padding:1mm}
+.document-sheet table{margin-top:1mm}
+.document-sheet th,.document-sheet td{padding:.3mm .7mm}
+.document-sheet .signatures{margin-top:1mm}
+.document-sheet .signatures div{min-height:8mm;padding:.5mm}
+@media print{.document-sheet{max-height:195mm}}

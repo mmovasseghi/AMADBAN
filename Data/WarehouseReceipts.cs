@@ -1,8 +1,31 @@
 namespace Amadban.Data;
 
+public sealed record ReceiptMatch(int Position, string Title, string Unit, decimal Quantity, string? Code, string? Product);
+
 public sealed partial class Store
 {
-    public async Task<string> ReceiveInvoiceAsync(long invoice, DateOnly day, long actor)
+    public async Task<List<ReceiptMatch>> ReceiptMatchesAsync(long invoice)
+    {
+        await using var conn = await source.OpenConnectionAsync();
+        await using var cmd = Command(conn, null, """
+            SELECT l.position,l.title,l.unit,l.quantity,p.code,p.name
+            FROM invoice_lines l LEFT JOIN invoice_product_matches m
+                ON m.invoice_id=l.invoice_id AND m.position=l.position
+            LEFT JOIN product_aliases a ON a.invoice_title=l.title AND a.invoice_unit=l.unit
+            LEFT JOIN products p ON p.id=coalesce(m.product_id,a.product_id,
+                (SELECT exact.id FROM products exact WHERE lower(exact.name)=lower(l.title)
+                 AND exact.unit=l.unit ORDER BY exact.id LIMIT 1))
+            WHERE l.invoice_id=$1 ORDER BY l.position
+            """, invoice);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var result = new List<ReceiptMatch>();
+        while (await reader.ReadAsync()) result.Add(new(reader.GetInt32(0),reader.GetString(1),
+            reader.GetString(2),reader.GetDecimal(3),reader.IsDBNull(4)?null:reader.GetString(4),
+            reader.IsDBNull(5)?null:reader.GetString(5)));
+        return result;
+    }
+
+    public async Task<string> ReceiveInvoiceAsync(long invoice, DateOnly day, IReadOnlyList<string?> codes, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
@@ -15,12 +38,12 @@ public sealed partial class Store
         if (await Scalar(conn, tx, "SELECT id FROM stock_events WHERE invoice_id=$1 AND receipt_id IS NULL LIMIT 1", invoice) is not null)
             return "برای این سند گردش دستی انبار ثبت شده است. از ثبت تکراری اقلام خودداری کنید.";
 
-        var lines = new List<(string Title, string Unit, decimal Quantity)>();
+        var lines = new List<(int Position, string Title, string Unit, decimal Quantity)>();
         await using (var cmd = Command(conn, tx,
-            "SELECT title,unit,quantity FROM invoice_lines WHERE invoice_id=$1 ORDER BY position", invoice))
+            "SELECT position,title,unit,quantity FROM invoice_lines WHERE invoice_id=$1 ORDER BY position", invoice))
         await using (var reader = await cmd.ExecuteReaderAsync())
         {
-            while (await reader.ReadAsync()) lines.Add((reader.GetString(0), reader.GetString(1), reader.GetDecimal(2)));
+            while (await reader.ReadAsync()) lines.Add((reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDecimal(3)));
         }
         if (lines.Count == 0) return "اقلام فاکتور پیدا نشدند.";
         await Exec(conn, tx, "SELECT pg_advisory_xact_lock(782541998)");
@@ -30,9 +53,19 @@ public sealed partial class Store
             """, invoice, day, actor))!;
         foreach (var line in lines)
         {
-            var productId = await Scalar(conn, tx, """
-                SELECT id FROM products WHERE lower(name)=lower($1) AND unit=$2
-                ORDER BY id LIMIT 1 FOR UPDATE
+            var selectedCode = line.Position-1 < codes.Count ? (codes[line.Position-1] ?? "").Trim() : "";
+            long? productId;
+            if (selectedCode.Length > 0)
+            {
+                productId = await Scalar(conn, tx,
+                    "SELECT id FROM products WHERE code=$1 AND unit=$2 FOR UPDATE",selectedCode,line.Unit) as long?;
+                if (productId is null) return $"کد انبار «{selectedCode}» برای قلم «{line.Title}» با همین واحد پیدا نشد.";
+            }
+            else productId = await Scalar(conn, tx, """
+                SELECT p.id FROM products p LEFT JOIN product_aliases a
+                    ON a.product_id=p.id AND a.invoice_title=$1 AND a.invoice_unit=$2
+                WHERE p.unit=$2 AND (a.product_id IS NOT NULL OR lower(p.name)=lower($1))
+                ORDER BY (a.product_id IS NOT NULL) DESC,p.id LIMIT 1 FOR UPDATE OF p
                 """, line.Title, line.Unit) as long?;
             decimal before;
             if (productId is null)
@@ -47,6 +80,15 @@ public sealed partial class Store
             else before = (decimal)(await Scalar(conn, tx, "SELECT stock FROM products WHERE id=$1 FOR UPDATE", productId.Value))!;
             if (before + line.Quantity >= 1_000_000_000) return "موجودی این کالا از دامنه قابل ثبت بیشتر می‌شود.";
             await Exec(conn, tx, "UPDATE products SET stock=stock+$2 WHERE id=$1", productId.Value, line.Quantity);
+            await Exec(conn, tx, """
+                INSERT INTO invoice_product_matches(invoice_id,position,product_id) VALUES($1,$2,$3)
+                ON CONFLICT(invoice_id,position) DO UPDATE SET product_id=excluded.product_id
+                """, invoice,line.Position,productId.Value);
+            await Exec(conn, tx, """
+                INSERT INTO product_aliases(invoice_title,invoice_unit,product_id,actor_id)
+                VALUES($1,$2,$3,$4) ON CONFLICT(invoice_title,invoice_unit)
+                DO UPDATE SET product_id=excluded.product_id,actor_id=excluded.actor_id,updated_at=now()
+                """,line.Title,line.Unit,productId.Value,actor);
             await Exec(conn, tx, """
                 INSERT INTO stock_events(submission_id,product_id,invoice_id,kind,delta,department,event_date,actor_id,before_quantity,receipt_id)
                 VALUES($1,$2,$3,'in',$4,'ورود اقلام سند',$5,$6,$7,$8)

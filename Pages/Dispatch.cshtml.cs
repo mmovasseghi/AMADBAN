@@ -43,13 +43,14 @@ public sealed class DispatchModel(Store store) : PageModel
         return RedirectToPage();
     }
 
-    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, long department)
+    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank, long department)
     {
         name = name?.Trim() ?? "";
         position = position?.Trim() ?? "";
-        Message = name.Length is < 2 or > 120 || position.Length > 120 || department < 1
+        rank = rank?.Trim() ?? "";
+        Message = name.Length is < 2 or > 120 || position.Length > 120 || rank.Length > 80 || department < 1
             ? "بخش، نام و سمت تحویل‌گیرنده را بررسی کنید."
-            : await store.AddPersonAsync(name, position, department, Actor);
+            : await store.AddPersonAsync(name, position, rank, department, Actor);
         return RedirectToPage();
     }
 

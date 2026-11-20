@@ -3,7 +3,7 @@ using Npgsql;
 namespace Amadban.Data;
 
 public sealed record Department(long Id, string Name);
-public sealed record Person(long Id, string Name, string Position, long? DepartmentId, string? Department);
+public sealed record Person(long Id, string Name, string Position, string Rank, long? DepartmentId, string? Department);
 public sealed record DispatchLineInput(string Code, decimal Quantity);
 public sealed record DispatchLine(string Code, string Name, string Unit, decimal Quantity);
 public sealed record DispatchRecord(long Id, long Number, string Department, string Recipient, string RecipientPosition,
@@ -25,14 +25,14 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT p.id,p.name,p.position,p.department_id,d.name
+            SELECT p.id,p.name,p.position,p.rank,p.department_id,d.name
             FROM people p LEFT JOIN departments d ON d.id=p.department_id
             WHERE p.active ORDER BY d.name NULLS FIRST,p.name LIMIT 500
             """);
         await using var reader = await cmd.ExecuteReaderAsync();
         var result = new List<Person>();
-        while (await reader.ReadAsync()) result.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetString(2),
-            reader.IsDBNull(3) ? null : reader.GetInt64(3), reader.IsDBNull(4) ? null : reader.GetString(4)));
+            while (await reader.ReadAsync()) result.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+            reader.IsDBNull(4) ? null : reader.GetInt64(4), reader.IsDBNull(5) ? null : reader.GetString(5)));
         return result;
     }
 
@@ -59,16 +59,16 @@ public sealed partial class Store
         return "بخش ثبت شد.";
     }
 
-    public async Task<string> AddPersonAsync(string name, string position, long department, long actor)
+    public async Task<string> AddPersonAsync(string name, string position, string rank, long department, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
         if (department > 0 && await Scalar(conn, tx,
             "SELECT id FROM departments WHERE id=$1 AND active", department) is null) return "بخش معتبر را انتخاب کنید.";
-        await Exec(conn, tx, "INSERT INTO people(name,position,department_id) VALUES($1,$2,NULLIF($3,0))",
-            name, position, department);
+        await Exec(conn, tx, "INSERT INTO people(name,position,rank,department_id) VALUES($1,$2,$3,NULLIF($4,0))",
+            name, position, rank, department);
         await Activity(conn, tx, actor, department > 0 ? "تحویل‌گیرنده بخش تعریف شد" : "شخص امضاکننده تعریف شد",
-            name + (position.Length > 0 ? " · " + position : ""), "organization");
+            (rank.Length > 0 ? rank + " " : "") + name + (position.Length > 0 ? " · " + position : ""), "organization");
         await tx.CommitAsync();
         return "شخص ثبت شد و برای فرم‌های چاپی قابل انتخاب است.";
     }

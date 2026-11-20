@@ -16,6 +16,8 @@ public sealed class PettyModel(Store store) : PageModel
     public List<(long Id, string Name)> Agents { get; private set; } = [];
     public List<PettyBalance> Balances { get; private set; } = [];
     public List<PettyEntry> Entries { get; private set; } = [];
+    public List<PettyAdvance> Advances { get; private set; } = [];
+    public long NextInvoiceNumber { get; private set; }
     public Guid Submission { get; } = Guid.NewGuid();
     [TempData] public string? Message { get; set; }
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -24,6 +26,8 @@ public sealed class PettyModel(Store store) : PageModel
     public async Task OnGetAsync()
     {
         P = Math.Clamp(P, 1, 4000);
+        Advances = await store.RecentPettyAdvancesAsync();
+        NextInvoiceNumber = await store.NextPettyInvoiceAsync();
         Agents = IsChief ? await store.AgentsAsync() : [(Actor, User.Identity!.Name!)];
         if (!IsChief) Recipient = Actor;
         var f = Persian.ParseDate(From);
@@ -47,5 +51,27 @@ public sealed class PettyModel(Store store) : PageModel
             ? "دریافت‌کننده، شماره، تاریخ و مبلغ را بررسی کنید."
             : await store.ReceivePettyAsync(submission, recipient, number, day, value, Actor);
         return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostAdvanceAsync(Guid submission,string? invoiceStart,string? date,string? amount,
+        string? owner,string? bank,string? sheba,string? description)
+    {
+        if (IsChief) return Forbid();
+        owner=owner?.Trim()??"";bank=bank?.Trim()??"";description=description?.Trim()??"";
+        sheba=Persian.Latin(sheba).Replace(" ","").ToUpperInvariant();
+        if(!sheba.StartsWith("IR",StringComparison.Ordinal))sheba="IR"+sheba;
+        var valid=long.TryParse(Persian.Latin(amount).Replace(",","").Replace("٬",""),out var value)
+            && value is >0 and <=1_000_000_000_000_000L;
+        var start=long.TryParse(Persian.Latin(invoiceStart),out var initial)?initial:0;
+        if(submission==Guid.Empty || !valid || Persian.ParseDate(date) is not DateOnly day ||
+            owner.Length is <1 or >140 || bank.Length is <1 or >100 || sheba.Length!=26 ||
+            sheba[2..].Any(c=>!char.IsAsciiDigit(c)) || description.Length is <1 or >250)
+        {
+            Message="تاریخ، مبلغ، نام صاحب حساب، بانک، شبا و بابت تنخواه را بررسی کنید.";
+            return RedirectToPage();
+        }
+        var result=await store.CreatePettyAdvanceAsync(submission,start,day,value,owner,bank,sheba,description,Actor);
+        Message=result.Message;
+        return result.Number is long number ? RedirectToPage("/PrintPettyAdvance",new{number}) : RedirectToPage();
     }
 }

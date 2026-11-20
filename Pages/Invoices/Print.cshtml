@@ -5,6 +5,9 @@
     Layout = null;
     var row = Model.Entry.Summary;
     var signers = await Store.SignersAsync();
+    var request = await Store.RequestSignerAsync(row.Id);
+    var payment = row.Kind == "credit" ? await Store.ReadPrepaymentAsync(row.Id, true) : null;
+    var requestDate = row.Date.AddDays(-1);
 }
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -24,7 +27,7 @@
         <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
             <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
     </nav>
-    <article>
+    <article class="document-sheet">
         <header>
             @await Html.PartialAsync("_BrandMarks", true)
             <p>بسمه‌تعالی</p>
@@ -33,8 +36,9 @@
         </header>
         <section class="metadata">
             <span>شماره سند <b>@row.Document</b></span><span>شماره فاکتور <b>@row.Number</b></span>
-            <span>تاریخ فاکتور <bdi>@Persian.Date(row.Date)</bdi></span><span>نوع خرید <b>@(row.Kind == "cash" ? "نقدی" : "اعتباری")</b></span>
-            <span>فروشنده <b>@row.Vendor</b></span><span>شرح <b>@row.Subject</b></span>
+            <span>تاریخ درخواست <bdi>@Persian.Date(requestDate)</bdi></span><span>تاریخ فاکتور <bdi>@Persian.Date(row.Date)</bdi></span>
+            <span>فروشنده <b>@row.Vendor</b></span><span>بخش درخواست‌کننده <b>@(request.Department ?? "—")</b></span>
+            <span>شماره پیش‌پرداخت <b>@(payment is null || row.Kind == "cash" ? "" : $"پ {payment.Number}")</b></span>
         </section>
         <table>
             <thead><tr><th>ردیف</th><th>مشخصات کالا یا خدمت</th><th>واحد</th><th>تعداد</th><th>قیمت واحد (ریال)</th><th>مبلغ کل (ریال)</th></tr></thead>
@@ -48,11 +52,19 @@
                 { <tr><td>@(i + 1)</td><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr> }
             </tbody>
         </table>
-        <section class="metadata totals"><span>جمع کل به عدد <b>@Persian.Money(row.Total) ریال</b></span><span>جمع کل به حروف <b>@PersianWords.Number(row.Total) ریال</b></span><span>شماره رسید یا کارتکس <b>@(row.Kardex ?? "................")</b></span></section>
-        <section class="signatures">
-            @foreach (var role in new[] {"agent","expert","warehouse","chief","auditor","finance"})
-            { <div>@Amadban.Pages.OrganizationModel.Roles[role]<p>@signers.GetValueOrDefault(role)</p></div> }
-        </section>
+        <section class="metadata totals"><span>جمع کل به عدد <b>@Persian.Money(row.Total) ریال</b></span><span>جمع کل به حروف <b>@PersianWords.Number(row.Total) ریال</b></span><span>شماره کارتکس <b>@(row.Kardex ?? "................")</b></span></section>
+        <section class="signatures"><div>مسئول قسمت درخواست‌کننده<p>@signers.GetValueOrDefault("requester")</p></div>
+            <div>مسئول مالی / عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
+            <div>فرمانده / رئیس (دارنده مجوز ماده ۵۳)<p>@signers.GetValueOrDefault("chief")</p></div></section>
+        <section class="signatures"><div>اقدام‌کننده / تنظیم‌کننده<p>@signers.GetValueOrDefault("agent")</p></div>
+            <div>کارشناس / رئیس قسمت<p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>
+            <div>انباردار<p>@signers.GetValueOrDefault("warehouse")</p></div></section>
+        <section class="metadata"><span>گواهی گزارش دریافت: @(row.Warehouse ? "اقلام به انبار تحویل شد." : "خدمت یا کالای غیرانباری بررسی شد.")</span>
+            <span>تاریخ دریافت @(row.Warehouse ? Persian.Date(row.Date) : "")</span><span>تاریخ دریافت انبار @(row.Warehouse ? Persian.Date(row.Date) : "")</span></section>
+        <section class="signatures"><div>کارتکس<p>@signers.GetValueOrDefault("kardex")</p></div>
+            <div>فرمانده / رئیس (تأیید پرداخت)<p>@signers.GetValueOrDefault("chief")</p></div>
+            <div>ممیز اسناد هزینه<p>@signers.GetValueOrDefault("auditor")</p></div>
+            <div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div></section>
     </article>
 </body>
 </html>

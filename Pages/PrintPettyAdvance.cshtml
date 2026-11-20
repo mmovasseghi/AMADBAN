@@ -1,0 +1,25 @@
+@page
+@model Amadban.Pages.PrintPettyAdvanceModel
+@inject Store Store
+@{ Layout=null; var signers=await Store.SignersAsync(); var a=Model.Advance; }
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>پیش‌پرداخت تنخواه @a.Number · آمادبان</title>
+<link rel="stylesheet" href="~/print.css" asp-append-version="true"><link rel="stylesheet" href="~/portrait.css" asp-append-version="true">
+<script src="~/site.js" asp-append-version="true" defer></script></head><body>
+<nav class="print-controls"><label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
+    <button type="button" data-print>چاپ پیش‌پرداخت تنخواه A4</button><a asp-page="/Petty">بازگشت به تنخواه</a></nav>
+<article class="prepayment-sheet"><header>@await Html.PartialAsync("_BrandMarks",true)<p>بسمه‌تعالی</p><h1>پیش‌پرداخت تنخواه</h1>
+    <p>بیمارستان فوق تخصصی امام سجاد (ع) فراجا</p></header>
+    <section class="metadata"><span>شماره پیش‌پرداخت <b>@a.Number</b></span><span>تاریخ <bdi>@Persian.Date(a.Date)</bdi></span>
+        <span>شماره فاکتور تنخواه <b>@a.InvoiceNumber</b></span></section>
+    <p>با احترام خواهشمند است مقرر فرمایید مدیریت مالی برای شارژ تنخواه افسرعامل به شرح زیر اقدام نماید.</p>
+    <table><tbody><tr><th>برنامه / طرح</th><td>افسر عاملی</td></tr><tr><th>بابت</th><td>@a.Description</td></tr>
+        <tr><th>دروجه شماره شبا</th><td><bdi>@a.Sheba</bdi></td></tr><tr><th>بانک</th><td>@a.Bank</td></tr>
+        <tr><th>به نام</th><td>@a.Owner</td></tr><tr><th>مبلغ به عدد</th><td>@Persian.Money(a.Amount) ریال</td></tr>
+        <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(a.Amount) ریال</td></tr><tr><th>شماره سند</th><td>—</td></tr></tbody></table>
+    <section class="signatures"><div>تقاضای هزینه<p>@signers.GetValueOrDefault("petty_authorizer")</p></div>
+        <div>گواهی مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div></section>
+    <section class="signatures"><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
+        <div>اعتبارات<p>@signers.GetValueOrDefault("credit_officer")</p></div>
+        <div>حسابداری<p>@signers.GetValueOrDefault("accounting")</p></div>
+        <div>افسرعامل پرداخت<p>@signers.GetValueOrDefault("agent")</p></div></section>
+</article></body></html>

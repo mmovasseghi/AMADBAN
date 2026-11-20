@@ -149,6 +149,31 @@
         filterRecipients();
     }
 
+    const receiptInputs = document.querySelectorAll('[data-receipt-product]');
+    if (receiptInputs.length) {
+        const suggestions = document.getElementById('receipt-products');
+        let receiptTimer;
+        receiptInputs.forEach(input => input.addEventListener('input', () => {
+            clearTimeout(receiptTimer);
+            const term = input.value.trim();
+            if (term.length < 2 || term.length > 80) return;
+            receiptTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
+                    if (!response.ok || input.value.trim() !== term) return;
+                    const products = await response.json();
+                    suggestions.textContent = '';
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.code;
+                        option.label = product.name + ' · ' + product.unit + ' · مانده ' + product.stock;
+                        suggestions.appendChild(option);
+                    });
+                } catch (_) { /* Typing a known code remains available. */ }
+            }, 220);
+        }));
+    }
+
     const lines = document.querySelector('[data-lines]');
     if (!lines) return;
     const template = document.querySelector('[data-line-template]');

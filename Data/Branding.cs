@@ -26,7 +26,7 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT s.role,coalesce(p.name || CASE WHEN p.position='' THEN '' ELSE ' · ' || p.position END,s.name)
+            SELECT s.role,coalesce(CASE WHEN p.rank='' THEN '' ELSE p.rank || ' ' END || p.name,s.name)
             FROM signers s LEFT JOIN people p ON p.id=s.person_id
             """);
         await using var r = await cmd.ExecuteReaderAsync();

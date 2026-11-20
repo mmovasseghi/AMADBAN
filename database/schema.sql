@@ -162,6 +162,30 @@ CREATE TABLE IF NOT EXISTS people (
     department_id bigint REFERENCES departments(id),
     active boolean NOT NULL DEFAULT true
 );
+ALTER TABLE people ADD COLUMN IF NOT EXISTS rank text NOT NULL DEFAULT '';
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS request_department_id bigint REFERENCES departments(id);
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS expert_person_id bigint REFERENCES people(id);
+CREATE TABLE IF NOT EXISTS meeting_extra_signers (
+    invoice_id bigint PRIMARY KEY REFERENCES invoices(id),
+    person_id bigint NOT NULL REFERENCES people(id),
+    actor_id bigint NOT NULL REFERENCES staff(id),
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS product_aliases (
+    invoice_title text NOT NULL,
+    invoice_unit text NOT NULL,
+    product_id bigint NOT NULL REFERENCES products(id),
+    actor_id bigint NOT NULL REFERENCES staff(id),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY(invoice_title,invoice_unit)
+);
+CREATE TABLE IF NOT EXISTS invoice_product_matches (
+    invoice_id bigint NOT NULL,
+    position integer NOT NULL,
+    product_id bigint NOT NULL REFERENCES products(id),
+    PRIMARY KEY(invoice_id,position),
+    FOREIGN KEY(invoice_id,position) REFERENCES invoice_lines(invoice_id,position) ON DELETE CASCADE
+);
 CREATE INDEX IF NOT EXISTS people_by_department ON people(department_id,name) WHERE active;
 CREATE TABLE IF NOT EXISTS stock_issues (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -236,6 +260,20 @@ CREATE TABLE IF NOT EXISTS petty_receipts (
     actor_id bigint NOT NULL REFERENCES staff(id)
 );
 CREATE INDEX IF NOT EXISTS petty_receipts_recipient ON petty_receipts(recipient_id,receipt_date);
+CREATE TABLE IF NOT EXISTS petty_advances (
+    number bigint PRIMARY KEY,
+    submission_id uuid NOT NULL UNIQUE,
+    manual_invoice_number bigint NOT NULL UNIQUE CHECK(manual_invoice_number>0),
+    advance_date date NOT NULL,
+    amount bigint NOT NULL CHECK(amount>0),
+    owner text NOT NULL,
+    bank text NOT NULL,
+    sheba text NOT NULL,
+    description text NOT NULL,
+    created_by bigint NOT NULL REFERENCES staff(id),
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+INSERT INTO counters(name) VALUES ('petty-invoice') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS bank_checks (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

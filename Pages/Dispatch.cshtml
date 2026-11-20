@@ -8,16 +8,13 @@
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <section class="card">
     <div class="steps"><span>۱ · بخش و تحویل‌گیرنده</span><span>۲ · کالا و تعداد</span><span>۳ · چاپ و امضا</span></div>
-    <form method="post" asp-page-handler="Issue" class="dispatch-form">
+    <form method="post" asp-page-handler="Issue" class="dispatch-form" id="dispatch-form">
         <input type="hidden" name="submission" value="@Model.Submission">
         <div class="fields">
             <label>بخش مقصد<select name="department" required><option value="">بخش را انتخاب کنید</option>
                 @foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }
             </select></label>
-            <label>شخص تحویل‌گیرنده<select name="recipient" required><option value="">تحویل‌گیرنده همان بخش را انتخاب کنید</option>
-                @foreach (var person in Model.People.Where(p => p.DepartmentId is not null))
-                { <option value="@person.Id" data-department="@person.DepartmentId">@person.Department · @person.Rank @person.Name @(person.Position.Length > 0 ? "· " + person.Position : "")</option> }
-            </select></label>
+            <label>شخص تحویل‌گیرنده<select name="recipient" required data-dispatch-recipient disabled><option value="">ابتدا بخش مقصد را انتخاب کنید</option></select></label>
             <label>نام انباردار روی برگه<select name="warehouse" required><option value="">انباردار را انتخاب کنید</option>
                 @foreach (var member in Model.WarehouseStaff) { <option value="@member.Id">@member.Name</option> }
             </select></label>
@@ -26,8 +23,7 @@
         </div>
         <h2>کالاهای تحویلی</h2>
         <p>نام کالا یا کد را تایپ کنید و از پیشنهادها کد کالا را برگزینید. موجودی هر کالا کنار نام آن نمایش داده می‌شود.</p>
-        <datalist id="dispatch-products">@foreach (var p in Model.Hints)
-        { <option value="@p.Code" label="@p.Name · موجودی @p.Stock.ToString("0.###") @p.Unit"></option> }</datalist>
+        <datalist id="dispatch-products"></datalist>
         <div class="table-wrap"><table class="entry-table"><thead><tr><th>کالا</th><th>تعداد تحویل</th><th></th></tr></thead>
             <tbody data-dispatch-lines><tr><td><input name="lines[0].code" data-dispatch-field="code" data-product-code list="dispatch-products" required aria-label="کد کالا" placeholder="نام یا کد کالا"></td>
                 <td><input name="lines[0].quantity" data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد تحویل" placeholder="تعداد"></td>

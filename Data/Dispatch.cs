@@ -91,8 +91,26 @@ public sealed partial class Store
         return "مشخصات شخص اصلاح شد.";
     }
 
+    public async Task<List<Person>> RecipientsByDepartmentAsync(long department)
+    {
+        if (department <= 0) return [];
+        await using var conn = await source.OpenConnectionAsync();
+        await using var cmd = Command(conn, null, """
+            SELECT p.id,p.name,p.position,p.rank,p.department_id,d.name
+            FROM people p JOIN departments d ON d.id=p.department_id
+            WHERE p.active AND p.department_id=$1
+            ORDER BY p.name LIMIT 200
+            """, department);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var result = new List<Person>();
+        while (await reader.ReadAsync()) result.Add(new(reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+            reader.GetInt64(4), reader.GetString(5)));
+        return result;
+    }
+
     public async Task<List<Product>> ProductHintsAsync(string search)
     {
+        if (search.Length is < 2 or > 80) return [];
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
             SELECT id,code,name,unit,stock,minimum FROM products

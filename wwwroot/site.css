@@ -79,3 +79,5 @@ tfoot th,tfoot td{background:#edf5f0}
 [hidden]{display:none!important}
 .brand-marks{display:flex;gap:7px;align-items:center}
 .brand-marks img{display:block;object-fit:contain}
+
+.print-order{margin:0;padding-inline-start:24px}.print-order li+li{margin-top:4px}

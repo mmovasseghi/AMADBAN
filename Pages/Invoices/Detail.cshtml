@@ -32,6 +32,40 @@
         <form method="post" asp-page-handler="Issue" class="actions"><button class="button primary" type="submit">صدور شماره سند</button></form>
     }
 </section>
+@if (row.Document is not null)
+{
+    var printItems = new[] {
+        (Kind: "meeting", Label: "صورت‌جلسه", Required: Model.Entry.Meeting),
+        (Kind: "invoice", Label: "فاکتور", Required: true),
+        (Kind: "account", Label: "تأییدیه حساب", Required: Model.Entry.Account),
+        (Kind: "taxpayer", Label: "برگه مؤدیان", Required: row.Kind == "credit" && Model.Entry.Tax),
+        (Kind: "tax", Label: "برگه ثبت مالیات", Required: Model.Entry.Tax)
+    };
+    <section class="card">
+        <h2><svg aria-hidden="true"><use href="/icons.svg#print"></use></svg> ترتیب چاپ مدارک سند</h2>
+        <ol class="print-order">
+            <li><a asp-page="Print" asp-route-id="@row.Id" target="_blank" rel="noopener">روکش سند</a></li>
+            @foreach (var item in printItems.Where(item => item.Required))
+            {
+                var attachment = Model.Entry.Attachments.FirstOrDefault(file => file.Kind == item.Kind);
+                <li>
+                    @if (attachment is not null)
+                    {
+                        <a asp-page-handler="Attachment" asp-route-attachment="@attachment.Id" asp-route-preview="true" target="_blank" rel="noopener">@item.Label</a>
+                    }
+                    else if (item.Kind == "meeting")
+                    {
+                        <a asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id" target="_blank" rel="noopener">چاپ صورت‌جلسه</a>
+                    }
+                    else
+                    {
+                        <span>@item.Label</span> <span class="badge returned">پیوست نشده</span>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+}
 <div class="detail-grid">
 <section class="card">
     <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس و تحویل</h2>

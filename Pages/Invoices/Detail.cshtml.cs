@@ -75,10 +75,11 @@ public sealed class DetailModel(Store store) : PageModel
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnGetAttachmentAsync(long id, long attachment)
+    public async Task<IActionResult> OnGetAttachmentAsync(long id, long attachment, bool preview)
     {
         var file = await store.ReadAttachmentAsync(id, attachment);
-        return file is { } found ? File(found.Content, found.Type, found.Name) : NotFound();
+        if (file is not { } found) return NotFound();
+        return preview ? File(found.Content, found.Type) : File(found.Content, found.Type, found.Name);
     }
 
     public async Task<IActionResult> OnPostFinanceAsync(long id, string action)

@@ -15,6 +15,9 @@
     if (!Amadban.Pages.PrintSettingsModel.Prepayments.ContainsKey(template))
         template = await Store.PrintPreferenceAsync(long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!), "prepayment") ?? "readable";
     var signers = await Store.SignersAsync();
+    var supplier = await Store.SupplierByNameAsync(payment.Vendor);
+    var confirmation = supplier is not null
+        && (await Store.SupplierDocumentsAsync(supplier.Id)).Any(file => file.Kind == "account");
     var document = payment.Invoice is long invoice ? (await Store.DetailAsync(invoice))?.Summary.Document : null;
 }
 <!doctype html>
@@ -28,14 +31,19 @@
 </head>
 <body>
 <nav class="print-controls">
+    <label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
     <button type="button" data-print>چاپ پیش‌پرداخت A4</button><a asp-page="/Credit" asp-route-number="@number">بازگشت</a>
+    @if (confirmation && supplier is not null)
+    {
+        <a asp-page="/Suppliers" asp-page-handler="Document" asp-route-id="@supplier.Id" asp-route-kind="account" asp-route-preview="true" target="_blank" rel="noopener">باز کردن تأییدیه حساب برای چاپ</a>
+    }
     <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Prepayments)
     { <option value="@key" selected="@(key==template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
     <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="prepayment"><input type="hidden" name="id" value="@number">
         <input type="hidden" name="template" value="@template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
 </nav>
 <article>
-    <header><partial name="_BrandMarks" /><p>بسمه‌تعالی</p><h1>پیش‌پرداخت</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
+    <header>@await Html.PartialAsync("_BrandMarks", true)<p>بسمه‌تعالی</p><h1>پیش‌پرداخت</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
     <section class="metadata">
         <span>شماره پیش‌پرداخت <b>@payment.Number</b></span>
         <span>شماره سند <b>@(document?.ToString() ?? "—")</b></span>

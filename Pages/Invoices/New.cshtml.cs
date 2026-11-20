@@ -13,7 +13,7 @@ public sealed class NewModel(Store store) : PageModel
 {
     [BindProperty(SupportsGet = true)] public long Id { get; set; }
     [BindProperty] public long CashCredit { get; set; }
-    public List<CreditBalance> Codes { get; private set; } = [];
+    public List<(long Id,string Code,string Title)> Codes { get; private set; } = [];
     [BindProperty] public Guid Submission { get; set; }
     [BindProperty, Required, StringLength(80)] public string Number { get; set; } = "";
     [BindProperty, Required, StringLength(180)] public string Vendor { get; set; } = "";
@@ -36,7 +36,7 @@ public sealed class NewModel(Store store) : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        Codes = await store.CreditBalancesAsync();
+        Codes = await store.CreditLabelsAsync();
         Submission = Guid.NewGuid();
         Date = Persian.Date(Persian.Today);
         Lines = [new() { Quantity = "1" }];
@@ -64,7 +64,7 @@ public sealed class NewModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        Codes = await store.CreditBalancesAsync();
+        Codes = await store.CreditLabelsAsync();
         var date = Persian.ParseDate(Date);
         if (CashCredit < 0 || (CashCredit > 0 && !Codes.Any(c => c.Id == CashCredit)))
             ModelState.AddModelError("", "کد اعتباری خرید نقدی را بررسی کنید.");

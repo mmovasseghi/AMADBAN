@@ -45,7 +45,7 @@ public sealed partial class Store
                 message = action == "require-proxy" ? "ثبت نیاز به نیابتی" : "رفع نیاز به نیابتی";
                 break;
             case "return":
-                sql = "UPDATE invoices SET delivery_state='returned' WHERE id=$1 AND delivery_state='delivered'";
+                sql = "UPDATE invoices SET delivery_state='returned' WHERE id=$1 AND delivery_state IN ('delivered','closed')";
                 message = "ثبت برگشت از مالی";
                 break;
             case "close":

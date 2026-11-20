@@ -35,11 +35,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = 429;
-    options.AddPolicy("login", context => RateLimitPartition.GetFixedWindowLimiter(
-        context.Connection.RemoteIpAddress?.ToString() ?? "local", _ => new FixedWindowRateLimiterOptions
-        {
-            PermitLimit = 12, Window = TimeSpan.FromMinutes(1)
-        }));
+    options.AddPolicy("login", context => !HttpMethods.IsPost(context.Request.Method)
+        ? RateLimitPartition.GetNoLimiter("login-page")
+        : RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "local", _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 12, Window = TimeSpan.FromMinutes(1)
+            }));
 });
 builder.Services.AddRazorPages(options => options.Conventions.AuthorizeFolder("/"))
     .AddMvcOptions(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);

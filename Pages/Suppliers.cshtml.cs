@@ -80,10 +80,11 @@ public sealed class SuppliersModel(Store store) : PageModel
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnGetDocumentAsync(long id, string? kind)
+    public async Task<IActionResult> OnGetDocumentAsync(long id, string? kind, bool preview)
     {
         if (kind is not ("account" or "taxpayer")) return NotFound();
         var file = await store.ReadSupplierDocumentAsync(id, kind);
-        return file is null ? NotFound() : File(file.Content, file.Type, file.Name);
+        if (file is null) return NotFound();
+        return preview ? File(file.Content, file.Type) : File(file.Content, file.Type, file.Name);
     }
 }

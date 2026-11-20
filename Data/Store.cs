@@ -51,12 +51,12 @@ public sealed partial class Store(NpgsqlDataSource source)
     }
 
     public async Task<(List<InvoiceSummary> Rows, long Count, long Total)> ListAsync(
-        string status, string search, DateOnly from, DateOnly to, int page, bool totals = false)
+        string status, string search, string subject, string kind, string credit, DateOnly from, DateOnly to, int page, bool totals = false)
     {
         await using var conn = await source.OpenConnectionAsync();
         var filter = status switch
         {
-            "due" => " AND kind='credit' AND paid_at IS NULL AND invoice_date+45 <= $4",
+            "due" => " AND kind='credit' AND paid_at IS NULL AND invoice_date+45 <= $7",
             "returned" => " AND delivery_state='returned'",
             "kardex" => " AND warehouse_required AND kardex_number IS NULL",
             "document" => " AND document_number IS NULL",
@@ -69,10 +69,15 @@ public sealed partial class Store(NpgsqlDataSource source)
         const string criteria = """
             FROM invoices i WHERE invoice_date BETWEEN $1 AND $2
               AND ($3 = '' OR strpos(lower(vendor || ' ' || subject || ' ' || number || ' ' || coalesce(document_number::text, '')), lower($3)) > 0)
+              AND ($4 = '' OR strpos(lower(subject), lower($4)) > 0)
+              AND ($5 = '' OR i.kind=$5)
+              AND ($6 = '' OR EXISTS (SELECT 1 FROM credit_codes c WHERE c.id=i.cash_credit_code AND c.code=$6)
+                            OR EXISTS (SELECT 1 FROM prepayments p JOIN credit_codes c ON c.id=p.code_id
+                                      WHERE p.invoice_id=i.id AND p.state<>'void' AND c.code=$6))
             """;
         var rows = new List<InvoiceSummary>();
         var offset = (page - 1) * 25;
-        var listArgs = status == "due" ? new object[] { from, to, search, Persian.Today.AddDays(7), offset } : [from, to, search, offset];
+        var listArgs = status == "due" ? new object[] { from, to, search, subject, kind, credit, Persian.Today.AddDays(7), offset } : [from, to, search, subject, kind, credit, offset];
         await using (var cmd = Command(conn, null, "SELECT " + SummaryColumns + " " + criteria + " " + filter +
             " ORDER BY invoice_date DESC, id DESC LIMIT 26 OFFSET $" + listArgs.Length, listArgs))
         await using (var r = await cmd.ExecuteReaderAsync())
@@ -80,7 +85,7 @@ public sealed partial class Store(NpgsqlDataSource source)
             while (await r.ReadAsync()) rows.Add(ReadSummary(r));
         }
         if (!totals) return (rows, 0, 0);
-        var args = status == "due" ? new object[] { from, to, search, Persian.Today.AddDays(7) } : [from, to, search];
+        var args = status == "due" ? new object[] { from, to, search, subject, kind, credit, Persian.Today.AddDays(7) } : [from, to, search, subject, kind, credit];
         await using var summary = Command(conn, null, "SELECT count(*), coalesce(sum(total),0)::bigint " + criteria + " " + filter, args);
         await using var sr = await summary.ExecuteReaderAsync();
         await sr.ReadAsync();
@@ -173,8 +178,16 @@ public sealed partial class Store(NpgsqlDataSource source)
             (kind == "credit" && role is not ("warehouse" or "agent" or "chief"))) return false;
         var number = (long)(await Scalar(conn, tx,
             "UPDATE counters SET last_value=last_value+1 WHERE name='document' RETURNING last_value"))!;
-        await Exec(conn, tx, "UPDATE invoices SET document_number=$2 WHERE id=$1", id, number);
-        await Event(conn, tx, id, actor, "صدور سند");
+        if (kind == "cash")
+        {
+            await Exec(conn, tx, "UPDATE invoices SET document_number=$2,paid_at=now(),paid_by=$3 WHERE id=$1", id, number, actor);
+            await Event(conn, tx, id, actor, "صدور سند و ثبت پرداخت نقدی");
+        }
+        else
+        {
+            await Exec(conn, tx, "UPDATE invoices SET document_number=$2 WHERE id=$1", id, number);
+            await Event(conn, tx, id, actor, "صدور سند");
+        }
         await tx.CommitAsync();
         return true;
     }

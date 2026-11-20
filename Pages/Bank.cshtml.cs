@@ -10,7 +10,7 @@ namespace Amadban.Pages;
 public sealed class BankModel(Store store) : PageModel
 {
     [BindProperty(SupportsGet = true)] public int P { get; set; } = 1;
-    public List<Prepayment> Paid { get; private set; } = [];
+    public List<Prepayment> BankPrepayments { get; private set; } = [];
     public List<BankCheck> Checks { get; private set; } = [];
     [TempData] public string? Message { get; set; }
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -19,7 +19,7 @@ public sealed class BankModel(Store store) : PageModel
     {
         P = Math.Clamp(P, 1, 4000);
         Checks = await store.ChecksAsync(null, P);
-        Paid = await store.RecentPaidPrepaymentsAsync();
+        BankPrepayments = await store.RecentBankPrepaymentsAsync();
     }
 
     public async Task<IActionResult> OnPostAsync(string? sayad, string? account, string? bank, string? branch,

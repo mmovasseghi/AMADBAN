@@ -2,6 +2,7 @@ name: amadban
 services:
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: amadban
       POSTGRES_USER: amadban

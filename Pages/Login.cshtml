@@ -4,7 +4,7 @@
     ViewData["Title"] = "ورود";
 }
 <section class="login card">
-    <partial name="_BrandMarks" />
+    @await Html.PartialAsync("_BrandMarks", false)
     <div class="eyebrow">بیمارستان امام سجاد (ع) فراجا</div>
     <h1>ورود به آمادبان</h1>
     <p>دایره آماد و پشتیبانی</p>

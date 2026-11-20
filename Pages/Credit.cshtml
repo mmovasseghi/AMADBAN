@@ -50,23 +50,27 @@ else if (Model.IsAgent)
             <input type="hidden" name="invoice" value="@(Model.Invoice?.Summary.Id ?? 0)">
             @if (Model.Invoice is null)
             {
-                <label>شماره پیش‌فاکتور<input name="proforma" maxlength="80" required></label>
-                <label>فروشنده<input name="vendor" maxlength="180" required></label>
+                <label>شماره پیش‌فاکتور<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
+                <label>فروشنده<input name="vendor" value="@Model.Pending?.Vendor" maxlength="180" required></label>
             }
-            <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id">@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
+            <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" selected="@(Model.Pending?.Code == c.Id)">@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
             @if (Model.Accounts.Count > 0)
             {
                 <label>حساب ثبت‌شده فروشنده<select data-account><option value="">انتخاب حساب</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Sheba</option> }</select></label>
             }
-            <label>نام صاحب حساب<input name="owner" maxlength="140" required></label>
-            <label>بانک<input name="bank" maxlength="100" required></label>
-            <label>شبا<input name="sheba" dir="ltr" maxlength="32" required></label>
-            <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@Model.Invoice?.Summary.Total" required></label>
-            <label>شماره مجوز<input name="permit" maxlength="80"></label>
-            <label>تاریخ مجوز<input name="permitDate" dir="ltr" maxlength="10"></label>
-            <label>مالیات جداگانه درج‌شونده (ریال)<input name="tax" inputmode="numeric"></label>
+            <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required></label>
+            <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required></label>
+            <label>شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required></label>
+            <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
+            <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80"></label>
+            <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10"></label>
+            <label>مالیات جداگانه درج‌شونده (ریال)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
             <button class="button primary" type="submit">ثبت و رزرو اعتبار</button>
         </form>
+        @if (Model.Pending is not null)
+        {
+            <p><a asp-page="/Credit" target="_blank" rel="noopener">افزایش یا انتقال اعتبار در پنجره جدا</a></p>
+        }
         @if (Model.Invoice is not null)
         {
             <form method="post" asp-page-handler="Link" class="filters">
@@ -112,9 +116,12 @@ else if (Model.IsAgent)
     @if (Model.History.Count > 0)
     {
         <section class="card"><h2>گردش اخیر اعتبار</h2>
-            <div class="table-wrap"><table><thead><tr><th>مبدأ</th><th>مقصد</th><th>مبلغ</th><th>ثبت‌کننده</th></tr></thead>
+            <div class="table-wrap"><table><thead><tr><th>زمان و عملیات</th><th>مبدأ</th><th>مقصد</th><th>مبلغ</th><th>ثبت‌کننده</th></tr></thead>
             <tbody>@foreach (var h in Model.History)
-            { <tr><td>@(h.Source ?? "تخصیص جدید")</td><td>@h.Destination</td><td>@Persian.Money(h.Amount)</td><td>@h.Actor</td></tr> }</tbody></table></div>
+            { <tr><td>@h.Operation<small>@Persian.Time(h.At)</small></td>
+                <td>@(h.Source ?? "تخصیص جدید") @if (h.SourceBefore is long start) { <small>@Persian.Money(start) ← @Persian.Money(start - h.Amount)</small> }</td>
+                <td>@h.Destination @if (h.DestinationBefore is long destinationStart) { <small>@Persian.Money(destinationStart) ← @Persian.Money(destinationStart + h.Amount)</small> }</td>
+                <td>@Persian.Money(h.Amount)</td><td>@h.Actor</td></tr> }</tbody></table></div>
         </section>
     }
 }

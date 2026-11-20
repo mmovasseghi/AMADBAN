@@ -27,7 +27,7 @@ public sealed class PrintFormsModel(Store store) : PageModel
                 return Invoice?.Summary.Document is null ? NotFound() : Page();
             case "proxy" when User.IsInRole("agent") || User.IsInRole("chief"):
                 if (ids is not { Length: > 0 and <= 25 }) return RedirectToPage("/Bank");
-                var available = await store.RecentPaidPrepaymentsAsync();
+                var available = await store.RecentBankPrepaymentsAsync();
                 Payments = available.Where(p => ids.Contains(p.Number)).ToList();
                 return Payments.Count == 0 ? NotFound() : Page();
             case "petty" when User.IsInRole("agent"):

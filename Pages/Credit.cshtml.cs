@@ -13,6 +13,9 @@ public sealed class CreditModel(Store store) : PageModel
     public List<CreditChange> History { get; private set; } = [];
     public List<string> Notices { get; private set; } = [];
     public List<Prepayment> Proformas { get; private set; } = [];
+    public sealed record PendingPayment(string Proforma, string Vendor, long Code, string Owner, string Bank,
+        string Sheba, string? Amount, string Permit, string PermitDate, string? Tax);
+    public PendingPayment? Pending { get; private set; }
     public List<SupplierAccount> Accounts { get; private set; } = [];
     public InvoiceDetail? Invoice { get; private set; }
     public Prepayment? Payment { get; private set; }
@@ -82,9 +85,17 @@ public sealed class CreditModel(Store store) : PageModel
         else
         {
             if (invoice > 0) proforma = "";
-            Message = await store.ReserveAsync(invoice, proforma, vendor, code, owner, bank, sheba, value, permit, permitDate, taxAmount, Actor);
+            var result = await store.ReserveAsync(invoice, proforma, vendor, code, owner, bank, sheba, value, permit, permitDate, taxAmount, Actor);
+            if (result.Number is long number)
+            {
+                Message = result.Message;
+                return RedirectToPage(new { invoice, number });
+            }
+            Message = result.Message;
         }
-        return RedirectToPage(new { invoice });
+        Pending = new(proforma, vendor, code, owner, bank, sheba, amount, permit, permitDate, tax);
+        await OnGetAsync(invoice, 0);
+        return Page();
     }
 
     public async Task<IActionResult> OnPostActionAsync(long invoice, long number, string? action, long code, bool proxy)

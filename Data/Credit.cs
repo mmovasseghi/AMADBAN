@@ -9,10 +9,20 @@ public sealed record CreditBalance(long Id, string Code, string Title, long Allo
 
 public sealed record Prepayment(long Number, long? Invoice, string? Proforma, string Vendor, long CodeId,
     string Code, string CodeTitle, string Owner, string Bank, string Sheba, long Amount, string State, string Permit, string PermitDate, long Tax);
-public sealed record CreditChange(long Id, string? Source, string Destination, long Amount, string Actor, DateTime At);
+public sealed record CreditChange(string? Source, string Destination, long Amount, string Actor, DateTime At, string Operation, long? SourceBefore, long? DestinationBefore);
 
 public sealed partial class Store
 {
+    public async Task<List<(long Id, string Code, string Title)>> CreditLabelsAsync()
+    {
+        await using var conn = await source.OpenConnectionAsync();
+        await using var cmd = Command(conn, null, "SELECT id,code,title FROM credit_codes ORDER BY code LIMIT 200");
+        await using var r = await cmd.ExecuteReaderAsync();
+        var list = new List<(long, string, string)>();
+        while (await r.ReadAsync()) list.Add((r.GetInt64(0), r.GetString(1), r.GetString(2)));
+        return list;
+    }
+
     public async Task<List<CreditBalance>> CreditBalancesAsync()
     {
         await using var conn = await source.OpenConnectionAsync();
@@ -28,15 +38,23 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT m.id,s.code,d.code,m.amount,u.display_name,m.occurred_at
-            FROM credit_changes m LEFT JOIN credit_codes s ON s.id=m.source_id
-            JOIN credit_codes d ON d.id=m.destination_id JOIN staff u ON u.id=m.actor_id
-            ORDER BY m.id DESC LIMIT 30
+            SELECT src,dst,amount,actor,occurred_at,operation,source_before,destination_before FROM (
+                SELECT s.code src,d.code dst,m.amount,u.display_name actor,m.occurred_at,m.id,
+                    CASE WHEN m.source_id IS NULL THEN 'تخصیص' ELSE 'انتقال' END operation,
+                    m.source_before,m.destination_before
+                FROM credit_changes m LEFT JOIN credit_codes s ON s.id=m.source_id
+                JOIN credit_codes d ON d.id=m.destination_id JOIN staff u ON u.id=m.actor_id
+                UNION ALL
+                SELECT s.code,d.code,m.amount,u.display_name,m.occurred_at,m.id,'اصلاح کد',NULL,NULL
+                FROM credit_reclassifications m JOIN credit_codes s ON s.id=m.source_id
+                JOIN credit_codes d ON d.id=m.destination_id JOIN staff u ON u.id=m.actor_id
+            ) changes ORDER BY occurred_at DESC,id DESC LIMIT 30
             """);
         await using var r = await cmd.ExecuteReaderAsync();
         var list = new List<CreditChange>();
         while (await r.ReadAsync())
-            list.Add(new(r.GetInt64(0), r.IsDBNull(1) ? null : r.GetString(1), r.GetString(2), r.GetInt64(3), r.GetString(4), r.GetDateTime(5)));
+            list.Add(new(r.IsDBNull(0) ? null : r.GetString(0), r.GetString(1), r.GetInt64(2), r.GetString(3),
+                r.GetDateTime(4), r.GetString(5), r.IsDBNull(6) ? null : r.GetInt64(6), r.IsDBNull(7) ? null : r.GetInt64(7)));
         return list;
     }
 
@@ -69,16 +87,19 @@ public sealed partial class Store
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
         await LockCredit(conn, tx);
-        if (from == to || await Available(conn, tx, to) is null) return "کد مقصد را بررسی کنید.";
+        var destinationBefore = await Available(conn, tx, to);
+        if (from == to || destinationBefore is null) return "کد مقصد را بررسی کنید.";
+        long sourceBefore = 0;
         if (from > 0)
         {
             var available = await Available(conn, tx, from);
             if (available is null || available < amount) return "اعتبار قابل استفاده مبدأ کافی نیست.";
+            sourceBefore = available.Value;
         }
         await Exec(conn, tx, """
-            INSERT INTO credit_changes(source_id,destination_id,amount,actor_id)
-            VALUES(NULLIF($1,0),$2,$3,$4)
-            """, from, to, amount, actor);
+            INSERT INTO credit_changes(source_id,destination_id,amount,actor_id,source_before,destination_before)
+            VALUES(NULLIF($1,0),$2,$3,$4,CASE WHEN $1=0 THEN NULL ELSE $5 END,$6)
+            """, from, to, amount, actor, sourceBefore, destinationBefore.Value);
         var verb = from > 0 ? "انتقال اعتبار" : "افزایش اعتبار";
         await NotifyChief(conn, tx, actor, role, verb + " به مبلغ " + Persian.Money(amount) + " ریال");
         await tx.CommitAsync();
@@ -101,7 +122,7 @@ public sealed partial class Store
         return list;
     }
 
-    public async Task<string> ReserveAsync(long invoice, string proforma, string vendor, long code, string owner,
+    public async Task<(long? Number, string Message)> ReserveAsync(long invoice, string proforma, string vendor, long code, string owner,
         string bank, string sheba, long amount, string permit, string permitDate, long tax, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
@@ -113,13 +134,13 @@ public sealed partial class Store
                 SELECT vendor FROM invoices WHERE id=$1 AND kind='credit' AND document_number IS NOT NULL
                 AND total=$2 AND paid_at IS NULL AND delivery_state IN ('open','returned') FOR UPDATE
                 """, invoice, amount) as string;
-            if (recordedVendor is null) return "سند اعتباری و مبلغ پرونده را بررسی کنید.";
-            if (await FindPrepayment(conn, tx, invoice, byInvoice: true) is not null) return "این سند پیش‌پرداخت دارد.";
+            if (recordedVendor is null) return (null, "سند اعتباری و مبلغ پرونده را بررسی کنید.");
+            if (await FindPrepayment(conn, tx, invoice, byInvoice: true) is not null) return (null, "این سند پیش‌پرداخت دارد.");
             vendor = recordedVendor;
         }
         var available = await Available(conn, tx, code);
-        if (available is null) return "کد اعتباری را انتخاب کنید.";
-        if (available < amount) return $"مانده قابل استفاده {Persian.Money(available.Value)} ریال و کسری {Persian.Money(amount - available.Value)} ریال است.";
+        if (available is null) return (null, "کد اعتباری را انتخاب کنید.");
+        if (available < amount) return (null, $"مانده قابل استفاده {Persian.Money(available.Value)} ریال و کسری {Persian.Money(amount - available.Value)} ریال است.");
         var number = (long)(await Scalar(conn, tx, "UPDATE counters SET last_value=last_value+1 WHERE name='prepayment' RETURNING last_value"))!;
         await Exec(conn, tx, """
             INSERT INTO prepayments(number,invoice_id,proforma_number,vendor,code_id,owner,bank,sheba,amount,state,created_by,permit_number,permit_date,tax_amount)
@@ -127,7 +148,7 @@ public sealed partial class Store
             """, number, invoice, proforma, vendor, code, owner, bank, sheba, amount, actor, permit, permitDate, tax);
         if (invoice > 0) await Event(conn, tx, invoice, actor, "ثبت پیش‌پرداخت");
         await tx.CommitAsync();
-        return $"پیش‌پرداخت {number} ثبت شد و اعتبار رزرو شد.";
+        return (number, $"پیش‌پرداخت {number} ثبت شد و اعتبار رزرو شد.");
     }
 
     public async Task<string> PrepaymentActionAsync(long number, string action, long code, bool proxy, long actor, string role)

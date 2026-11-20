@@ -20,3 +20,7 @@ tr{break-inside:avoid;page-break-inside:avoid}
 .print-controls form{display:flex;align-items:center;gap:5px}
 .brand-marks{display:flex;align-items:center;justify-content:center;gap:2mm}
 .brand-marks img{object-fit:contain}
+@media print{.brand-marks img{filter:grayscale(1)}}
+
+.print-controls input[type=number]{width:4em}
+.print-copy{break-before:page;page-break-before:always}

@@ -8,6 +8,9 @@ public sealed class IndexModel(Store store) : PageModel
 {
     [BindProperty(SupportsGet = true)] public string Status { get; set; } = "";
     [BindProperty(SupportsGet = true)] public string Search { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string Subject { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string Kind { get; set; } = "";
+    [BindProperty(SupportsGet = true)] public string Credit { get; set; } = "";
     [BindProperty(SupportsGet = true)] public string From { get; set; } = "";
     [BindProperty(SupportsGet = true)] public string To { get; set; } = "";
     [BindProperty(SupportsGet = true)] public bool Report { get; set; }
@@ -22,6 +25,11 @@ public sealed class IndexModel(Store store) : PageModel
         P = Math.Clamp(P, 1, 4000);
         Search = Persian.Latin(Search);
         if (Search.Length > 100) Search = Search[..100];
+        Subject = (Subject ?? "").Trim();
+        if (Subject.Length > 100) Subject = Subject[..100];
+        Credit = Persian.Latin(Credit);
+        if (Credit.Length > 40) Credit = Credit[..40];
+        if (Kind is not ("cash" or "credit")) Kind = "";
         From ??= "";
         To ??= "";
         Status ??= "";
@@ -35,7 +43,7 @@ public sealed class IndexModel(Store store) : PageModel
         }
         var roles = User.IsInRole("warehouse") ? "document" : User.IsInRole("kardex") ? "kardex" : "";
         if (!Request.Query.ContainsKey(nameof(Status)) && !Report) Status = roles;
-        var results = await store.ListAsync(Status, Search, from ?? new DateOnly(1900, 1, 1),
+        var results = await store.ListAsync(Status, Search, Subject, Kind, Credit, from ?? new DateOnly(1900, 1, 1),
             to ?? new DateOnly(2200, 12, 31), P, Report);
         HasNext = results.Rows.Count > 25;
         Rows = results.Rows.Take(25).ToList();

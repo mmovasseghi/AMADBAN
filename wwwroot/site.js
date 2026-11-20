@@ -1,7 +1,25 @@
 (() => {
     'use strict';
     const printButton = document.querySelector('[data-print]');
-    if (printButton) printButton.addEventListener('click', () => window.print());
+    if (printButton) printButton.addEventListener('click', () => {
+        const copiesInput = document.querySelector('[data-print-copies]');
+        const copies = copiesInput ? Math.max(1, Math.min(12, parseInt(copiesInput.value, 10) || 1)) : 1;
+        const clones = [];
+        if (copies > 1) {
+            const original = document.querySelector('article');
+            for (let copy = 1; copy < copies; copy++) {
+                const clone = original.cloneNode(true);
+                clone.classList.add('print-copy');
+                document.body.appendChild(clone);
+                clones.push(clone);
+            }
+        }
+        try {
+            window.print();
+        } finally {
+            clones.forEach(clone => clone.remove());
+        }
+    });
 
     const supplier = document.querySelector('[data-supplier]');
     if (supplier) {

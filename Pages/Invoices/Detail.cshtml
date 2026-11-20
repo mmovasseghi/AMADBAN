@@ -60,10 +60,10 @@
                 @if (Model.Entry.Proxy) { <button class="button" name="action" value="clear-proxy">رفع نیاز به نیابتی</button> }
                 else { <button class="button" name="action" value="require-proxy">پرداخت گروهی در بانک</button> }
             }
-            @if (row.Delivery == "delivered")
+            @if (row.Delivery is "delivered" or "closed")
             {
                 <button class="button" name="action" value="return">ثبت برگشت</button>
-                <button class="button primary" name="action" value="close">ثبت تأیید و بستن</button>
+                @if (row.Delivery == "delivered") { <button class="button primary" name="action" value="close">ثبت تأیید و بستن</button> }
             }
         </form>
     }

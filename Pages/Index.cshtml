@@ -21,7 +21,7 @@
         @foreach (var (code, label, icon) in tabs)
         {
             <a class="tab @(Model.Status == code ? "selected" : "")" asp-page="/Index" asp-route-Status="@code"
-               asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">
+               asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">
                 <svg aria-hidden="true"><use href="/icons.svg#@icon"></use></svg> @label
             </a>
         }
@@ -32,6 +32,12 @@
         <label>جست‌وجو <input name="Search" value="@Model.Search" maxlength="100" placeholder="فروشنده، موضوع یا شماره"></label>
         <label>از تاریخ <input name="From" value="@Model.From" dir="ltr" placeholder="۱۴۰۵/۰۱/۰۱" maxlength="10"></label>
         <label>تا تاریخ <input name="To" value="@Model.To" dir="ltr" placeholder="۱۴۰۵/۱۲/۲۹" maxlength="10"></label>
+        @if (Model.Report)
+        {
+            <label>موضوع<input name="Subject" value="@Model.Subject" maxlength="100"></label>
+            <label>نوع خرید<select name="Kind"><option value="">همه</option><option value="cash" selected="@(Model.Kind=="cash")">نقدی</option><option value="credit" selected="@(Model.Kind=="credit")">چکی</option></select></label>
+            <label>کد اعتباری<input name="Credit" value="@Model.Credit" maxlength="40"></label>
+        }
         <button type="submit" class="button"><svg aria-hidden="true"><use href="/icons.svg#search"></use></svg> نمایش</button>
     </form>
     <div asp-validation-summary="All" class="validation"></div>
@@ -61,8 +67,8 @@
     @if (Model.P > 1 || Model.HasNext)
     {
         <nav class="pagination" aria-label="صفحه گزارش">
-            @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P - 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">قبلی</a> }
-            @if (Model.HasNext) { <a class="button" asp-route-P="@(Model.P + 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-From="@Model.From" asp-route-To="@Model.To">بعدی</a> }
+            @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P - 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">قبلی</a> }
+            @if (Model.HasNext) { <a class="button" asp-route-P="@(Model.P + 1)" asp-route-Status="@Model.Status" asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">بعدی</a> }
         </nav>
     }
 </section>

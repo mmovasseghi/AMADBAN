@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
+    <link rel="icon" href="/BrandAsset/faraja" type="image/png">
     <title>@ViewData["Title"] · آمادبان</title>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true">
     <script src="~/site.js" asp-append-version="true" defer></script>
@@ -42,7 +43,7 @@
                     <a asp-page="/Staff"><svg aria-hidden="true"><use href="/icons.svg#user"></use></svg> کاربران</a>
                 }
             </nav>
-            <partial name="_BrandMarks" />
+            @await Html.PartialAsync("_BrandMarks", false)
             <div class="org">بیمارستان امام سجاد (ع) فراجا</div>
         </aside>
         <div class="workspace">

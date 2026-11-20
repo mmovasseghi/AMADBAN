@@ -20,9 +20,9 @@
     var request = await Store.RequestSignerAsync(invoice.Summary.Id);
     var extra = await Store.MeetingExtraAsync(invoice.Summary.Id);
     <section class="metadata"><span>شماره سند @invoice.Summary.Document</span><span>شماره فاکتور @invoice.Summary.Number</span><span>تاریخ صورت‌جلسه @Persian.Date(invoice.Summary.Date.AddDays(-1))</span></section>
-    <p>بدین‌وسیله گواهی می‌شود اقلام یا خدمت مندرج در سند، بررسی و مفاد زیر مورد تأیید امضاکنندگان است.</p>
-    <table><thead><tr><th>شرح اقلام یا کار انجام شده</th><th>واحد</th><th>مبلغ (ریال)</th><th>توضیحات</th></tr></thead>
-        <tbody>@foreach (var item in invoice.Lines) { <tr><td>@item.Title</td><td>@item.Unit</td><td>@Persian.Money(item.Amount)</td><td></td></tr> }</tbody>
+    <p>بدین‌وسیله گواهی می‌شود اقلام خریداری‌شده یا کار انجام‌شده در تاریخ درج‌شده بررسی شده و مشخصات آن با فاکتور و سند مربوط تطبیق دارد.</p>
+    <table><thead><tr><th>شماره سند / مجوز</th><th>شماره فاکتور</th><th>شرح اقلام یا کار انجام شده</th><th>واحد</th><th>مبلغ (ریال)</th><th>توضیحات</th></tr></thead>
+        <tbody>@foreach (var item in invoice.Lines) { <tr><td>@invoice.Summary.Document</td><td>@invoice.Summary.Number</td><td>@item.Title</td><td>@item.Unit</td><td>@Persian.Money(item.Amount)</td><td></td></tr> }</tbody>
     </table>
     <p>جمع کل @Persian.Money(invoice.Summary.Total) ریال · @PersianWords.Number(invoice.Summary.Total) ریال</p>
     <section class="signatures"><div>کارشناس / رئیس قسمت<p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>

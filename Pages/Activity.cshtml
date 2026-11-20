@@ -7,7 +7,7 @@
 <section class="activity-list" aria-label="رویدادهای آماد">
     @foreach (var item in Model.Items)
     {
-        <a class="activity-card" href="@item.TargetUrl"><span class="activity-icon"><img src="/icon3d/@(item.Icon).webp" width="52" height="52" alt=""></span>
+        <a class="activity-card" asp-page="/ActivityDetail" asp-route-id="@item.Id"><span class="activity-icon"><img src="/icon3d/@(item.Icon).webp" width="52" height="52" alt=""></span>
             <span class="activity-body"><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></span>
             <span class="activity-more">دیدن جزئیات ←</span></a>
     }

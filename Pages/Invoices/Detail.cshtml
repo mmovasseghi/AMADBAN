@@ -85,6 +85,11 @@
         </ol>
     </section>
 }
+@if (Model.Entry.Account && Model.SupplierAccounts.Count>0)
+{ <section class="card"><h2>چاپ تأییدیه حساب</h2><p>حساب درست را انتخاب کنید، برگه را چاپ و پس از امضا اسکن آن را در همین پرونده بارگذاری کنید.</p>
+    <div class="actions">@foreach (var account in Model.SupplierAccounts)
+    { <a class="button" asp-page="/PrintAccountConfirmation" asp-route-invoice="@row.Id" asp-route-account="@account.Id" target="_blank" rel="noopener">@account.Bank · @account.Sheba</a> }</div>
+</section> }
 <div class="detail-grid">
 @if (row.Warehouse)
 {
@@ -153,10 +158,15 @@
                 @if (Model.Entry.Proxy) { <button class="button" name="action" value="clear-proxy">رفع نیاز به نیابتی</button> }
                 else { <button class="button" name="action" value="require-proxy">پرداخت گروهی در بانک</button> }
             }
-            @if (row.Delivery is "delivered" or "closed")
+            @if (row.Delivery == "delivered" && row.ReviewStage == "finance")
             {
-                <button class="button" name="action" value="return">ثبت برگشت</button>
-                @if (row.Delivery == "delivered") { <button class="button primary" name="action" value="close">ثبت تأیید و بستن</button> }
+                <button class="button" name="action" value="return-finance">برگشت از مالی</button>
+                <button class="button primary" name="action" value="send-deputy">ارسال به معاونت</button>
+            }
+            @if (row.Delivery == "delivered" && row.ReviewStage == "deputy")
+            {
+                <button class="button" name="action" value="return-deputy">برگشت از معاونت</button>
+                <button class="button primary" name="action" value="close">تأیید نهایی و بستن سند</button>
             }
         </form>
     }

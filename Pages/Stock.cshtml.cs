@@ -54,6 +54,16 @@ public sealed class StockModel(Store store) : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostCorrectProductAsync(long id,string? code,string? name,string? unit,string? minimum)
+    {
+        code=Persian.Latin(code).Trim();name=name?.Trim()??"";unit=unit?.Trim()??"";
+        Message=id<=0 || code.Length is <1 or >40 || name.Length is <1 or >150 || unit.Length is <1 or >30 ||
+            Quantity(minimum) is not decimal min
+            ? "کد، نام، واحد و حداقل موجودی را بررسی کنید."
+            : await store.CorrectProductAsync(id,code,name,unit,min,Actor);
+        return RedirectToPage(new { productId=id });
+    }
+
     public async Task<IActionResult> OnPostMoveAsync(long productId, Guid submission, long invoice, string? kind,
         string? quantity, string? department, string? date)
     {

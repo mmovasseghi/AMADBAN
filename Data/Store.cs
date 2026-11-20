@@ -5,7 +5,8 @@ namespace Amadban.Data;
 
 public sealed record Staff(long Id, string Username, string Name, string Role, string Hash, Guid SecurityStamp);
 public sealed record InvoiceSummary(long Id, long? Document, string Number, string Vendor, string Subject,
-    DateOnly Date, string Kind, long Total, bool Paid, string Delivery, bool Warehouse, string? Kardex);
+    DateOnly Date, string Kind, long Total, bool Paid, string Delivery, bool Warehouse, string? Kardex,
+    string ReviewStage);
 public sealed record InvoiceLine(string Title, string Unit, decimal Quantity, long Price, long Amount);
 public sealed record InvoiceEntry(Guid Submission, string Number, string Vendor, string Subject, DateOnly Date,
     string Kind, bool Warehouse, bool Meeting, bool Account, bool Tax, IReadOnlyList<InvoiceLine> Lines, long CashCredit);
@@ -20,7 +21,7 @@ public sealed partial class Store(NpgsqlDataSource source)
     private static readonly PasswordHasher<string> Passwords = new();
     private const string SummaryColumns = """
         id, document_number, number, vendor, subject, invoice_date, kind, total, paid_at IS NOT NULL,
-        delivery_state, warehouse_required, kardex_number
+        delivery_state, warehouse_required, kardex_number, review_stage
         """;
     private const string InvoiceCriteria = """
             FROM invoices i WHERE invoice_date BETWEEN $1 AND $2
@@ -36,11 +37,14 @@ public sealed partial class Store(NpgsqlDataSource source)
     {
         "due" => " AND kind='credit' AND paid_at IS NULL AND invoice_date+45 <= $7",
         "returned" => " AND delivery_state='returned'",
+        "returned-finance" => " AND delivery_state='returned' AND review_stage='finance'",
+        "returned-deputy" => " AND delivery_state='returned' AND review_stage='deputy'",
         "kardex" => " AND warehouse_required AND kardex_number IS NULL",
         "kardex-late" => " AND warehouse_required AND kardex_number IS NULL AND invoice_date < $7",
         "kardex-current" => " AND warehouse_required AND kardex_number IS NULL AND invoice_date >= $7",
         "document" => " AND document_number IS NULL",
         "paid" => " AND paid_at IS NOT NULL",
+        "tax-pending" => " AND document_number IS NOT NULL AND NOT EXISTS (SELECT 1 FROM invoice_attachments a WHERE a.invoice_id=i.id AND a.kind='tax')",
         "ready" => " AND delivery_state IN ('open','returned') AND " + ReadyConditions,
         "delivered" => " AND delivery_state='delivered'",
         "closed" => " AND delivery_state='closed'",
@@ -153,12 +157,12 @@ public sealed partial class Store(NpgsqlDataSource source)
         {
             if (!await r.ReadAsync()) return null;
             summary = ReadSummary(r);
-            meeting = r.GetBoolean(12);
-            account = r.GetBoolean(13);
-            tax = r.GetBoolean(14);
-            kardexDate = r.IsDBNull(15) ? null : r.GetFieldValue<DateOnly>(15);
-            proxy = r.GetBoolean(16);
-            posInInvoice = r.GetBoolean(17);
+            meeting = r.GetBoolean(13);
+            account = r.GetBoolean(14);
+            tax = r.GetBoolean(15);
+            kardexDate = r.IsDBNull(16) ? null : r.GetFieldValue<DateOnly>(16);
+            proxy = r.GetBoolean(17);
+            posInInvoice = r.GetBoolean(18);
         }
         var lines = new List<InvoiceLine>();
         await using (var cmd = Command(conn, null,
@@ -282,10 +286,15 @@ public sealed partial class Store(NpgsqlDataSource source)
     private static InvoiceSummary ReadSummary(NpgsqlDataReader r) => new(
         r.GetInt64(0), r.IsDBNull(1) ? null : r.GetInt64(1), r.GetString(2), r.GetString(3), r.GetString(4),
         r.GetFieldValue<DateOnly>(5), r.GetString(6), r.GetInt64(7), r.GetBoolean(8), r.GetString(9), r.GetBoolean(10),
-        r.IsDBNull(11) ? null : r.GetString(11));
+        r.IsDBNull(11) ? null : r.GetString(11),r.GetString(12));
 
-    private static Task<int> Event(NpgsqlConnection conn, NpgsqlTransaction tx, long invoice, long actor, string action) =>
-        Exec(conn, tx, "INSERT INTO invoice_events(invoice_id,actor_id,action) VALUES($1,$2,$3)", invoice, actor, action);
+    private static async Task<int> Event(NpgsqlConnection conn, NpgsqlTransaction tx, long invoice, long actor, string action)
+    {
+        var count=await Exec(conn,tx,"INSERT INTO invoice_events(invoice_id,actor_id,action) VALUES($1,$2,$3)",invoice,actor,action);
+        var document=await Scalar(conn,tx,"SELECT document_number FROM invoices WHERE id=$1",invoice);
+        await Activity(conn,tx,actor,action,document is long number?$"سند {number} · پرونده {invoice}":$"پرونده {invoice}","invoice",invoice);
+        return count;
+    }
 
     private static NpgsqlCommand Command(NpgsqlConnection conn, NpgsqlTransaction? tx, string sql, params object[] values)
     {

@@ -5,9 +5,12 @@ namespace Amadban.Data;
 public sealed record Department(long Id, string Name);
 public sealed record Person(long Id, string Name, string Position, string Rank, long? DepartmentId, string? Department);
 public sealed record DispatchLineInput(string Code, decimal Quantity);
-public sealed record DispatchLine(string Code, string Name, string Unit, decimal Quantity);
+public sealed record DispatchLine(string Code, string Name, string Unit, decimal Quantity, decimal Returned=0)
+{
+    public decimal Remaining => Quantity-Returned;
+}
 public sealed record DispatchRecord(long Id, long Number, string Department, string Recipient, string RecipientPosition,
-    string Warehouse, DateOnly Date, string Note, IReadOnlyList<DispatchLine> Lines);
+    string Warehouse, DateOnly Date, string Note, IReadOnlyList<DispatchLine> Lines, string State="active");
 
 public sealed partial class Store
 {
@@ -73,6 +76,21 @@ public sealed partial class Store
         return "شخص ثبت شد و برای فرم‌های چاپی قابل انتخاب است.";
     }
 
+    public async Task<string> CorrectPersonAsync(long id,string name,string position,string rank,long department,long actor)
+    {
+        await using var conn=await source.OpenConnectionAsync();
+        await using var tx=await conn.BeginTransactionAsync();
+        if(department>0 && await Scalar(conn,tx,"SELECT id FROM departments WHERE id=$1 AND active",department) is null)
+            return "بخش معتبر را انتخاب کنید.";
+        if(await Exec(conn,tx,"""
+            UPDATE people SET name=$2,position=$3,rank=$4,department_id=NULLIF($5,0)
+            WHERE id=$1 AND active
+            """,id,name,position,rank,department)!=1)return "شخص فعال پیدا نشد.";
+        await Activity(conn,tx,actor,"مشخصات شخص اصلاح شد",$"{rank} {name} · شناسه {id}","organization");
+        await tx.CommitAsync();
+        return "مشخصات شخص اصلاح شد.";
+    }
+
     public async Task<List<Product>> ProductHintsAsync(string search)
     {
         await using var conn = await source.OpenConnectionAsync();
@@ -134,6 +152,7 @@ public sealed partial class Store
                 VALUES($1,$2,'out',$3,(SELECT name FROM departments WHERE id=$4),$5,$6,$7,$8)
                 """, Guid.NewGuid(), product.Id, -line.Quantity, department, date, actor, product.Stock, issueId);
         }
+        await Activity(conn,tx,actor,"حواله خروج انبار ثبت شد",$"حواله {number} · {lines.Count} قلم · بخش {department}","dispatch",number);
         await tx.CommitAsync();
         return (number, $"برگه خروج {number} برای {lines.Count} قلم ثبت شد.");
     }
@@ -142,10 +161,10 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         long id;
-        string department, recipient, position, warehouse, note;
+        string department, recipient, position, warehouse, note, state;
         DateOnly date;
         await using (var cmd = Command(conn, null, """
-            SELECT i.id,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note
+            SELECT i.id,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note,i.state
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN people p ON p.id=i.recipient_id JOIN staff s ON s.id=i.warehouse_person_id
             WHERE i.number=$1
@@ -155,26 +174,28 @@ public sealed partial class Store
             if (!await reader.ReadAsync()) return null;
             id=reader.GetInt64(0);department=reader.GetString(1);recipient=reader.GetString(2);
             position=reader.GetString(3);warehouse=reader.GetString(4);
-            date=reader.GetFieldValue<DateOnly>(5);note=reader.GetString(6);
+            date=reader.GetFieldValue<DateOnly>(5);note=reader.GetString(6);state=reader.GetString(7);
         }
         var lines = new List<DispatchLine>();
         await using (var cmd = Command(conn, null, """
-            SELECT p.code,p.name,p.unit,l.quantity FROM stock_issue_lines l
-            JOIN products p ON p.id=l.product_id WHERE l.issue_id=$1 ORDER BY l.position
+            SELECT p.code,p.name,p.unit,l.quantity,
+              coalesce((SELECT sum(r.quantity) FROM stock_issue_returns r WHERE r.issue_id=l.issue_id AND r.position=l.position),0)
+            FROM stock_issue_lines l JOIN products p ON p.id=l.product_id
+            WHERE l.issue_id=$1 ORDER BY l.position
             """, id))
         await using (var reader = await cmd.ExecuteReaderAsync())
         {
             while (await reader.ReadAsync()) lines.Add(new(reader.GetString(0),reader.GetString(1),
-                reader.GetString(2),reader.GetDecimal(3)));
+                reader.GetString(2),reader.GetDecimal(3),reader.GetDecimal(4)));
         }
-        return new(id,number,department,recipient,position,warehouse,date,note,lines);
+        return new(id,number,department,recipient,position,warehouse,date,note,lines,state);
     }
 
     public async Task<List<DispatchRecord>> RecentDispatchesAsync()
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT i.id,i.number,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note
+            SELECT i.id,i.number,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note,i.state
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN people p ON p.id=i.recipient_id JOIN staff s ON s.id=i.warehouse_person_id
             ORDER BY i.id DESC LIMIT 25
@@ -183,7 +204,7 @@ public sealed partial class Store
         var result = new List<DispatchRecord>();
         while (await reader.ReadAsync()) result.Add(new(reader.GetInt64(0),reader.GetInt64(1),reader.GetString(2),
             reader.GetString(3),reader.GetString(4),reader.GetString(5),reader.GetFieldValue<DateOnly>(6),
-            reader.GetString(7),[]));
+                reader.GetString(7),[],reader.GetString(8)));
         return result;
     }
 }

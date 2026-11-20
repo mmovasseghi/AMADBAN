@@ -42,14 +42,14 @@ public sealed class PettyModel(Store store) : PageModel
             t ?? new DateOnly(2200, 1, 1), P);
     }
 
-    public async Task<IActionResult> OnPostAsync(Guid submission, long recipient, string? number, string? date, string? amount)
+    public async Task<IActionResult> OnPostAsync(Guid submission, long recipient, string? number, string? date, string? amount, long advanceNumber)
     {
         if (!IsChief) recipient = Actor;
         number = Persian.Latin(number);
         Message = recipient <= 0 || submission == Guid.Empty || number.Length is < 1 or > 80 || Persian.ParseDate(date) is not DateOnly day ||
             !long.TryParse(Persian.Latin(amount).Replace(",", "").Replace("٬", ""), out var value) || value is <= 0 or > 1_000_000_000_000_000L
             ? "دریافت‌کننده، شماره، تاریخ و مبلغ را بررسی کنید."
-            : await store.ReceivePettyAsync(submission, recipient, number, day, value, Actor);
+            : await store.ReceivePettyAsync(submission, recipient, number, day, value, Actor, advanceNumber);
         return RedirectToPage();
     }
 
@@ -73,5 +73,28 @@ public sealed class PettyModel(Store store) : PageModel
         var result=await store.CreatePettyAdvanceAsync(submission,start,day,value,owner,bank,sheba,description,Actor);
         Message=result.Message;
         return result.Number is long number ? RedirectToPage("/PrintPettyAdvance",new{number}) : RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostCorrectAdvanceAsync(long number,string? date,string? amount,
+        string? owner,string? bank,string? sheba,string? description)
+    {
+        if (IsChief) return Forbid();
+        var valid=long.TryParse(Persian.Latin(amount).Replace(",","").Replace("٬",""),out var value)
+            && value is >0 and <=1_000_000_000_000_000L;
+        sheba=Persian.Latin(sheba).Replace(" ","").ToUpperInvariant();
+        if(!sheba.StartsWith("IR",StringComparison.Ordinal))sheba="IR"+sheba;
+        Message=!valid || Persian.ParseDate(date) is not DateOnly day || (owner?.Trim().Length ?? 0) is <1 or >140 ||
+            (bank?.Trim().Length ?? 0) is <1 or >100 || sheba.Length!=26 || sheba[2..].Any(c=>!char.IsAsciiDigit(c)) ||
+            (description?.Trim().Length ?? 0) is <1 or >250
+            ? "مشخصات برگه تنخواه را بررسی کنید."
+            : await store.CorrectPettyAdvanceAsync(number,day,value,owner!.Trim(),bank!.Trim(),sheba,description!.Trim(),Actor,IsChief);
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostVoidAdvanceAsync(long number)
+    {
+        if (IsChief) return Forbid();
+        Message=await store.VoidPettyAdvanceAsync(number,Actor,IsChief);
+        return RedirectToPage();
     }
 }

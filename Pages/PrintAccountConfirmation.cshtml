@@ -1,0 +1,25 @@
+@page
+@model Amadban.Pages.PrintAccountConfirmationModel
+@{ Layout=null; }
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>تأیید مشخصات حساب · آمادبان</title>
+<link rel="stylesheet" href="~/print.css" asp-append-version="true"><link rel="stylesheet" href="~/portrait.css" asp-append-version="true">
+<script src="~/site.js" asp-append-version="true" defer></script></head><body>
+<nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" min="1" max="12" value="1"></label>
+<button type="button" data-print>چاپ تأییدیه حساب A4</button><a asp-page="/Invoices/Detail" asp-route-id="@Model.Invoice.Summary.Id">بازگشت به سند</a></nav>
+<article><header>@await Html.PartialAsync("_BrandMarks",true)<p>بسمه‌تعالی</p><h1>تأیید مشخصات حساب بانکی فروشنده</h1>
+<p>بیمارستان فوق‌تخصصی امام سجاد (ع) فراجا ـ دایره آماد و پشتیبانی</p></header>
+<section class="metadata"><span>شماره سند <b>@Model.Invoice.Summary.Document</b></span>
+<span>شماره فاکتور <b>@Model.Invoice.Summary.Number</b></span><span>تاریخ فاکتور <bdi>@Persian.Date(Model.Invoice.Summary.Date)</bdi></span></section>
+<p>مشخصات فروشنده و حساب معرفی‌شده برای پرداخت فاکتور بالا به شرح زیر است. صاحب حساب، صحت اطلاعات را با امضا و مهر تأیید می‌کند.</p>
+<table><tbody><tr><th>نام فروشنده</th><td>@Model.Supplier.Name</td></tr>
+<tr><th>نوع فروشنده</th><td>@(Model.Supplier.Kind=="person" ? "حقیقی" : "حقوقی")</td></tr>
+<tr><th>شناسه / کد ملی</th><td>@Model.Supplier.National</td></tr>
+<tr><th>کد اقتصادی</th><td>@Model.Supplier.Economic</td></tr>
+<tr><th>صاحب حساب</th><td>@Model.Account.Owner</td></tr>
+<tr><th>نام بانک</th><td>@Model.Account.Bank</td></tr>
+<tr><th>شماره حساب</th><td><bdi>@Model.Account.Account</bdi></td></tr>
+<tr><th>شماره شبا</th><td><bdi>@Model.Account.Sheba</bdi></td></tr></tbody></table>
+<section class="signatures dispatch-signatures"><div>تأیید صاحب حساب / فروشنده<p>نام، مهر و امضا: ........................</p></div>
+<div>کنترل اطلاعات در آماد<p>نام، تاریخ و امضا: ........................</p></div></section>
+<p>پس از گرفتن امضا، نسخه تأییدشده را همراه سند نگهداری و تصویر آن را در پرونده بارگذاری کنید.</p>
+</article></body></html>

@@ -84,7 +84,8 @@ public sealed class IndexModel(Store store) : PageModel
 
     public static string Badge(InvoiceSummary item) => item.Delivery switch
     {
-        "closed" => "بسته‌شده", "returned" => "برگشتی از مالی", "delivered" => "تحویل‌شده",
+        "closed" => "بسته‌شده", "returned" => item.ReviewStage == "deputy" ? "برگشتی از معاونت" : "برگشتی از مالی",
+        "delivered" => item.ReviewStage == "deputy" ? "در معاونت" : "تحویل مالی",
         _ when item.Paid => "پرداخت‌شده و باز",
         _ when item.Document is null => "در انتظار صدور سند",
         _ => "در انتظار پرداخت"

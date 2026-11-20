@@ -3,9 +3,9 @@
 @{
     ViewData["Title"] = Model.Report ? "گزارش فاکتورها" : "کارتابل";
     var tabs = new[] {
-        ("", "همه", "dashboard"), ("due", "سررسید پرداخت", "clock"), ("returned", "برگشتی از مالی", "return"),
+        ("", "همه", "dashboard"), ("due", "سررسید پرداخت", "clock"), ("returned", "برگشتی", "return"),
         ("document", "در انتظار سند", "file"), ("kardex", "کارتکس ثبت‌نشده", "archive"), ("paid", "پرداخت‌شده", "check"),
-        ("ready", "آماده تحویل", "check"), ("delivered", "تحویل‌شده", "archive"), ("closed", "بسته‌شده", "check")
+        ("tax-pending", "در انتظار مالیات", "file"), ("ready", "آماده تحویل", "check"), ("delivered", "تحویل‌شده", "archive"), ("closed", "بسته‌شده", "check")
     };
 }
 <header class="hero">
@@ -23,7 +23,7 @@
         <a class="alert-tile" asp-page="/Index" asp-route-Status="kardex-late"><img src="/icon3d/clock.webp" width="48" height="48" alt=""><strong>@alerts.LateKardex</strong><span>کارتکس عقب‌افتاده</span></a>
         <a class="alert-tile" asp-page="/Index" asp-route-Status="kardex-current"><img src="/icon3d/notebook.webp" width="48" height="48" alt=""><strong>@alerts.CurrentKardex</strong><span>کارتکس این ماه</span></a>
         <a class="alert-tile" asp-page="/Index" asp-route-Status="due"><img src="/icon3d/money-bag.webp" width="48" height="48" alt=""><strong>@alerts.DuePayments</strong><span>پرداخت تا ۷ روز آینده</span></a>
-        <a class="alert-tile" asp-page="/Index" asp-route-Status="returned"><img src="/icon3d/folder.webp" width="48" height="48" alt=""><strong>@alerts.Returned</strong><span>برگشتی از مالی</span></a>
+        <a class="alert-tile" asp-page="/Index" asp-route-Status="returned"><img src="/icon3d/folder.webp" width="48" height="48" alt=""><strong>@alerts.Returned</strong><span>برگشتی از مالی یا معاونت</span></a>
         <a class="alert-tile" asp-page="/Index" asp-route-Status="document"><img src="/icon3d/file-text.webp" width="48" height="48" alt=""><strong>@alerts.Unnumbered</strong><span>در انتظار شماره سند</span></a>
     </section>
 }
@@ -31,7 +31,7 @@
 {
     <section class="card activity-preview"><div class="actions between"><h2>تازه‌ترین کارهای آماد</h2><a class="button quiet" asp-page="/Activity">همه اطلاعیه‌ها</a></div>
         @foreach (var item in Model.Activity)
-        { <a href="@item.TargetUrl"><img src="/icon3d/@(item.Icon).webp" width="29" height="29" alt=""><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></a> }
+        { <a asp-page="/ActivityDetail" asp-route-id="@item.Id"><img src="/icon3d/@(item.Icon).webp" width="29" height="29" alt=""><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></a> }
     </section>
 }
 <section class="card">

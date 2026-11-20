@@ -40,7 +40,11 @@ public sealed partial class Store
                 break;
             case "deliver":
                 sql = "UPDATE invoices i SET delivery_state='delivered' WHERE id=$1 AND delivery_state IN ('open','returned') AND " + ReadyConditions;
-                message = "ثبت تحویل به مالی";
+                message = "ثبت تحویل یا ارسال مجدد سند";
+                break;
+            case "send-deputy":
+                sql = "UPDATE invoices SET review_stage='deputy' WHERE id=$1 AND delivery_state='delivered' AND review_stage='finance'";
+                message = "ارسال سند از مالی به معاونت";
                 break;
             case "require-proxy":
             case "clear-proxy":
@@ -49,13 +53,17 @@ public sealed partial class Store
                     : "UPDATE invoices SET proxy_required=false WHERE id=$1 AND kind='credit' AND paid_at IS NOT NULL AND delivery_state IN ('open','returned')";
                 message = action == "require-proxy" ? "ثبت نیاز به نیابتی" : "رفع نیاز به نیابتی";
                 break;
-            case "return":
-                sql = "UPDATE invoices SET delivery_state='returned' WHERE id=$1 AND delivery_state IN ('delivered','closed')";
-                message = "ثبت برگشت از مالی";
+            case "return-finance":
+                sql = "UPDATE invoices SET delivery_state='returned',review_stage='finance' WHERE id=$1 AND delivery_state='delivered' AND review_stage='finance'";
+                message = "ثبت برگشت سند از مالی";
+                break;
+            case "return-deputy":
+                sql = "UPDATE invoices SET delivery_state='returned',review_stage='deputy' WHERE id=$1 AND delivery_state='delivered' AND review_stage='deputy'";
+                message = "ثبت برگشت سند از معاونت";
                 break;
             case "close":
-                sql = "UPDATE invoices SET delivery_state='closed' WHERE id=$1 AND delivery_state='delivered'";
-                message = "تأیید مالی و بستن سند";
+                sql = "UPDATE invoices SET delivery_state='closed' WHERE id=$1 AND delivery_state='delivered' AND review_stage='deputy'";
+                message = "تأیید نهایی و بستن سند";
                 break;
             default: return "اقدام برای این حساب فعال نیست.";
         }

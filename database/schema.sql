@@ -42,6 +42,7 @@ CREATE INDEX IF NOT EXISTS invoices_recent ON invoices(invoice_date DESC, id DES
 CREATE INDEX IF NOT EXISTS invoices_due ON invoices(invoice_date, id) WHERE paid_at IS NULL AND kind='credit';
 CREATE INDEX IF NOT EXISTS invoices_document_queue ON invoices(id) WHERE document_number IS NULL;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS pos_in_invoice boolean NOT NULL DEFAULT false;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS review_stage text NOT NULL DEFAULT 'finance';
 
 CREATE TABLE IF NOT EXISTS invoice_lines (
     invoice_id bigint NOT NULL REFERENCES invoices(id),
@@ -179,6 +180,18 @@ CREATE TABLE IF NOT EXISTS product_aliases (
     updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY(invoice_title,invoice_unit)
 );
+ALTER TABLE product_aliases ADD COLUMN IF NOT EXISTS vendor text NOT NULL DEFAULT '';
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid='product_aliases'::regclass
+               AND conname='product_aliases_pkey' AND array_length(conkey,1)=2) THEN
+        ALTER TABLE product_aliases DROP CONSTRAINT product_aliases_pkey;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid='product_aliases'::regclass
+                   AND conname='product_aliases_pkey') THEN
+        ALTER TABLE product_aliases ADD CONSTRAINT product_aliases_pkey
+            PRIMARY KEY(invoice_title,invoice_unit,vendor);
+    END IF;
+END $$;
 CREATE TABLE IF NOT EXISTS invoice_product_matches (
     invoice_id bigint NOT NULL,
     position integer NOT NULL,
@@ -207,6 +220,18 @@ CREATE TABLE IF NOT EXISTS stock_issue_lines (
     stock_before numeric(12,3) NOT NULL,
     PRIMARY KEY(issue_id,position)
 );
+ALTER TABLE stock_issues ADD COLUMN IF NOT EXISTS state text NOT NULL DEFAULT 'active';
+CREATE TABLE IF NOT EXISTS stock_issue_returns (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    submission_id uuid NOT NULL UNIQUE,
+    issue_id bigint NOT NULL REFERENCES stock_issues(id),
+    position integer NOT NULL,
+    quantity numeric(12,3) NOT NULL CHECK(quantity>0),
+    return_date date NOT NULL,
+    actor_id bigint NOT NULL REFERENCES staff(id),
+    FOREIGN KEY(issue_id,position) REFERENCES stock_issue_lines(issue_id,position)
+);
+CREATE INDEX IF NOT EXISTS stock_issue_returns_line ON stock_issue_returns(issue_id,position);
 CREATE INDEX IF NOT EXISTS stock_issues_recent ON stock_issues(issue_date DESC,id DESC);
 CREATE TABLE IF NOT EXISTS stock_events (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -273,6 +298,8 @@ CREATE TABLE IF NOT EXISTS petty_advances (
     created_by bigint NOT NULL REFERENCES staff(id),
     created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE petty_advances ADD COLUMN IF NOT EXISTS state text NOT NULL DEFAULT 'active';
+ALTER TABLE petty_receipts ADD COLUMN IF NOT EXISTS advance_number bigint UNIQUE REFERENCES petty_advances(number);
 INSERT INTO counters(name) VALUES ('petty-invoice') ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS bank_checks (
@@ -286,6 +313,8 @@ CREATE TABLE IF NOT EXISTS bank_checks (
     recipient text NOT NULL,
     created_by bigint NOT NULL REFERENCES staff(id)
 );
+ALTER TABLE bank_checks ADD COLUMN IF NOT EXISTS prepayment_number bigint REFERENCES prepayments(number);
+CREATE INDEX IF NOT EXISTS bank_checks_prepayment ON bank_checks(prepayment_number) WHERE prepayment_number IS NOT NULL;
 CREATE INDEX IF NOT EXISTS bank_checks_recent ON bank_checks(check_date DESC,id DESC);
 
 CREATE TABLE IF NOT EXISTS suppliers (

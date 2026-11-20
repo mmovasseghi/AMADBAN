@@ -1,0 +1,12 @@
+@page "{id:long}"
+@model Amadban.Pages.ActivityDetailModel
+@{ ViewData["Title"]="جزئیات اطلاعیه"; }
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/@(Model.Item.Icon).webp" width="82" height="82" alt=""></span>
+    <div><div class="eyebrow">ثبت فعالیت آماد</div><h1>@Model.Item.Title</h1><p>@Model.Item.Summary</p></div></div></header>
+<section class="card"><h2>جزئیات رویداد</h2><dl>
+    <dt>انجام‌دهنده</dt><dd>@Model.Item.Actor</dd>
+    <dt>نقش</dt><dd>@(Model.Item.Role switch { "chief"=>"رئیس آماد", "agent"=>"افسرعامل", "warehouse"=>"انباردار", "kardex"=>"کارتکس", _=>Model.Item.Role })</dd>
+    <dt>زمان</dt><dd>@Persian.Time(Model.Item.At)</dd>
+    <dt>شرح ثبت‌شده</dt><dd>@Model.Item.Summary</dd>
+</dl><div class="actions"><a class="button primary" href="@Model.Item.TargetUrl">رفتن به بخش مربوط</a>
+    <a class="button" asp-page="/Activity">بازگشت به اطلاعیه‌ها</a></div></section>

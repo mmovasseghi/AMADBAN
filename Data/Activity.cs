@@ -46,6 +46,19 @@ public sealed partial class Store
         return result;
     }
 
+    public async Task<ActivityItem?> ActivityDetailAsync(long id)
+    {
+        await using var conn=await source.OpenConnectionAsync();
+        await using var cmd=Command(conn,null,"""
+            SELECT a.id,a.title,a.summary,s.display_name,s.role,a.occurred_at,a.target_kind,a.target_id
+            FROM activity_feed a JOIN staff s ON s.id=a.actor_id WHERE a.id=$1
+            """,id);
+        await using var reader=await cmd.ExecuteReaderAsync();
+        return await reader.ReadAsync()?new(reader.GetInt64(0),reader.GetString(1),reader.GetString(2),
+            reader.GetString(3),reader.GetString(4),reader.GetDateTime(5),reader.GetString(6),
+            reader.IsDBNull(7)?null:reader.GetInt64(7)):null;
+    }
+
     public async Task<long> UnreadActivityAsync(long chief)
     {
         await using var conn = await source.OpenConnectionAsync();

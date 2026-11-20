@@ -23,7 +23,7 @@ public sealed class BankModel(Store store) : PageModel
     }
 
     public async Task<IActionResult> OnPostAsync(string? sayad, string? account, string? bank, string? branch,
-        string? date, string? amount, string? recipient)
+        string? date, string? amount, string? recipient, long prepayment)
     {
         sayad = Persian.Latin(sayad).Replace(" ", "");
         account = Persian.Latin(account);
@@ -35,7 +35,21 @@ public sealed class BankModel(Store store) : PageModel
             Persian.ParseDate(date) is not DateOnly day ||
             !long.TryParse(Persian.Latin(amount).Replace(",", "").Replace("٬", ""), out var value) || value is <= 0 or > 1_000_000_000_000_000L
             ? "شناسه صیاد ۱۶ رقمی و اطلاعات چک را بررسی کنید."
-            : await store.SaveCheckAsync(sayad, account, bank, branch, day, value, recipient, Actor);
+            : await store.SaveCheckAsync(sayad, account, bank, branch, day, value, recipient, Actor,prepayment);
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostCorrectAsync(long id,string? sayad,string? account,string? bank,string? branch,
+        string? date,string? amount,string? recipient,long prepayment)
+    {
+        sayad=Persian.Latin(sayad).Replace(" ","");account=Persian.Latin(account).Trim();
+        bank=bank?.Trim()??"";branch=branch?.Trim()??"";recipient=recipient?.Trim()??"";
+        Message=id<=0 || sayad.Length!=16 || sayad.Any(c=>!char.IsAsciiDigit(c)) || account.Length is <1 or >50 ||
+            bank.Length is <1 or >80 || branch.Length is <1 or >80 || recipient.Length is <1 or >150 ||
+            Persian.ParseDate(date) is not DateOnly day ||
+            !long.TryParse(Persian.Latin(amount).Replace(",","").Replace("٬",""),out var value) || value is <=0 or >1_000_000_000_000_000L
+            ? "مشخصات چک را بررسی کنید."
+            : await store.CorrectCheckAsync(id,sayad,account,bank,branch,day,value,recipient,prepayment,Actor);
         return RedirectToPage();
     }
 }

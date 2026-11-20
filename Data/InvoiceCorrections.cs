@@ -24,6 +24,7 @@ public sealed partial class Store
         }
 
         var total = entry.Lines.Sum(x => x.Amount);
+        var preservedMatches = new List<(int Position,long Product)>();
         if (await Scalar(conn, tx, "SELECT id FROM warehouse_receipts WHERE invoice_id=$1 AND state='active'", id) is not null)
         {
             var stockedLines = new List<(string Title, string Unit, decimal Quantity)>();
@@ -37,6 +38,10 @@ public sealed partial class Store
                 stockedLines.Where((line, position) => line.Title != entry.Lines[position].Title ||
                     line.Unit != entry.Lines[position].Unit || line.Quantity != entry.Lines[position].Quantity).Any())
                 return "اقلام به انبار وارد شده‌اند. ابتدا در پرونده، ورود انبار را برگردانید و پس از اصلاح فاکتور دوباره ثبت کنید.";
+            await using var matches = Command(conn, tx,
+                "SELECT position,product_id FROM invoice_product_matches WHERE invoice_id=$1 ORDER BY position", id);
+            await using var rows = await matches.ExecuteReaderAsync();
+            while (await rows.ReadAsync()) preservedMatches.Add((rows.GetInt32(0),rows.GetInt64(1)));
         }
         if (issued && kind != entry.Kind) return "نوع پرداخت سند صادرشده ثابت است.";
         var prepayment = await FindPrepayment(conn, tx, id, byInvoice: true);
@@ -55,6 +60,10 @@ public sealed partial class Store
             entry.Warehouse, entry.Meeting, entry.Account, entry.Tax, total, entry.CashCredit);
         await Exec(conn, tx, "DELETE FROM invoice_lines WHERE invoice_id=$1", id);
         await AddLines(conn, tx, id, entry.Lines);
+        foreach (var match in preservedMatches)
+            await Exec(conn, tx,
+                "INSERT INTO invoice_product_matches(invoice_id,position,product_id) VALUES($1,$2,$3)",
+                id, match.Position, match.Product);
         await Event(conn, tx, id, actor, "اصلاح فاکتور و مدارک لازم");
         await tx.CommitAsync();
         return null;

@@ -6,10 +6,11 @@
         const copies = copiesInput ? Math.max(1, Math.min(12, parseInt(copiesInput.value, 10) || 1)) : 1;
         const clones = [];
         if (copies > 1) {
-            const original = document.querySelector('article');
+            const documentPage = document.querySelector('.document-print-page');
+            const original = documentPage || document.querySelector('article');
             for (let copy = 1; copy < copies; copy++) {
-                const clone = original.cloneNode(true);
-                clone.classList.add('print-copy');
+                const clone = documentPage ? document.createElement('div') : original.cloneNode(true);
+                clone.classList.add(documentPage ? 'document-print-spacer' : 'print-copy');
                 document.body.appendChild(clone);
                 clones.push(clone);
             }
@@ -20,6 +21,19 @@
         // Some older browsers do not fire afterprint reliably.
         setTimeout(cleanup, 30000);
     });
+
+    const fitDocumentPrint = () => {
+        const pages = document.querySelectorAll('.document-print-page');
+        if (!pages.length) return;
+        const available = 165 * 96 / 25.4;
+        pages.forEach(page => {
+            const sheet = page.querySelector('.document-sheet');
+            sheet.style.removeProperty('--document-print-scale');
+            const height = sheet.scrollHeight;
+            sheet.style.setProperty('--document-print-scale', String(Math.min(1, available / Math.max(height, 1))));
+        });
+    };
+    window.addEventListener('beforeprint', fitDocumentPrint);
 
     const notificationBadge = document.querySelector('[data-notification-badge]');
     if (notificationBadge) setInterval(async () => {

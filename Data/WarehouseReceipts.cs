@@ -9,10 +9,13 @@ public sealed partial class Store
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
             SELECT l.position,l.title,l.unit,l.quantity,p.code,p.name
-            FROM invoice_lines l LEFT JOIN invoice_product_matches m
+            FROM invoice_lines l JOIN invoices i ON i.id=l.invoice_id
+            LEFT JOIN invoice_product_matches m
                 ON m.invoice_id=l.invoice_id AND m.position=l.position
-            LEFT JOIN product_aliases a ON a.invoice_title=l.title AND a.invoice_unit=l.unit
-            LEFT JOIN products p ON p.id=coalesce(m.product_id,a.product_id,
+            LEFT JOIN product_aliases a ON a.invoice_title=l.title AND a.invoice_unit=l.unit AND a.vendor=i.vendor
+            LEFT JOIN product_aliases old_alias ON old_alias.invoice_title=l.title
+                AND old_alias.invoice_unit=l.unit AND old_alias.vendor=''
+            LEFT JOIN products p ON p.id=coalesce(m.product_id,a.product_id,old_alias.product_id,
                 (SELECT exact.id FROM products exact WHERE lower(exact.name)=lower(l.title)
                  AND exact.unit=l.unit ORDER BY exact.id LIMIT 1))
             WHERE l.invoice_id=$1 ORDER BY l.position
@@ -29,10 +32,11 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
-        if (await Scalar(conn, tx, """
-            SELECT id FROM invoices WHERE id=$1 AND warehouse_required AND document_number IS NOT NULL
+        var vendor = await Scalar(conn, tx, """
+            SELECT vendor FROM invoices WHERE id=$1 AND warehouse_required AND document_number IS NOT NULL
               AND delivery_state IN ('open','returned') FOR UPDATE
-            """, invoice) is null) return "سند انباری باز و شماره‌دار پیدا نشد.";
+            """, invoice) as string;
+        if (vendor is null) return "سند انباری باز و شماره‌دار پیدا نشد.";
         if (await Scalar(conn, tx, "SELECT id FROM warehouse_receipts WHERE invoice_id=$1 AND state='active'", invoice) is not null)
             return "ورود اقلام این سند قبلاً ثبت شده است.";
         if (await Scalar(conn, tx, "SELECT id FROM stock_events WHERE invoice_id=$1 AND receipt_id IS NULL LIMIT 1", invoice) is not null)
@@ -64,9 +68,10 @@ public sealed partial class Store
             else productId = await Scalar(conn, tx, """
                 SELECT p.id FROM products p LEFT JOIN product_aliases a
                     ON a.product_id=p.id AND a.invoice_title=$1 AND a.invoice_unit=$2
+                       AND a.vendor IN ($3,'')
                 WHERE p.unit=$2 AND (a.product_id IS NOT NULL OR lower(p.name)=lower($1))
-                ORDER BY (a.product_id IS NOT NULL) DESC,p.id LIMIT 1 FOR UPDATE OF p
-                """, line.Title, line.Unit) as long?;
+                ORDER BY (a.vendor=$3) DESC NULLS LAST,(a.product_id IS NOT NULL) DESC,p.id LIMIT 1 FOR UPDATE OF p
+                """, line.Title, line.Unit, vendor) as long?;
             decimal before;
             if (productId is null)
             {
@@ -85,10 +90,10 @@ public sealed partial class Store
                 ON CONFLICT(invoice_id,position) DO UPDATE SET product_id=excluded.product_id
                 """, invoice,line.Position,productId.Value);
             await Exec(conn, tx, """
-                INSERT INTO product_aliases(invoice_title,invoice_unit,product_id,actor_id)
-                VALUES($1,$2,$3,$4) ON CONFLICT(invoice_title,invoice_unit)
+                INSERT INTO product_aliases(invoice_title,invoice_unit,vendor,product_id,actor_id)
+                VALUES($1,$2,$3,$4,$5) ON CONFLICT(invoice_title,invoice_unit,vendor)
                 DO UPDATE SET product_id=excluded.product_id,actor_id=excluded.actor_id,updated_at=now()
-                """,line.Title,line.Unit,productId.Value,actor);
+                """,line.Title,line.Unit,vendor,productId.Value,actor);
             await Exec(conn, tx, """
                 INSERT INTO stock_events(submission_id,product_id,invoice_id,kind,delta,department,event_date,actor_id,before_quantity,receipt_id)
                 VALUES($1,$2,$3,'in',$4,'ورود اقلام سند',$5,$6,$7,$8)

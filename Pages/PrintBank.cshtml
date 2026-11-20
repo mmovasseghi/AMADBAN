@@ -31,7 +31,7 @@
     }
     else
     {
-        <p>شعبه محترم بانک سپه ـ تاریخ @Persian.Date(Persian.Today)</p>
+        <p>@(Model.Checks.Select(c => c.Bank).Distinct().Count() == 1 ? "شعبه محترم بانک " + Model.Checks[0].Bank : "شعب محترم بانک‌های مربوط") ـ تاریخ @Persian.Date(Persian.Today)</p>
         <p>با احترام، بیمارستان امام سجاد (ع) فراجا درخواست ثبت @Model.Checks.Count فقره چک با مشخصات زیر در سامانه صیاد را دارد.</p>
         <table>
             <thead><tr><th>ردیف</th><th>شناسه صیاد</th><th>شماره حساب</th><th>بانک و شعبه</th><th>تاریخ</th><th>مبلغ ریالی</th><th>در وجه</th></tr></thead>

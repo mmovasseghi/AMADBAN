@@ -1,7 +1,7 @@
 namespace Amadban.Data;
 
 public sealed record PettyAdvance(long Number,long InvoiceNumber,DateOnly Date,long Amount,string Owner,string Bank,
-    string Sheba,string Description,string Actor);
+    string Sheba,string Description,string Actor,string State,bool Received);
 
 public sealed partial class Store
 {
@@ -43,25 +43,57 @@ public sealed partial class Store
     {
         await using var conn=await source.OpenConnectionAsync();
         await using var cmd=Command(conn,null,"""
-            SELECT p.number,p.manual_invoice_number,p.advance_date,p.amount,p.owner,p.bank,p.sheba,p.description,s.display_name
+            SELECT p.number,p.manual_invoice_number,p.advance_date,p.amount,p.owner,p.bank,p.sheba,p.description,s.display_name,p.state,
+              EXISTS(SELECT 1 FROM petty_receipts r WHERE r.advance_number=p.number)
             FROM petty_advances p JOIN staff s ON s.id=p.created_by WHERE p.number=$1
             """,number);
         await using var r=await cmd.ExecuteReaderAsync();
         return await r.ReadAsync()?new(r.GetInt64(0),r.GetInt64(1),r.GetFieldValue<DateOnly>(2),r.GetInt64(3),
-            r.GetString(4),r.GetString(5),r.GetString(6),r.GetString(7),r.GetString(8)):null;
+            r.GetString(4),r.GetString(5),r.GetString(6),r.GetString(7),r.GetString(8),r.GetString(9),r.GetBoolean(10)):null;
     }
 
     public async Task<List<PettyAdvance>> RecentPettyAdvancesAsync()
     {
         await using var conn=await source.OpenConnectionAsync();
         await using var cmd=Command(conn,null,"""
-            SELECT p.number,p.manual_invoice_number,p.advance_date,p.amount,p.owner,p.bank,p.sheba,p.description,s.display_name
+            SELECT p.number,p.manual_invoice_number,p.advance_date,p.amount,p.owner,p.bank,p.sheba,p.description,s.display_name,p.state,
+              EXISTS(SELECT 1 FROM petty_receipts r WHERE r.advance_number=p.number)
             FROM petty_advances p JOIN staff s ON s.id=p.created_by ORDER BY p.number DESC LIMIT 20
             """);
         await using var r=await cmd.ExecuteReaderAsync();
         var rows=new List<PettyAdvance>();
         while(await r.ReadAsync()) rows.Add(new(r.GetInt64(0),r.GetInt64(1),r.GetFieldValue<DateOnly>(2),r.GetInt64(3),
-            r.GetString(4),r.GetString(5),r.GetString(6),r.GetString(7),r.GetString(8)));
+            r.GetString(4),r.GetString(5),r.GetString(6),r.GetString(7),r.GetString(8),r.GetString(9),r.GetBoolean(10)));
         return rows;
+    }
+
+    public async Task<string> CorrectPettyAdvanceAsync(long number,DateOnly day,long amount,string owner,
+        string bank,string sheba,string description,long actor,bool chief)
+    {
+        await using var conn=await source.OpenConnectionAsync();
+        await using var tx=await conn.BeginTransactionAsync();
+        var changed=await Exec(conn,tx,"""
+            UPDATE petty_advances SET advance_date=$2,amount=$3,owner=$4,bank=$5,sheba=$6,description=$7
+            WHERE number=$1 AND state='active' AND ($9 OR created_by=$8)
+              AND NOT EXISTS(SELECT 1 FROM petty_receipts r WHERE r.advance_number=$1)
+            """,number,day,amount,owner,bank,sheba,description,actor,chief);
+        if(changed!=1)return "برگه فعال و بدون دریافت مرتبط برای اصلاح پیدا نشد.";
+        await Activity(conn,tx,actor,"اصلاح پیش‌پرداخت تنخواه",$"شماره {number} · {Persian.Money(amount)} ریال", "petty");
+        await tx.CommitAsync();
+        return "پیش‌پرداخت تنخواه اصلاح شد؛ نسخه تازه را چاپ کنید.";
+    }
+
+    public async Task<string> VoidPettyAdvanceAsync(long number,long actor,bool chief)
+    {
+        await using var conn=await source.OpenConnectionAsync();
+        await using var tx=await conn.BeginTransactionAsync();
+        var changed=await Exec(conn,tx,"""
+            UPDATE petty_advances SET state='void' WHERE number=$1 AND state='active' AND ($3 OR created_by=$2)
+              AND NOT EXISTS(SELECT 1 FROM petty_receipts r WHERE r.advance_number=$1)
+            """,number,actor,chief);
+        if(changed!=1)return "برگه فعال و بدون دریافت مرتبط برای ابطال پیدا نشد.";
+        await Activity(conn,tx,actor,"ابطال پیش‌پرداخت تنخواه",$"شماره {number}","petty");
+        await tx.CommitAsync();
+        return "پیش‌پرداخت تنخواه باطل شد. شماره آن در سابقه می‌ماند.";
     }
 }

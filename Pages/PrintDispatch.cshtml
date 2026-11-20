@@ -7,12 +7,14 @@
     <link rel="stylesheet" href="~/print.css" asp-append-version="true"><link rel="stylesheet" href="~/portrait.css" asp-append-version="true">
     <script src="~/site.js" asp-append-version="true" defer></script></head>
 <body>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="2" min="1" max="12"></label>
     <button type="button" data-print>چاپ برگه A4</button><a asp-page="/Dispatch">بازگشت به خروج انبار</a><strong>یک نسخه امضاشده را در انبار نگه دارید.</strong></nav>
 <article>
     <header>@await Html.PartialAsync("_BrandMarks", true)<p>بسمه‌تعالی</p><h1>حواله خروج و تحویل کالا به بخش</h1>
         <p>بیمارستان فوق‌تخصصی امام سجاد (ع) فراجا · آماد و پشتیبانی</p></header>
     <section class="metadata"><span>شماره برگه <b>@Model.Issue.Number</b></span><span>تاریخ <bdi>@Persian.Date(Model.Issue.Date)</bdi></span>
+        @if (Model.Issue.State != "active") { <span><b>باطل شده ـ اقلام به موجودی برگشته‌اند</b></span> }
         <span>بخش مقصد <b>@Model.Issue.Department</b></span><span>تحویل‌گیرنده <b>@Model.Issue.Recipient</b></span>
         @if (Model.Issue.RecipientPosition.Length > 0) { <span>سمت <b>@Model.Issue.RecipientPosition</b></span> }
         <span>انباردار <b>@Model.Issue.Warehouse</b></span></section>
@@ -26,4 +28,23 @@
         <div><b>تحویل‌گیرنده بخش @Model.Issue.Department</b><p>@Model.Issue.Recipient</p><p>نام، امضا و تاریخ</p></div></section>
     <p>نسخه امضاشده این برگه در بایگانی انبار نگهداری شود.</p>
 </article>
+@if (Model.Issue.State == "active")
+{
+<section class="print-controls dispatch-return-controls"><div><strong>اصلاح یا برگشت کالا از بخش</strong>
+    <p>برگشت هر قلم موجودی را افزایش می‌دهد. برای برگه اشتباه، همه مانده اقلام را برگردانید و برگه درست را دوباره ثبت کنید.</p></div>
+    <form method="post" asp-page-handler="Return" asp-route-number="@Model.Issue.Number">
+        <input type="hidden" name="submission" value="@Model.Submission"><input type="hidden" name="position" value="0">
+        <label>تاریخ برگشت<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
+        <button type="submit">ابطال برگه و برگشت همه مانده</button></form>
+    @for (var i=0;i<Model.Issue.Lines.Count;i++) { var line=Model.Issue.Lines[i];
+        if (line.Remaining <= 0) continue;
+        <form method="post" asp-page-handler="Return" asp-route-number="@Model.Issue.Number">
+            <input type="hidden" name="submission" value="@Guid.NewGuid()"><input type="hidden" name="position" value="@(i+1)">
+            <span>@line.Name · مانده نزد بخش @line.Remaining.ToString("0.###") @line.Unit</span>
+            <label>تعداد برگشتی<input name="quantity" inputmode="decimal" required></label>
+            <label>تاریخ<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
+            <button type="submit">ثبت برگشت</button></form>
+    }
+</section>
+}
 </body></html>

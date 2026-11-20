@@ -10,7 +10,7 @@ public sealed record WarehouseReportOverview(long Dispatches, long Departments, 
 public sealed partial class Store
 {
     private const string DispatchFilter = """
-        WHERE i.issue_date BETWEEN $1 AND $2 AND ($3::bigint=0 OR i.department_id=$3)
+        WHERE i.state='active' AND i.issue_date BETWEEN $1 AND $2 AND ($3::bigint=0 OR i.department_id=$3)
           AND ($4='' OR EXISTS(SELECT 1 FROM stock_issue_lines found
               JOIN products match_product ON match_product.id=found.product_id
               WHERE found.issue_id=i.id AND strpos(lower(match_product.name || ' ' || match_product.code),lower($4))>0))
@@ -33,11 +33,14 @@ public sealed partial class Store
         }
         var usage = new List<DepartmentUsage>();
         await using (var cmd = Command(conn, null, """
-            SELECT d.name,p.name,p.code,p.unit,sum(l.quantity),count(DISTINCT i.id)
+            SELECT d.name,p.name,p.code,p.unit,sum(l.quantity-coalesce(returned.quantity,0)),count(DISTINCT i.id)
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN stock_issue_lines l ON l.issue_id=i.id JOIN products p ON p.id=l.product_id
+            LEFT JOIN LATERAL (SELECT sum(r.quantity) quantity FROM stock_issue_returns r
+                WHERE r.issue_id=l.issue_id AND r.position=l.position) returned ON true
             """ + " " + DispatchFilter + """
               AND ($4='' OR strpos(lower(p.name || ' ' || p.code),lower($4))>0)
+              AND l.quantity>coalesce(returned.quantity,0)
             GROUP BY d.name,p.name,p.code,p.unit ORDER BY d.name,p.name,p.code LIMIT 150
             """, args))
         await using (var reader = await cmd.ExecuteReaderAsync())
@@ -68,17 +71,20 @@ public sealed partial class Store
         await using var conn = await source.OpenConnectionAsync(cancellation);
         await using var cmd = Command(conn, null, """
             SELECT i.number,i.issue_date,d.name,recipient.name,warehouse.display_name,
-                   p.code,p.name,p.unit,l.quantity,i.note
+                   p.code,p.name,p.unit,l.quantity-coalesce(returned.quantity,0),i.note
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN people recipient ON recipient.id=i.recipient_id
             JOIN staff warehouse ON warehouse.id=i.warehouse_person_id
             JOIN stock_issue_lines l ON l.issue_id=i.id JOIN products p ON p.id=l.product_id
+            LEFT JOIN LATERAL (SELECT sum(r.quantity) quantity FROM stock_issue_returns r
+                WHERE r.issue_id=l.issue_id AND r.position=l.position) returned ON true
             """ + " " + DispatchFilter + """
               AND ($4='' OR strpos(lower(p.name || ' ' || p.code),lower($4))>0)
+              AND l.quantity>coalesce(returned.quantity,0)
             ORDER BY i.issue_date DESC,i.id DESC,l.position
             """, from, to, department, search);
         await using var reader = await cmd.ExecuteReaderAsync(cancellation);
-        await output.WriteLineAsync("شماره حواله,تاریخ,بخش,تحویل‌گیرنده,انباردار,کد کالا,نام کالا,واحد,تعداد,یادداشت".AsMemory(), cancellation);
+        await output.WriteLineAsync("شماره حواله,تاریخ,بخش,تحویل‌گیرنده,انباردار,کد کالا,نام کالا,واحد,خالص تعداد نزد بخش,یادداشت".AsMemory(), cancellation);
         while (await reader.ReadAsync(cancellation))
         {
             var values = new[] { reader.GetInt64(0).ToString(CultureInfo.InvariantCulture),

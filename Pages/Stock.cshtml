@@ -9,6 +9,14 @@
 {
     <section class="card">
         <h2>@product.Name · @product.Stock.ToString("0.###") @product.Unit</h2>
+        <details><summary>اصلاح مشخصات این کالا</summary><form method="post" asp-page-handler="CorrectProduct" class="filters">
+            <input type="hidden" name="id" value="@product.Id">
+            <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
+            <label>نام کالا<input name="name" value="@product.Name" required maxlength="150"></label>
+            <label>واحد<input name="unit" value="@product.Unit" required maxlength="30"></label>
+            <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
+            <button type="submit" class="button">ذخیره مشخصات</button>
+        </form></details>
         <form method="post" asp-page-handler="Move" class="filters">
             <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
             <label>نوع گردش<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>

@@ -102,6 +102,7 @@ public sealed partial class Store
             VALUES(NULLIF($1,0),$2,$3,$4,CASE WHEN $1=0 THEN NULL ELSE $5 END,$6)
             """, from, to, amount, actor, sourceBefore, destinationBefore.Value);
         var verb = from > 0 ? "انتقال اعتبار" : "افزایش اعتبار";
+        await Activity(conn,tx,actor,verb,$"مبلغ {Persian.Money(amount)} ریال · مبدأ {from} · مقصد {to}","credit");
         await NotifyChief(conn, tx, actor, role, verb + " به مبلغ " + Persian.Money(amount) + " ریال");
         await tx.CommitAsync();
         return verb + " ثبت شد.";

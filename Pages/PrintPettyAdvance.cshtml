@@ -7,19 +7,23 @@
 <script src="~/site.js" asp-append-version="true" defer></script></head><body>
 <nav class="print-controls"><label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
     <button type="button" data-print>چاپ پیش‌پرداخت تنخواه A4</button><a asp-page="/Petty">بازگشت به تنخواه</a></nav>
-<article class="prepayment-sheet"><header>@await Html.PartialAsync("_BrandMarks",true)<p>بسمه‌تعالی</p><h1>پیش‌پرداخت تنخواه</h1>
+<article class="prepayment-sheet"><header>@await Html.PartialAsync("_BrandMarks",true)<p>بسمه‌تعالی</p><h1>پیش‌پرداخت تنخواه @(a.State=="void" ? "ـ باطل‌شده" : "")</h1>
     <p>بیمارستان فوق تخصصی امام سجاد (ع) فراجا</p></header>
     <section class="metadata"><span>شماره پیش‌پرداخت <b>@a.Number</b></span><span>تاریخ <bdi>@Persian.Date(a.Date)</bdi></span>
         <span>شماره فاکتور تنخواه <b>@a.InvoiceNumber</b></span></section>
+    @if (a.State=="void") { <p class="void-print-warning">این برگه باطل شده و برای پرداخت معتبر نیست.</p> }
     <p>با احترام خواهشمند است مقرر فرمایید مدیریت مالی برای شارژ تنخواه افسرعامل به شرح زیر اقدام نماید.</p>
     <table><tbody><tr><th>برنامه / طرح</th><td>افسر عاملی</td></tr><tr><th>بابت</th><td>@a.Description</td></tr>
         <tr><th>دروجه شماره شبا</th><td><bdi>@a.Sheba</bdi></td></tr><tr><th>بانک</th><td>@a.Bank</td></tr>
         <tr><th>به نام</th><td>@a.Owner</td></tr><tr><th>مبلغ به عدد</th><td>@Persian.Money(a.Amount) ریال</td></tr>
         <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(a.Amount) ریال</td></tr><tr><th>شماره سند</th><td>—</td></tr></tbody></table>
+    <p>پرداخت مبلغ درج‌شده با آگاهی و دستور مقام مجاز انجام می‌شود.</p>
     <section class="signatures"><div>تقاضای هزینه<p>@signers.GetValueOrDefault("petty_authorizer")</p></div>
         <div>گواهی مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div></section>
     <section class="signatures"><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
         <div>اعتبارات<p>@signers.GetValueOrDefault("credit_officer")</p></div>
-        <div>حسابداری<p>@signers.GetValueOrDefault("accounting")</p></div>
-        <div>افسرعامل پرداخت<p>@signers.GetValueOrDefault("agent")</p></div></section>
+        <div>حسابداری<p>@signers.GetValueOrDefault("accounting")</p></div></section>
+    <section class="prepayment-declaration"><h2>حواله وجه</h2><p>مبلغ فوق طبق چک شماره ..................... در وجه ..................... حواله یا پرداخت شد.</p>
+        <h2>گواهی دریافت و تعهد افسرعامل</h2><p>متعهد می‌شوم وجه دریافت‌شده برابر قوانین و مقررات مربوط هزینه و اسناد آن را تحویل دهم.</p>
+        <p>نام، درجه/رتبه و امضای افسرعامل: @signers.GetValueOrDefault("agent")</p></section>
 </article></body></html>

@@ -20,6 +20,7 @@ public sealed partial class Store
         await Exec(conn, tx, "UPDATE staff SET password_hash=$2,security_stamp=gen_random_uuid() WHERE id=$1",
             id, Passwords.HashPassword(username, password));
         await Exec(conn, tx, "INSERT INTO staff_events(actor_id,target_id,action) VALUES($1,$2,'reset-password')", actor, id);
+        await Activity(conn,tx,actor,"رمز حساب کاربری بازنشانی شد",$"شناسه کاربر {id}","staff",id);
         await tx.CommitAsync();
         return "رمز تازه ثبت شد؛ نشست‌های قبلی این حساب پایان یافتند.";
     }
@@ -45,6 +46,7 @@ public sealed partial class Store
         await Exec(conn, tx, "UPDATE staff SET active=$2,security_stamp=gen_random_uuid() WHERE id=$1", id, active);
         await Exec(conn, tx, "INSERT INTO staff_events(actor_id,target_id,action) VALUES($1,$2,$3)",
             actor, id, active ? "activate" : "deactivate");
+        await Activity(conn,tx,actor,active?"حساب کاربری فعال شد":"حساب کاربری غیرفعال شد",$"شناسه کاربر {id}","staff",id);
         await tx.CommitAsync();
         return active ? "حساب فعال شد." : "حساب غیرفعال شد و نشست‌های آن پایان یافتند.";
     }

@@ -13,6 +13,10 @@
         <label>شماره رسید<input name="number" maxlength="80" required></label>
         <label>تاریخ دریافت<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
         <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
+        <label>برگه پیش‌پرداخت مرتبط (اختیاری)<select name="advanceNumber"><option value="0">بدون برگه مرتبط</option>
+            @foreach (var advance in Model.Advances.Where(x => x.State == "active" && !x.Received && (Model.IsChief || x.Actor == User.Identity!.Name)))
+            { <option value="@advance.Number">شماره @advance.Number · @Persian.Money(advance.Amount) ریال · @advance.Actor</option> }
+        </select></label>
         <button class="button primary" type="submit">ثبت دریافت</button>
     </form>
 </section>
@@ -35,9 +39,23 @@
     </section>
 }
 @if (Model.Advances.Count>0) { <section class="card"><h2>پیش‌پرداخت‌های تنخواه اخیر</h2>
-    <div class="table-wrap"><table><thead><tr><th>شماره پیش‌پرداخت</th><th>شماره فاکتور</th><th>تاریخ</th><th>مبلغ</th><th>چاپ</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>شماره پیش‌پرداخت</th><th>شماره فاکتور</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>چاپ / اصلاح</th></tr></thead><tbody>
     @foreach (var advance in Model.Advances) { <tr><td>@advance.Number</td><td>@advance.InvoiceNumber</td><td>@Persian.Date(advance.Date)</td>
-        <td>@Persian.Money(advance.Amount) ریال</td><td><a asp-page="/PrintPettyAdvance" asp-route-number="@advance.Number">بازکردن برگه</a></td></tr> }
+        <td>@Persian.Money(advance.Amount) ریال</td><td>@(advance.State == "void" ? "باطل" : advance.Received ? "دریافت شده" : "در انتظار دریافت")</td>
+        <td><a asp-page="/PrintPettyAdvance" asp-route-number="@advance.Number">بازکردن برگه</a>
+            @if (!Model.IsChief && advance.State == "active" && !advance.Received && advance.Actor == User.Identity!.Name)
+            { <details><summary>اصلاح یا ابطال</summary><form method="post" asp-page-handler="CorrectAdvance" class="fields">
+                <input type="hidden" name="number" value="@advance.Number">
+                <label>تاریخ<input name="date" value="@Persian.Date(advance.Date)" required></label>
+                <label>مبلغ ریال<input name="amount" value="@advance.Amount" required></label>
+                <label>صاحب حساب<input name="owner" value="@advance.Owner" required></label>
+                <label>بانک<input name="bank" value="@advance.Bank" required></label>
+                <label>شبا<input name="sheba" value="@advance.Sheba" required></label>
+                <label>بابت<input name="description" value="@advance.Description" required></label>
+                <button class="button" type="submit">ذخیره اصلاح</button></form>
+                <form method="post" asp-page-handler="VoidAdvance"><input type="hidden" name="number" value="@advance.Number">
+                    <button class="button" type="submit" data-confirm="برگه تنخواه باطل شود؟">ابطال برگه</button></form></details> }
+        </td></tr> }
     </tbody></table></div>
 </section> }
 <section class="card">

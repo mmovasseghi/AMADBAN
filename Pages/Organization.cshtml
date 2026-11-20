@@ -40,4 +40,16 @@
     @foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles)
     { <tr><td>@label</td><td>@(Model.Signers.GetValueOrDefault(role) ?? "—")</td></tr> }
     </tbody></table></div>
+    <details><summary>اصلاح نام، درجه یا سمت اشخاص</summary>
+        <p>اصلاح هر شخص در چاپ‌های بعدی همه فرم‌هایی که او در آن‌ها انتخاب شده اعمال می‌شود.</p>
+        @foreach (var person in Model.People)
+        { <details><summary>@person.Rank @person.Name · @person.Position</summary>
+            <form method="post" asp-page-handler="CorrectPerson" class="filters"><input type="hidden" name="id" value="@person.Id">
+                <label>نام<input name="name" value="@person.Name" required maxlength="120"></label>
+                <label>درجه یا رتبه<input name="rank" value="@person.Rank" maxlength="80"></label>
+                <label>سمت<input name="position" value="@person.Position" maxlength="120"></label>
+                <input type="hidden" name="department" value="@(person.DepartmentId ?? 0)">
+                <button class="button" type="submit">ذخیره اصلاح</button>
+            </form></details> }
+    </details>
 </section>

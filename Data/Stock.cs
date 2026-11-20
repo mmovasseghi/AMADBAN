@@ -43,6 +43,19 @@ public sealed partial class Store
         return "کالا ثبت شد.";
     }
 
+    public async Task<string> CorrectProductAsync(long id,string code,string name,string unit,decimal minimum,long actor)
+    {
+        await using var conn=await source.OpenConnectionAsync();
+        await using var tx=await conn.BeginTransactionAsync();
+        if(await Scalar(conn,tx,"SELECT id FROM products WHERE code=$1 AND id<>$2",code,id) is not null)
+            return "کد کالا برای کالای دیگری استفاده شده است.";
+        if(await Exec(conn,tx,"UPDATE products SET code=$2,name=$3,unit=$4,minimum=$5 WHERE id=$1",id,code,name,unit,minimum)!=1)
+            return "کالا پیدا نشد.";
+        await Activity(conn,tx,actor,"مشخصات کالا اصلاح شد",$"{name} · کد {code}","stock",id);
+        await tx.CommitAsync();
+        return "مشخصات کالا اصلاح شد؛ موجودی و سابقه آن حفظ شد.";
+    }
+
     public async Task<string> MoveStockAsync(Guid submission, long id, long invoice, string kind, decimal quantity,
         string department, DateOnly date, long actor)
     {
@@ -72,6 +85,7 @@ public sealed partial class Store
             VALUES($1,$2,NULLIF($3,0),$4,$5,NULLIF($6,''),$7,$8,$9,CASE WHEN $4='opening' THEN $5 ELSE NULL END)
             """, submission, id, invoice, kind, delta, department, date, actor, current);
         if (invoice > 0) await Event(conn, tx, invoice, actor, "ثبت ورود انبار");
+        else await Activity(conn,tx,actor,"گردش دستی انبار ثبت شد",$"کالا {id} · {kind} · {delta:0.###}","stock",id);
         await tx.CommitAsync();
         return "گردش کالا ثبت شد.";
     }
@@ -92,6 +106,7 @@ public sealed partial class Store
             INSERT INTO stock_events(submission_id,product_id,kind,delta,department,event_date,actor_id,before_quantity,counted_quantity)
             VALUES($1,$2,'count',$3,NULLIF($4,''),$5,$6,$7,$8)
             """, submission, id, difference, note, date, actor, current, counted);
+        await Activity(conn,tx,actor,"انبارگردانی ثبت شد",$"کالا {id} · شمارش {counted:0.###} · اختلاف {difference:0.###}","stock",id);
         await tx.CommitAsync();
         return difference == 0 ? "شمارش ثبت شد؛ مغایرتی وجود ندارد." :
             $"شمارش ثبت شد؛ مغایرت {difference:0.###} { (difference > 0 ? "افزایش" : "کاهش") } ثبت شد.";
@@ -123,13 +138,24 @@ public sealed partial class Store
         return result;
     }
 
-    public async Task<string> ReceivePettyAsync(Guid submission, long recipient, string number, DateOnly date, long amount, long actor)
+    public async Task<string> ReceivePettyAsync(Guid submission, long recipient, string number, DateOnly date, long amount, long actor, long advanceNumber)
     {
         await using var conn = await source.OpenConnectionAsync();
-        return await Exec(conn, null, """
-            INSERT INTO petty_receipts(submission_id,recipient_id,receipt_number,receipt_date,amount,actor_id)
-            SELECT $1,id,$3,$4,$5,$6 FROM staff WHERE id=$2 AND role='agent' AND active ON CONFLICT DO NOTHING
-            """, submission, recipient, number, date, amount, actor) == 1 ? "دریافت تنخواه ثبت شد." : "دریافت ثبت نشده یا قبلاً وارد شده است.";
+        await using var tx = await conn.BeginTransactionAsync();
+        if (advanceNumber > 0 && await Scalar(conn, tx, """
+            SELECT number FROM petty_advances WHERE number=$1 AND state='active' AND amount=$2 AND created_by=$3
+            FOR UPDATE
+            """, advanceNumber, amount, recipient) is null)
+            return "برگه تنخواه فعال با همین مبلغ و افسرعامل پیدا نشد.";
+        var changed = await Exec(conn, tx, """
+            INSERT INTO petty_receipts(submission_id,recipient_id,receipt_number,receipt_date,amount,actor_id,advance_number)
+            SELECT $1,id,$3,$4,$5,$6,NULLIF($7,0) FROM staff WHERE id=$2 AND role='agent' AND active ON CONFLICT DO NOTHING
+            """, submission, recipient, number, date, amount, actor, advanceNumber);
+        if (changed != 1) return "دریافت ثبت نشده یا برگه تنخواه قبلاً به دریافت دیگری پیوند داده شده است.";
+        await Activity(conn, tx, actor, "دریافت تنخواه ثبت شد", $"شماره رسید {number} · {Persian.Money(amount)} ریال" +
+            (advanceNumber > 0 ? $" · پیش‌پرداخت {advanceNumber}" : ""), "petty");
+        await tx.CommitAsync();
+        return "دریافت تنخواه ثبت شد.";
     }
 
     public async Task<(List<PettyBalance> Balances, List<PettyEntry> Entries)> PettyReportAsync(long agent, DateOnly from, DateOnly to, int page)

@@ -79,12 +79,18 @@ public sealed partial class Store
     public async Task<string> SaveSupplierDocumentAsync(long id, string kind, DocumentUpload document, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
-        var written = await Exec(conn, null, """
+        await using var tx=await conn.BeginTransactionAsync();
+        var written = await Exec(conn, tx, """
             INSERT INTO supplier_documents(supplier_id,kind,filename,content_type,content,actor_id)
             SELECT id,$2,$3,$4,$5,$6 FROM suppliers WHERE id=$1
             ON CONFLICT(supplier_id,kind) DO UPDATE SET filename=excluded.filename,content_type=excluded.content_type,
                 content=excluded.content,actor_id=excluded.actor_id,uploaded_at=now()
             """, id, kind, document.Name, document.Type, document.Content, actor);
+        if(written==1)
+        {
+            await Activity(conn,tx,actor,"مدرک فروشنده ثبت شد",$"فروشنده {id} · {(kind=="account"?"تأییدیه حساب":"مودیان")}","supplier",id);
+            await tx.CommitAsync();
+        }
         return written == 1 ? "مدرک فروشنده ثبت شد." : "فروشنده پیدا نشد.";
     }
 

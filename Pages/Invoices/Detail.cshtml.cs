@@ -13,6 +13,7 @@ public sealed class DetailModel(Store store) : PageModel
     public List<Department> Departments { get; private set; } = [];
     public List<Person> People { get; private set; } = [];
     public List<ReceiptMatch> ReceiptMatches { get; private set; } = [];
+    public List<SupplierAccount> SupplierAccounts { get; private set; } = [];
     public (long? Id, string? Name) MeetingExtra { get; private set; }
     public IReadOnlyList<string> Missing => Store.Missing(Entry);
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -40,6 +41,8 @@ public sealed class DetailModel(Store store) : PageModel
         RequestSigner = await store.RequestSignerAsync(id);
         if (HandlesFinance) { Departments = await store.DepartmentsAsync(); People = await store.PeopleAsync(); }
         if (entry.Summary.Warehouse && CanReceive) ReceiptMatches = await store.ReceiptMatchesAsync(id);
+        if (entry.Account && HandlesFinance && await store.SupplierByNameAsync(entry.Summary.Vendor) is { } supplier)
+            SupplierAccounts = await store.SupplierAccountsAsync(supplier.Id);
         if (entry.Meeting) MeetingExtra = await store.MeetingExtraAsync(id);
         return Page();
     }

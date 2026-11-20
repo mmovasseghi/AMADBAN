@@ -24,7 +24,7 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, PrepaymentSelect +
-            " WHERE p.state IN ('reserved','paid') AND p.invoice_id IS NOT NULL ORDER BY p.number DESC LIMIT 50");
+            " WHERE p.state IN ('reserved','paid') ORDER BY p.number DESC LIMIT 50");
         await using var r = await cmd.ExecuteReaderAsync();
         var results = new List<Prepayment>();
         while (await r.ReadAsync()) results.Add(ReadPrepayment(r));

@@ -40,6 +40,15 @@ public sealed class OrganizationModel(Store store) : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostCorrectPersonAsync(long id,string? name,string? position,string? rank,long department)
+    {
+        name=name?.Trim()??"";position=position?.Trim()??"";rank=rank?.Trim()??"";
+        Message=id<=0 || name.Length is <2 or >120 || position.Length>120 || rank.Length>80
+            ? "نام و سمت شخص را بررسی کنید."
+            : await store.CorrectPersonAsync(id,name,position,rank,department,Actor);
+        return RedirectToPage();
+    }
+
     public async Task<IActionResult> OnPostAssignAsync(string? role, long person)
     {
         Message = role is null || !Roles.ContainsKey(role) || person <= 0

@@ -15,6 +15,9 @@
         <label>تاریخ چک<input name="date" value="@Persian.Date(Persian.Today)" required dir="ltr"></label>
         <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
         <label>در وجه<input name="recipient" maxlength="150" required></label>
+        <label>پیش‌پرداخت مرتبط (اختیاری)<select name="prepayment"><option value="0">بدون پیش‌پرداخت</option>
+            @foreach (var item in Model.BankPrepayments) { <option value="@item.Number">شماره @item.Number · @item.Vendor</option> }
+        </select></label>
         <button type="submit" class="button primary">ثبت مشخصات چک</button>
     </form>
 </section>
@@ -22,12 +25,12 @@
     <h2>چک‌های ثبت‌شده</h2>
     <form method="get" asp-page="/PrintBank" asp-antiforgery="false">
         <div class="table-wrap"><table>
-            <thead><tr><th>انتخاب</th><th>شناسه صیاد</th><th>ذی‌نفع</th><th>بانک</th><th>مبلغ ریال</th><th>فیش</th></tr></thead>
+            <thead><tr><th>انتخاب</th><th>شناسه صیاد</th><th>ذی‌نفع</th><th>بانک</th><th>پیش‌پرداخت</th><th>مبلغ ریال</th><th>فیش</th></tr></thead>
             <tbody>
             @foreach (var c in Model.Checks.Take(25))
             {
                 <tr><td><input type="checkbox" name="ids" value="@c.Id" aria-label="انتخاب چک @c.Sayad"></td><td>@c.Sayad</td>
-                    <td>@c.Recipient</td><td>@c.Bank</td><td>@Persian.Money(c.Amount)</td>
+                    <td>@c.Recipient</td><td>@c.Bank</td><td>@(c.Prepayment?.ToString() ?? "—")</td><td>@Persian.Money(c.Amount)</td>
                     <td><a asp-page="/PrintBank" asp-route-ids="@c.Id" asp-route-kind="slip">فیش A5</a></td></tr>
             }
             </tbody>
@@ -38,6 +41,22 @@
         @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)">قبلی</a> }
         @if (Model.Checks.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)">بعدی</a> }
     </nav>
+    <details><summary>اصلاح مشخصات چک‌های ثبت‌شده</summary>
+        @foreach (var c in Model.Checks.Take(25))
+        { <details><summary>صیاد @c.Sayad · @c.Recipient</summary><form method="post" asp-page-handler="Correct" class="fields">
+            <input type="hidden" name="id" value="@c.Id">
+            <label>صیاد<input name="sayad" value="@c.Sayad" required maxlength="16"></label>
+            <label>حساب<input name="account" value="@c.Account" required maxlength="50"></label>
+            <label>بانک<input name="bank" value="@c.Bank" required maxlength="80"></label>
+            <label>شعبه<input name="branch" value="@c.Branch" required maxlength="80"></label>
+            <label>تاریخ<input name="date" value="@Persian.Date(c.Date)" required></label>
+            <label>مبلغ ریال<input name="amount" value="@c.Amount" required></label>
+            <label>در وجه<input name="recipient" value="@c.Recipient" required maxlength="150"></label>
+            <label>پیش‌پرداخت<select name="prepayment"><option value="0">بدون پیوند</option>
+                @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" selected="@(c.Prepayment==item.Number)">@item.Number · @item.Vendor</option> }
+            </select></label><button class="button" type="submit">ذخیره اصلاح</button>
+        </form></details> }
+    </details>
 </section>
 
 @if (Model.BankPrepayments.Count > 0)

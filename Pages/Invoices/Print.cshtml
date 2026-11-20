@@ -27,13 +27,14 @@
         <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
             <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
     </nav>
-    <article class="document-sheet">
+    <div class="document-print-page"><article class="document-sheet">
         <header>
             @await Html.PartialAsync("_BrandMarks", true)
             <p>بسمه‌تعالی</p>
             <h1>درخواست خرید، گزارش دریافت، سند هزینه فرعی خرید کالا و خدمات</h1>
             <p>بیمارستان امام سجاد (ع) فراجا ـ دایره آماد و پشتیبانی</p>
         </header>
+        <p class="document-letter">از: آماد &nbsp; به: ریاست محترم بیمارستان. با احترام، این یگان به کالا و خدمات زیر نیاز دارد؛ خواهشمند است دستور فرمایید نسبت به تهیه و تدارک آنها اقدام لازم معمول شود.</p>
         <section class="metadata">
             <span>شماره سند <b>@row.Document</b></span><span>شماره فاکتور <b>@row.Number</b></span>
             <span>تاریخ درخواست <bdi>@Persian.Date(requestDate)</bdi></span><span>تاریخ فاکتور <bdi>@Persian.Date(row.Date)</bdi></span>
@@ -56,15 +57,15 @@
         <section class="signatures"><div>مسئول قسمت درخواست‌کننده<p>@signers.GetValueOrDefault("requester")</p></div>
             <div>مسئول مالی / عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
             <div>فرمانده / رئیس (دارنده مجوز ماده ۵۳)<p>@signers.GetValueOrDefault("chief")</p></div></section>
-        <section class="signatures"><div>اقدام‌کننده / تنظیم‌کننده<p>@signers.GetValueOrDefault("agent")</p></div>
-            <div>کارشناس / رئیس قسمت<p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>
-            <div>انباردار<p>@signers.GetValueOrDefault("warehouse")</p></div></section>
+        <section class="signatures"><div>اقدام‌کننده / تنظیم‌کننده<p>اقلام تصویبی با کنترل کیفیت و قیمت خریداری شد.</p><p>@signers.GetValueOrDefault("agent")</p></div>
+            <div>کارشناس / رئیس قسمت<p>اقلام یا خدمات بررسی و با مندرجات سند تطبیق داده شد.</p><p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>
+            <div>انباردار<p>اقلام انباری بررسی و دریافت شد.</p><p>@signers.GetValueOrDefault("warehouse")</p></div></section>
         <section class="metadata"><span>گواهی گزارش دریافت: @(row.Warehouse ? "اقلام به انبار تحویل شد." : "خدمت یا کالای غیرانباری بررسی شد.")</span>
             <span>تاریخ دریافت @(row.Warehouse ? Persian.Date(row.Date) : "")</span><span>تاریخ دریافت انبار @(row.Warehouse ? Persian.Date(row.Date) : "")</span></section>
         <section class="signatures"><div>کارتکس<p>@signers.GetValueOrDefault("kardex")</p></div>
-            <div>فرمانده / رئیس (تأیید پرداخت)<p>@signers.GetValueOrDefault("chief")</p></div>
-            <div>ممیز اسناد هزینه<p>@signers.GetValueOrDefault("auditor")</p></div>
+            <div>فرمانده / رئیس (دارنده مجوز ماده ۵۳)<p>پرداخت با اطلاع و دستور اینجانب است.</p><p>@signers.GetValueOrDefault("chief")</p></div>
+            <div>ممیز اسناد هزینه<p>صحت ارقام و تشریفات صوری سند بررسی شد.</p><p>@signers.GetValueOrDefault("auditor")</p></div>
             <div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div></section>
-    </article>
+    </article></div>
 </body>
 </html>

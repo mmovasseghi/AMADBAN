@@ -42,7 +42,7 @@
 </section>
 <section class="card"><h2>برگه‌های خروج اخیر</h2>
     <div class="table-wrap"><table><thead><tr><th>شماره برگه</th><th>تاریخ</th><th>بخش</th><th>تحویل‌گیرنده</th><th>چاپ دوباره</th></tr></thead><tbody>
-    @foreach (var issue in Model.Recent) { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
+    @foreach (var issue in Model.Recent) { <tr><td>@issue.Number @(issue.State == "void" ? "· باطل‌شده" : "")</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
     @if (Model.Recent.Count == 0) { <tr><td colspan="5" class="empty">هنوز برگه خروج ثبت نشده است.</td></tr> }
     </tbody></table></div>
 </section>

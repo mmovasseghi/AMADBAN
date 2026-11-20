@@ -78,10 +78,10 @@ public sealed partial class Store
                 coalesce((SELECT c.code FROM prepayments p JOIN credit_codes c ON c.id=p.code_id
                           WHERE p.invoice_id=i.id AND p.state<>'void' LIMIT 1),
                          (SELECT c.code FROM credit_codes c WHERE c.id=i.cash_credit_code),''),
-                i.paid_at IS NOT NULL,i.delivery_state,i.warehouse_required,i.kardex_number,i.kardex_date
+                i.paid_at IS NOT NULL,i.delivery_state,i.warehouse_required,i.kardex_number,i.kardex_date,i.review_stage
             """ + " " + InvoiceCriteria + InvoiceStatusFilter(status) + " ORDER BY i.invoice_date DESC,i.id DESC", args);
         await using var reader = await cmd.ExecuteReaderAsync(cancellation);
-        await output.WriteLineAsync("شناسه پرونده,شماره سند,شماره فاکتور,فروشنده,موضوع,تاریخ فاکتور,نوع خرید,مبلغ ریال,کد اعتباری,مهلت پرداخت,پرداخت شده,وضعیت تحویل,انبار,مهلت کارتکس,شماره کارتکس,تاریخ کارتکس".AsMemory(), cancellation);
+        await output.WriteLineAsync("شناسه پرونده,شماره سند,شماره فاکتور,فروشنده,موضوع,تاریخ فاکتور,نوع خرید,مبلغ ریال,کد اعتباری,مهلت پرداخت,پرداخت شده,وضعیت تحویل,انبار,مهلت کارتکس,شماره کارتکس,تاریخ کارتکس,مرحله بررسی".AsMemory(), cancellation);
         while (await reader.ReadAsync(cancellation))
         {
             var invoiceDate = reader.GetFieldValue<DateOnly>(5);
@@ -95,10 +95,11 @@ public sealed partial class Store
                 reader.GetInt64(7).ToString(CultureInfo.InvariantCulture), reader.GetString(8),
                 reader.GetString(6) == "credit" ? Persian.Date(invoiceDate.AddDays(45)) : "",
                 reader.GetBoolean(9) ? "بله" : "خیر",
-                reader.GetString(10) switch { "closed" => "بسته", "returned" => "برگشتی", "delivered" => "تحویل مالی", _ => "باز" },
+                reader.GetString(10) switch { "closed" => "بسته", "returned" => reader.GetString(14)=="deputy" ? "برگشتی از معاونت" : "برگشتی از مالی", "delivered" => reader.GetString(14)=="deputy" ? "در معاونت" : "تحویل مالی", _ => "باز" },
                 warehouse ? "بله" : "خیر", warehouse ? Persian.Date(Persian.MonthEnd(invoiceDate)) : "",
                 reader.IsDBNull(12) ? "" : reader.GetString(12),
-                reader.IsDBNull(13) ? "" : Persian.Date(reader.GetFieldValue<DateOnly>(13))
+                reader.IsDBNull(13) ? "" : Persian.Date(reader.GetFieldValue<DateOnly>(13)),
+                reader.GetString(14)=="deputy" ? "معاونت" : "مالی"
             };
             await output.WriteLineAsync(string.Join(',', cells.Select(CsvCell)).AsMemory(), cancellation);
         }

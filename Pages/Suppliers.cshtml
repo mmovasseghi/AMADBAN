@@ -4,7 +4,7 @@
     ViewData["Title"] = "فروشندگان";
     var company = Model.Supplier;
 }
-<header class="hero"><h1>پرونده فروشندگان</h1><p>اطلاعات هویتی، حساب‌ها و مدارک قابل استفاده در سند</p></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/boy.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">فروشنده و شرکت</div><h1>پرونده فروشندگان</h1><p>اطلاعات هویتی و حساب را ثبت کنید؛ مدارک فروشنده بعداً در سندهای مربوط قابل استفاده‌اند.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <section class="card">
     <h2>@(company is null ? "تعریف فروشنده" : company.Name)</h2>

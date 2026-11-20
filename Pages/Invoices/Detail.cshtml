@@ -6,7 +6,7 @@
     var missing = Model.Missing;
 }
 <header class="hero">
-    <div><div class="eyebrow">فاکتور @row.Number @(row.Document is long number ? $" · سند {number}" : "")</div><h1>@row.Subject</h1><p>@row.Vendor · @Persian.Date(row.Date)</p></div>
+    <div class="hero-main"><span class="hero-icon"><img src="/icon3d/file-text.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">فاکتور @row.Number @(row.Document is long number ? $" · سند {number}" : "")</div><h1>@row.Subject</h1><p>@row.Vendor · @Persian.Date(row.Date)</p></div></div>
     <div class="actions">
         @if (row.Document is not null) { <a class="button primary" asp-page="Print" asp-route-id="@row.Id"><svg aria-hidden="true"><use href="/icons.svg#print"></use></svg> چاپ سند</a> }
         @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }

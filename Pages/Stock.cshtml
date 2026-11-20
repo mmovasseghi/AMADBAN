@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "موجودی انبار";
 }
-<header class="hero"><div><h1>موجودی و گردش انبار</h1><p>موجودی کالاها، ورود فاکتور و شمارش واقعی را اینجا ببینید.</p></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>موجودی و گردش انبار</h1><p>کالا را پیدا کنید، موجودی واقعی را ببینید و برای تحویل به بخش حواله بسازید.</p></div></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.Selected is { } product)
 {
@@ -15,7 +15,7 @@
             <label>مقدار<input name="quantity" inputmode="decimal" required><small>برای افتتاحیه، صفر نیز مجاز است.</small></label>
             <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
             <label>بخش دریافت‌کننده<input name="department" maxlength="120"></label>
-            <label>شناسه پرونده ورود، در صورت وجود<input name="invoice" type="number" min="1"></label>
+            <label>شماره داخلی پرونده، فقط برای ثبت دستی ورود<input name="invoice" type="number" min="1"><small>ورود معمول فاکتور را از صفحه همان پرونده ثبت کنید.</small></label>
             <button class="button primary" type="submit">ثبت گردش</button>
         </form>
         <details>

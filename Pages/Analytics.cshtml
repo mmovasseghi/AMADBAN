@@ -4,7 +4,7 @@
     ViewData["Title"] = "گزارش تحلیلی";
     var groups = new[] { ("vendor", "فروشنده"), ("subject", "موضوع خرید"), ("credit", "کد اعتباری"), ("kind", "نوع خرید") };
 }
-<header class="hero"><div><div class="eyebrow">گزارش عملیاتی</div><h1>تحلیل خریدها</h1><p>مبلغ، پرداخت و پرونده‌های برگشتی در بازه انتخابی</p></div>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/chart.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">گزارش عملیاتی</div><h1>تحلیل خریدها</h1><p>مبلغ، پرداخت و پرونده‌های برگشتی را در بازه انتخابی مقایسه کنید.</p></div></div>
     <a class="button" asp-page="/Index" asp-route-Report="true">فهرست پرونده‌ها</a></header>
 <section class="card">
     <form method="get" class="filters">

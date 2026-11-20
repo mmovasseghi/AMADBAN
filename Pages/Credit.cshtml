@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = Model.Invoice is not null || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار و پیش‌پرداخت";
 }
-<header class="hero"><h1>@ViewData["Title"]</h1><a class="button" asp-page="/Credit">کدهای اعتباری</a></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1><p>مانده هر کد را ببینید، اعتبار را جابه‌جا کنید و پیش‌پرداخت را به سند وصل کنید.</p></div></div><a class="button" asp-page="/Credit">کدهای اعتباری</a></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.Payment is { } payment)
 {

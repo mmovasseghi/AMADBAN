@@ -14,7 +14,7 @@
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
-<nav class="print-controls"><button type="button" data-print>چاپ @(Model.Slip ? "A5" : "A4")</button><a asp-page="/Bank">بازگشت</a></nav>
+<nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="1" min="1" max="12"></label><button type="button" data-print>چاپ @(Model.Slip ? "A5" : "A4")</button><a asp-page="/Bank">بازگشت</a></nav>
 <article>
     <header><h1>@title</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
     @if (Model.Slip)

@@ -35,15 +35,18 @@ public sealed partial class Store
         return await r.ReadAsync() ? new(r.GetInt64(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4), r.GetString(5), r.GetString(6)) : null;
     }
 
-    public async Task<(long Id, string Message)> SaveSupplierAsync(string name, string kind, string national, string economic, string phone, string address)
+    public async Task<(long Id, string Message)> SaveSupplierAsync(string name, string kind, string national, string economic, string phone, string address, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
-        var id = (long)(await Scalar(conn, null, """
+        await using var tx = await conn.BeginTransactionAsync();
+        var id = (long)(await Scalar(conn, tx, """
             INSERT INTO suppliers(name,kind,national_code,economic_code,phone,address) VALUES($1,$2,$3,$4,$5,$6)
             ON CONFLICT(name) DO UPDATE SET kind=excluded.kind,national_code=excluded.national_code,
                 economic_code=excluded.economic_code,phone=excluded.phone,address=excluded.address
             RETURNING id
             """, name, kind, national, economic, phone, address))!;
+        await Activity(conn, tx, actor, "اطلاعات فروشنده ثبت شد", name, "supplier", id);
+        await tx.CommitAsync();
         return (id, "اطلاعات فروشنده ثبت شد.");
     }
 
@@ -57,13 +60,19 @@ public sealed partial class Store
         return list;
     }
 
-    public async Task<string> SaveSupplierAccountAsync(long id, string owner, string bank, string account, string sheba)
+    public async Task<string> SaveSupplierAccountAsync(long id, string owner, string bank, string account, string sheba, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
-        var updated = await Exec(conn, null, """
+        await using var tx = await conn.BeginTransactionAsync();
+        var updated = await Exec(conn, tx, """
             INSERT INTO supplier_accounts(supplier_id,owner,bank,account,sheba) SELECT id,$2,$3,$4,$5 FROM suppliers WHERE id=$1
             ON CONFLICT(supplier_id,sheba) DO UPDATE SET owner=excluded.owner,bank=excluded.bank,account=excluded.account
             """, id, owner, bank, account, sheba);
+        if (updated == 1)
+        {
+            await Activity(conn, tx, actor, "حساب بانکی فروشنده ثبت شد", owner + " · " + bank, "supplier", id);
+            await tx.CommitAsync();
+        }
         return updated == 1 ? "حساب فروشنده ثبت شد." : "فروشنده پیدا نشد.";
     }
 

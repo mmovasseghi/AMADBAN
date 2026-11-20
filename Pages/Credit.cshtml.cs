@@ -20,6 +20,7 @@ public sealed class CreditModel(Store store) : PageModel
     public InvoiceDetail? Invoice { get; private set; }
     public Prepayment? Payment { get; private set; }
     public bool IsAgent => User.IsInRole("agent");
+    public Guid Submission { get; } = Guid.NewGuid();
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string Role => User.FindFirstValue(ClaimTypes.Role)!;
     [TempData] public string? Message { get; set; }
@@ -64,7 +65,7 @@ public sealed class CreditModel(Store store) : PageModel
         return RedirectToPage();
     }
 
-    public async Task<IActionResult> OnPostReserveAsync(long invoice, string? proforma, string? vendor,
+    public async Task<IActionResult> OnPostReserveAsync(Guid submission, long invoice, string? proforma, string? vendor,
         long code, string? owner, string? bank, string? sheba, string? amount, string? permit, string? permitDate, string? tax)
     {
         if (!IsAgent) return Forbid();
@@ -77,7 +78,7 @@ public sealed class CreditModel(Store store) : PageModel
         permitDate = Persian.Latin(permitDate);
         var taxAmount = string.IsNullOrWhiteSpace(tax) ? 0 : ParseAmount(tax) ?? -1;
         if (!sheba.StartsWith("IR", StringComparison.Ordinal)) sheba = "IR" + sheba;
-        if (invoice < 0 || (invoice == 0 && (proforma.Length is < 1 or > 80 || vendor.Length is < 1 or > 180)) ||
+        if (submission == Guid.Empty || invoice < 0 || (invoice == 0 && (proforma.Length is < 1 or > 80 || vendor.Length is < 1 or > 180)) ||
             permit.Length > 80 || (permitDate.Length > 0 && Persian.ParseDate(permitDate) is null) || taxAmount < 0 ||
             owner.Length is < 1 or > 140 || bank.Length is < 1 or > 100 ||
             sheba.Length != 26 || sheba[2..].Any(c => !char.IsAsciiDigit(c)) || ParseAmount(amount) is not long value || code <= 0)
@@ -85,7 +86,7 @@ public sealed class CreditModel(Store store) : PageModel
         else
         {
             if (invoice > 0) proforma = "";
-            var result = await store.ReserveAsync(invoice, proforma, vendor, code, owner, bank, sheba, value, permit, permitDate, taxAmount, Actor);
+            var result = await store.ReserveAsync(submission, invoice, proforma, vendor, code, owner, bank, sheba, value, permit, permitDate, taxAmount, Actor);
             if (result.Number is long number)
             {
                 Message = result.Message;

@@ -77,6 +77,7 @@ public sealed partial class Store
         await using var tx = await conn.BeginTransactionAsync();
         if (await Exec(conn, tx, "INSERT INTO credit_codes(code,title) VALUES($1,$2) ON CONFLICT DO NOTHING", code, title) == 0)
             return "این شماره کد اعتباری قبلاً ثبت شده است.";
+        await Activity(conn, tx, actor, "کد اعتباری تعریف شد", code + " · " + title, "credit");
         await NotifyChief(conn, tx, actor, role, "کد اعتباری " + code + " ساخته شد.");
         await tx.CommitAsync();
         return "کد اعتباری ثبت شد.";
@@ -122,12 +123,15 @@ public sealed partial class Store
         return list;
     }
 
-    public async Task<(long? Number, string Message)> ReserveAsync(long invoice, string proforma, string vendor, long code, string owner,
+    public async Task<(long? Number, string Message)> ReserveAsync(Guid submission, long invoice, string proforma, string vendor, long code, string owner,
         string bank, string sheba, long amount, string permit, string permitDate, long tax, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
         await LockCredit(conn, tx);
+        var existing = await Scalar(conn, tx,
+            "SELECT number FROM prepayments WHERE submission_id=$1 AND created_by=$2", submission, actor);
+        if (existing is long previousNumber) return (previousNumber, $"پیش‌پرداخت {previousNumber} قبلاً با همین درخواست ثبت شده است.");
         if (invoice > 0)
         {
             var recordedVendor = await Scalar(conn, tx, """
@@ -143,9 +147,9 @@ public sealed partial class Store
         if (available < amount) return (null, $"مانده قابل استفاده {Persian.Money(available.Value)} ریال و کسری {Persian.Money(amount - available.Value)} ریال است.");
         var number = (long)(await Scalar(conn, tx, "UPDATE counters SET last_value=last_value+1 WHERE name='prepayment' RETURNING last_value"))!;
         await Exec(conn, tx, """
-            INSERT INTO prepayments(number,invoice_id,proforma_number,vendor,code_id,owner,bank,sheba,amount,state,created_by,permit_number,permit_date,tax_amount)
-            VALUES($1,NULLIF($2,0),NULLIF($3,''),$4,$5,$6,$7,$8,$9,'reserved',$10,$11,$12,$13)
-            """, number, invoice, proforma, vendor, code, owner, bank, sheba, amount, actor, permit, permitDate, tax);
+            INSERT INTO prepayments(number,invoice_id,proforma_number,vendor,code_id,owner,bank,sheba,amount,state,created_by,permit_number,permit_date,tax_amount,submission_id)
+            VALUES($1,NULLIF($2,0),NULLIF($3,''),$4,$5,$6,$7,$8,$9,'reserved',$10,$11,$12,$13,$14)
+            """, number, invoice, proforma, vendor, code, owner, bank, sheba, amount, actor, permit, permitDate, tax, submission);
         if (invoice > 0) await Event(conn, tx, invoice, actor, "ثبت پیش‌پرداخت");
         await tx.CommitAsync();
         return (number, $"پیش‌پرداخت {number} ثبت شد و اعتبار رزرو شد.");
@@ -188,6 +192,7 @@ public sealed partial class Store
                 VALUES($1,$2,$3,$4,$5)
                 """, number, p.CodeId, code, p.Amount, actor);
             if (p.Invoice is long id) await Event(conn, tx, id, actor, description);
+            else await Activity(conn, tx, actor, "کد پیش‌پرداخت اصلاح شد", description, "credit");
             await NotifyChief(conn, tx, actor, role, description);
         }
         else return "این اقدام در وضعیت فعلی قابل انجام نیست.";

@@ -39,7 +39,7 @@
         (Kind: "invoice", Label: "فاکتور", Required: true),
         (Kind: "account", Label: "تأییدیه حساب", Required: Model.Entry.Account),
         (Kind: "taxpayer", Label: "برگه مؤدیان", Required: row.Kind == "credit" && Model.Entry.Tax),
-        (Kind: "tax", Label: "برگه ثبت مالیات", Required: Model.Entry.Tax)
+        (Kind: "tax", Label: "برگه ثبت مالیات", Required: true)
     };
     <section class="card">
         <h2><svg aria-hidden="true"><use href="/icons.svg#print"></use></svg> ترتیب چاپ مدارک سند</h2>
@@ -67,6 +67,39 @@
     </section>
 }
 <div class="detail-grid">
+@if (row.Warehouse)
+{
+    <section class="card">
+        <h2><svg aria-hidden="true"><use href="/icons.svg#box"></use></svg> ورود اقلام به انبار</h2>
+        @if (Model.Entry.WarehouseReceiptDate is DateOnly receiptDate)
+        {
+            <p>همه اقلام این فاکتور در تاریخ @Persian.Date(receiptDate) به موجودی افزوده شده‌اند.</p>
+        }
+        else if (Model.Entry.HasManualStock)
+        {
+            <p>برای این سند گردش دستی انبار ثبت شده است. جزئیات از صفحه موجودی هر کالا قابل مشاهده است.</p>
+        }
+        else
+        {
+            <p>ورود اقلام این سند هنوز ثبت نشده است.</p>
+        }
+        @if (Model.CanReceive && Model.Editable && row.Document is not null && !Model.Entry.HasManualStock)
+        {
+            <form method="post" asp-page-handler="Receipt" class="filters">
+                <label>تاریخ شمسی گردش<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
+                @if (Model.Entry.WarehouseReceiptDate is null)
+                {
+                    <button class="button primary" name="operation" value="receive" type="submit">ثبت ورود همه اقلام فاکتور</button>
+                }
+                else
+                {
+                    <button class="button" name="operation" value="void" type="submit">برگرداندن ورود برای اصلاح</button>
+                }
+            </form>
+        }
+        <p>کالای هم‌نام و هم‌واحد به موجودی موجود افزوده می‌شود؛ برای کالای جدید، شناسه انبار خودکار ساخته می‌شود.</p>
+    </section>
+}
 <section class="card">
     <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس و تحویل</h2>
     @if (row.Warehouse)
@@ -104,6 +137,13 @@
 </section>
 <section class="card">
     <h2><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> مدارک پرونده</h2>
+    @if (row.Kind == "cash" && Model.HandlesFinance && Model.Editable)
+    {
+        <form method="post" asp-page-handler="Pos" class="actions">
+            <span>پرفراژ کارت‌خوان در همان اسکن فاکتور دیده می‌شود؟</span>
+            <button class="button" name="embedded" value="@(!Model.Entry.PosInInvoice ? "true" : "false")" type="submit">@(Model.Entry.PosInInvoice ? "بله، ثبت شده · تغییر به مدرک جدا" : "بله، داخل اسکن است")</button>
+        </form>
+    }
     @if (Model.Entry.Attachments.Count == 0) { <p>هنوز مدرکی پیوست نشده است.</p> }
     @foreach (var file in Model.Entry.Attachments)
     {

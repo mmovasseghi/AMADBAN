@@ -18,6 +18,7 @@ public sealed class SuppliersModel(Store store) : PageModel
     public List<SupplierAccount> Accounts { get; private set; } = [];
     public List<Attachment> Documents { get; private set; } = [];
     [TempData] public string? Message { get; set; }
+    private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     public async Task OnGetAsync()
     {
@@ -52,7 +53,7 @@ public sealed class SuppliersModel(Store store) : PageModel
             Message = "اطلاعات فروشنده را بررسی کنید.";
             return RedirectToPage();
         }
-        var result = await store.SaveSupplierAsync(name, kind, national, economic, phone, address);
+        var result = await store.SaveSupplierAsync(name, kind, national, economic, phone, address, Actor);
         Message = result.Message;
         return RedirectToPage(new { id = result.Id });
     }
@@ -67,7 +68,7 @@ public sealed class SuppliersModel(Store store) : PageModel
         Message = owner.Length is < 1 or > 140 || bank.Length is < 1 or > 100 || account.Length > 50 ||
             sheba.Length != 26 || sheba[2..].Any(c => !char.IsAsciiDigit(c))
             ? "صاحب حساب، بانک و شبای معتبر را وارد کنید."
-            : await store.SaveSupplierAccountAsync(id, owner, bank, account, sheba);
+            : await store.SaveSupplierAccountAsync(id, owner, bank, account, sheba, Actor);
         return RedirectToPage(new { id });
     }
 

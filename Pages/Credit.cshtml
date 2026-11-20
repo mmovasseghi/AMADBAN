@@ -47,6 +47,7 @@ else if (Model.IsAgent)
     <section class="card">
         <h2>@(Model.Invoice is null ? "پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice.Summary.Document}")</h2>
         <form method="post" asp-page-handler="Reserve" class="filters">
+            <input type="hidden" name="submission" value="@Model.Submission">
             <input type="hidden" name="invoice" value="@(Model.Invoice?.Summary.Id ?? 0)">
             @if (Model.Invoice is null)
             {

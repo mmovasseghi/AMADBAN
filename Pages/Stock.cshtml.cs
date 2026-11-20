@@ -50,7 +50,7 @@ public sealed class StockModel(Store store) : PageModel
         unit = unit?.Trim() ?? "";
         Message = code.Length is < 1 or > 40 || name.Length is < 1 or > 150 || unit.Length is < 1 or > 30 || Quantity(minimum) is not decimal min
             ? "کد، نام، واحد و حداقل موجودی را بررسی کنید."
-            : await store.NewProductAsync(code, name, unit, min);
+            : await store.NewProductAsync(code, name, unit, min, Actor);
         return RedirectToPage();
     }
 
@@ -59,10 +59,21 @@ public sealed class StockModel(Store store) : PageModel
     {
         department = department?.Trim() ?? "";
         Message = submission == Guid.Empty || productId < 1 || invoice < 0 || kind is not ("opening" or "in" or "out") ||
-            Quantity(quantity) is not decimal qty || qty <= 0 || Persian.ParseDate(date) is not DateOnly day ||
+            Quantity(quantity) is not decimal qty || (kind != "opening" && qty <= 0) || Persian.ParseDate(date) is not DateOnly day ||
             department.Length > 120 || (kind == "out" && department.Length == 0)
             ? "نوع گردش، مقدار، تاریخ و بخش دریافت‌کننده را بررسی کنید."
             : await store.MoveStockAsync(submission, productId, invoice, kind, qty, department, day, Actor);
+        return RedirectToPage(new { productId });
+    }
+
+    public async Task<IActionResult> OnPostCountAsync(long productId, Guid submission, string? counted,
+        string? note, string? date)
+    {
+        note = note?.Trim() ?? "";
+        Message = submission == Guid.Empty || productId < 1 || Quantity(counted) is not decimal amount ||
+            Persian.ParseDate(date) is not DateOnly day || note.Length > 120
+            ? "موجودی شمارش‌شده و تاریخ را بررسی کنید."
+            : await store.CountStockAsync(submission, productId, amount, note, day, Actor);
         return RedirectToPage(new { productId });
     }
 

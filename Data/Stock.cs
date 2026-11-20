@@ -1,7 +1,8 @@
 namespace Amadban.Data;
 
 public sealed record Product(long Id, string Code, string Name, string Unit, decimal Stock, decimal Minimum);
-public sealed record StockLine(string Product, string Kind, decimal Delta, string? Department, DateOnly Date, long? Invoice);
+public sealed record StockLine(string Product, string Kind, decimal Delta, string? Department, DateOnly Date, long? Invoice,
+    decimal? Before, decimal? Counted, string Actor);
 public sealed record PettyBalance(long Staff, string Name, long Opening, long Received, long Spent);
 public sealed record PettyEntry(string Kind, string Reference, string Description, string Person, DateOnly Date, long Amount, long? Invoice);
 
@@ -29,11 +30,17 @@ public sealed partial class Store
         return await r.ReadAsync() ? new(r.GetInt64(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetDecimal(4), r.GetDecimal(5)) : null;
     }
 
-    public async Task<string> NewProductAsync(string code, string name, string unit, decimal minimum)
+    public async Task<string> NewProductAsync(string code, string name, string unit, decimal minimum, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
-        return await Exec(conn, null, "INSERT INTO products(code,name,unit,minimum) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",
-            code, name, unit, minimum) == 1 ? "کالا ثبت شد." : "کد کالا قبلاً ثبت شده است.";
+        await using var tx = await conn.BeginTransactionAsync();
+        var id = await Scalar(conn, tx,
+            "INSERT INTO products(code,name,unit,minimum) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING id",
+            code, name, unit, minimum);
+        if (id is not long product) return "کد کالا قبلاً ثبت شده است.";
+        await Activity(conn, tx, actor, "کالای انبار تعریف شد", name + " · کد " + code, "stock", product);
+        await tx.CommitAsync();
+        return "کالا ثبت شد.";
     }
 
     public async Task<string> MoveStockAsync(Guid submission, long id, long invoice, string kind, decimal quantity,
@@ -41,40 +48,68 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
+        if (invoice > 0)
+        {
+            if (kind != "in" || await Scalar(conn, tx, """
+                SELECT id FROM invoices WHERE id=$1 AND warehouse_required AND delivery_state IN ('open','returned')
+                FOR UPDATE
+                """, invoice) is null) return "پرونده انباری باز و معتبر را انتخاب کنید.";
+            if (await Scalar(conn, tx, "SELECT id FROM warehouse_receipts WHERE invoice_id=$1 LIMIT 1", invoice) is not null)
+                return "برای این سند از ورود اقلام در صفحه پرونده استفاده کنید؛ گردش دستی با آن ترکیب نمی‌شود.";
+        }
         var stock = await Scalar(conn, tx, "SELECT stock FROM products WHERE id=$1 FOR UPDATE", id);
         if (stock is not decimal current) return "کالا پیدا نشد.";
         if (await Scalar(conn, tx, "SELECT id FROM stock_events WHERE submission_id=$1", submission) is not null)
             return "این گردش قبلاً ثبت شده است.";
         if (kind == "opening" && await Scalar(conn, tx, "SELECT id FROM stock_events WHERE product_id=$1 LIMIT 1", id) is not null)
             return "برای کالایی که گردش ثبت‌شده دارد، از ورود یا خروج استفاده کنید.";
-        if (invoice > 0 && (kind != "in" ||
-            await Scalar(conn, tx, "SELECT id FROM invoices WHERE id=$1 AND warehouse_required", invoice) is null))
-            return "پرونده انباری معتبر را انتخاب کنید.";
         var delta = kind == "out" ? -quantity : quantity;
         if (current + delta < 0) return "موجودی برای این خروج کافی نیست.";
         if (current + delta >= 1_000_000_000) return "مقدار موجودی از دامنه قابل ثبت بیشتر می‌شود.";
         await Exec(conn, tx, "UPDATE products SET stock=stock+$2 WHERE id=$1", id, delta);
         await Exec(conn, tx, """
-            INSERT INTO stock_events(submission_id,product_id,invoice_id,kind,delta,department,event_date,actor_id)
-            VALUES($1,$2,NULLIF($3,0),$4,$5,NULLIF($6,''),$7,$8)
-            """, submission, id, invoice, kind, delta, department, date, actor);
+            INSERT INTO stock_events(submission_id,product_id,invoice_id,kind,delta,department,event_date,actor_id,before_quantity,counted_quantity)
+            VALUES($1,$2,NULLIF($3,0),$4,$5,NULLIF($6,''),$7,$8,$9,CASE WHEN $4='opening' THEN $5 ELSE NULL END)
+            """, submission, id, invoice, kind, delta, department, date, actor, current);
         if (invoice > 0) await Event(conn, tx, invoice, actor, "ثبت ورود انبار");
         await tx.CommitAsync();
         return "گردش کالا ثبت شد.";
+    }
+
+    public async Task<string> CountStockAsync(Guid submission, long id, decimal counted, string note, DateOnly date, long actor)
+    {
+        await using var conn = await source.OpenConnectionAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+        var stock = await Scalar(conn, tx, "SELECT stock FROM products WHERE id=$1 FOR UPDATE", id);
+        if (stock is not decimal current) return "کالا پیدا نشد.";
+        if (await Scalar(conn, tx, "SELECT id FROM stock_events WHERE submission_id=$1", submission) is not null)
+            return "این شمارش قبلاً ثبت شده است.";
+        if (await Scalar(conn, tx, "SELECT id FROM stock_events WHERE product_id=$1 LIMIT 1", id) is null)
+            return "ابتدا موجودی افتتاحیه این کالا را ثبت کنید.";
+        var difference = counted - current;
+        await Exec(conn, tx, "UPDATE products SET stock=$2 WHERE id=$1", id, counted);
+        await Exec(conn, tx, """
+            INSERT INTO stock_events(submission_id,product_id,kind,delta,department,event_date,actor_id,before_quantity,counted_quantity)
+            VALUES($1,$2,'count',$3,NULLIF($4,''),$5,$6,$7,$8)
+            """, submission, id, difference, note, date, actor, current, counted);
+        await tx.CommitAsync();
+        return difference == 0 ? "شمارش ثبت شد؛ مغایرتی وجود ندارد." :
+            $"شمارش ثبت شد؛ مغایرت {difference:0.###} { (difference > 0 ? "افزایش" : "کاهش") } ثبت شد.";
     }
 
     public async Task<List<StockLine>> StockHistoryAsync(long id, DateOnly from, DateOnly to)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT p.name,s.kind,s.delta,s.department,s.event_date,s.invoice_id
-            FROM stock_events s JOIN products p ON s.product_id=p.id
+            SELECT p.name,s.kind,s.delta,s.department,s.event_date,s.invoice_id,s.before_quantity,s.counted_quantity,u.display_name
+            FROM stock_events s JOIN products p ON s.product_id=p.id JOIN staff u ON u.id=s.actor_id
             WHERE s.product_id=$1 AND event_date BETWEEN $2 AND $3 ORDER BY s.id DESC LIMIT 50
             """, id, from, to);
         await using var r = await cmd.ExecuteReaderAsync();
         var result = new List<StockLine>();
         while (await r.ReadAsync()) result.Add(new(r.GetString(0), r.GetString(1), r.GetDecimal(2), r.IsDBNull(3) ? null : r.GetString(3),
-            r.GetFieldValue<DateOnly>(4), r.IsDBNull(5) ? null : r.GetInt64(5)));
+            r.GetFieldValue<DateOnly>(4), r.IsDBNull(5) ? null : r.GetInt64(5),
+            r.IsDBNull(6) ? null : r.GetDecimal(6), r.IsDBNull(7) ? null : r.GetDecimal(7), r.GetString(8)));
         return result;
     }
 

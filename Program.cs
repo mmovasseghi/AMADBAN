@@ -1,9 +1,11 @@
 using Amadban.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 using System.Threading.RateLimiting;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 var connection = builder.Configuration.GetConnectionString("Amadban");
@@ -30,6 +32,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.AccessDeniedPath = "/Denied";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var idText = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var stampText = context.Principal?.FindFirstValue("session_stamp");
+            if (!long.TryParse(idText, out var id) || !Guid.TryParse(stampText, out var stamp) ||
+                !await context.HttpContext.RequestServices.GetRequiredService<Store>().SessionValidAsync(id, stamp))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
     });
 builder.Services.AddAuthorization();
 builder.Services.AddRateLimiter(options =>

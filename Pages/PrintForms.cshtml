@@ -1,6 +1,7 @@
 @page
 @model Amadban.Pages.PrintFormsModel
-@{ Layout = null; }
+@inject Store Store
+@{ Layout = null; var signers = await Store.SignersAsync(); }
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
@@ -11,7 +12,7 @@
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
-<nav class="print-controls"><button type="button" data-print>چاپ A4</button><a asp-page="/Index">کارتابل</a></nav>
+<nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="1" min="1" max="12"></label><button type="button" data-print>چاپ A4</button><a asp-page="/Index">کارتابل</a></nav>
 <article>
 <header><p>بسمه‌تعالی</p><h1>@Model.Title</h1><p>بیمارستان امام سجاد (ع) فراجا ـ آماد و پشتیبانی</p></header>
 @if (Model.Invoice is { } invoice)
@@ -21,7 +22,7 @@
         <tbody>@foreach (var item in invoice.Lines) { <tr><td>@item.Title</td><td>@item.Unit</td><td>@Persian.Money(item.Amount)</td><td></td></tr> }</tbody>
     </table>
     <p>جمع کل @Persian.Money(invoice.Summary.Total) ریال · @PersianWords.Number(invoice.Summary.Total) ریال</p>
-    <section class="signatures"><div>رئیس واحد</div><div>کارشناس مرکز</div><div>افسرعامل</div></section>
+    <section class="signatures"><div>رئیس واحد<p>@signers.GetValueOrDefault("chief")</p></div><div>کارشناس مرکز<p>@signers.GetValueOrDefault("expert")</p></div><div>افسرعامل<p>@signers.GetValueOrDefault("agent")</p></div></section>
 }
 else if (Model.Kind == "proxy")
 {
@@ -41,7 +42,7 @@ else
         <tr><th>مبلغ ریال</th><td>@Persian.Money(Model.Amount)</td></tr>
         <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(Model.Amount) ریال</td></tr>
     </tbody></table>
-    <section class="signatures"><div>افسرعامل</div><div>مقام مجاز</div><div>عامل ذی‌حساب</div></section>
+    <section class="signatures"><div>افسرعامل<p>@signers.GetValueOrDefault("agent")</p></div><div>مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div></section>
 }
 </article>
 </body>

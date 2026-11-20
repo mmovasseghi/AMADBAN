@@ -17,6 +17,7 @@
 </head>
 <body>
         <nav class="print-controls">
+        <label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
         <button type="button" data-print>چاپ سند A4</button><a asp-page="Detail" asp-route-id="@row.Id">بازگشت به پرونده</a>
         <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Documents)
         { <option value="@key" selected="@(key==Model.Template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>

@@ -2,6 +2,7 @@ using Amadban.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 
 namespace Amadban.Pages;
 
@@ -16,9 +17,33 @@ public sealed class OrganizationModel(Store store) : PageModel
         ["finance"] = "مسئول مالی / عامل ذی‌حساب", ["recipient"] = "گیرنده وجه"
     };
     public Dictionary<string, string> Signers { get; private set; } = [];
+    public List<Person> People { get; private set; } = [];
     [TempData] public string? Message { get; set; }
+    private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    public async Task OnGetAsync() => Signers = await store.SignersAsync();
+    public async Task OnGetAsync()
+    {
+        Signers = await store.SignersAsync();
+        People = await store.PeopleAsync();
+    }
+
+    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position)
+    {
+        name = name?.Trim() ?? "";
+        position = position?.Trim() ?? "";
+        Message = name.Length is < 2 or > 120 || position.Length > 120
+            ? "نام و سمت شخص را بررسی کنید."
+            : await store.AddPersonAsync(name, position, 0, Actor);
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostAssignAsync(string? role, long person)
+    {
+        Message = role is null || !Roles.ContainsKey(role) || person <= 0
+            ? "جایگاه و شخص را انتخاب کنید."
+            : await store.AssignSignerAsync(role, person, Actor) ? "نام شخص به محل امضا متصل شد." : "شخص فعال پیدا نشد.";
+        return RedirectToPage();
+    }
 
     public async Task<IActionResult> OnPostLogoAsync(string? code, IFormFile? file)
     {
@@ -27,7 +52,7 @@ public sealed class OrganizationModel(Store store) : PageModel
             Message = "نشان اصلی PNG یا JPG تا ۲ مگابایت را انتخاب کنید.";
         else
         {
-            await store.SaveBrandImageAsync(code, upload);
+            await store.SaveBrandImageAsync(code, upload, Actor);
             Message = "نشان اصلی ثبت شد.";
         }
         return RedirectToPage();
@@ -40,7 +65,7 @@ public sealed class OrganizationModel(Store store) : PageModel
             Message = "جایگاه و نام امضاکننده را بررسی کنید.";
         else
         {
-            await store.SaveSignerAsync(role, name);
+            await store.SaveSignerAsync(role, name, Actor);
             Message = "نام چاپی ثبت شد.";
         }
         return RedirectToPage();

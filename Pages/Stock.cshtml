@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "موجودی انبار";
 }
-<header class="hero"><h1>موجودی و گردش انبار</h1></header>
+<header class="hero"><div><h1>موجودی و گردش انبار</h1><p>موجودی کالاها، ورود فاکتور و شمارش واقعی را اینجا ببینید.</p></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.Selected is { } product)
 {
@@ -12,12 +12,23 @@
         <form method="post" asp-page-handler="Move" class="filters">
             <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
             <label>نوع گردش<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>
-            <label>مقدار<input name="quantity" inputmode="decimal" required></label>
+            <label>مقدار<input name="quantity" inputmode="decimal" required><small>برای افتتاحیه، صفر نیز مجاز است.</small></label>
             <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
             <label>بخش دریافت‌کننده<input name="department" maxlength="120"></label>
             <label>شناسه پرونده ورود، در صورت وجود<input name="invoice" type="number" min="1"></label>
             <button class="button primary" type="submit">ثبت گردش</button>
         </form>
+        <details>
+            <summary>ثبت شمارش واقعی و مغایرت انبارگردانی</summary>
+            <p>موجودی فعلی @product.Stock.ToString("0.###") @product.Unit است. مقدار واقعی شمارش‌شده را وارد کنید؛ اختلاف در سابقه کالا ثبت می‌شود.</p>
+            <form method="post" asp-page-handler="Count" class="filters">
+                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
+                <label>موجودی واقعی<input name="counted" inputmode="decimal" required></label>
+                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+                <label>یادداشت مغایرت، در صورت نیاز<input name="note" maxlength="120"></label>
+                <button class="button primary" type="submit">ثبت شمارش</button>
+            </form>
+        </details>
         <form method="get" class="filters">
             <input type="hidden" name="ProductId" value="@product.Id">
             <label>از تاریخ<input name="From" dir="ltr" value="@Model.From" placeholder="۱۴۰۵/۰۱/۰۱"></label>
@@ -25,10 +36,11 @@
             <button class="button" type="submit">نمایش گردش</button>
         </form>
         <div asp-validation-summary="All" class="validation"></div>
-        <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>عملیات</th><th>تغییر موجودی</th><th>بخش</th><th>پرونده</th></tr></thead>
+        <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>عملیات</th><th>تغییر موجودی</th><th>شمارش و مانده پیشین</th><th>بخش یا توضیح</th><th>ثبت‌کننده</th><th>پرونده</th></tr></thead>
         <tbody>@foreach (var entry in Model.History)
         {
-            <tr><td>@Persian.Date(entry.Date)</td><td>@(entry.Kind == "opening" ? "شمارش افتتاحیه" : entry.Kind == "in" ? "ورود" : "خروج")</td><td>@entry.Delta.ToString("0.###")</td><td>@(entry.Department ?? "—")</td>
+            <tr><td>@Persian.Date(entry.Date)</td><td>@(entry.Kind == "opening" ? "شمارش افتتاحیه" : entry.Kind == "count" ? "انبارگردانی" : entry.Kind == "in" ? "ورود" : "خروج")</td><td>@entry.Delta.ToString("+0.###;-0.###;0")</td>
+                <td>@(entry.Counted is decimal counted ? $"{counted:0.###} از {entry.Before:0.###}" : "—")</td><td>@(entry.Department ?? "—")</td><td>@entry.Actor</td>
                 <td>@if (entry.Invoice is long id) { <a asp-page="/Invoices/Detail" asp-route-id="@id">مشاهده</a> }</td></tr>
         }</tbody></table></div>
     </section>

@@ -14,8 +14,30 @@
         <label>نقش<select name="role">@foreach (var (role, label) in Amadban.Pages.StaffModel.Roles) { <option value="@role">@label</option> }</select></label>
         <button class="button primary" type="submit">ساخت حساب</button>
     </form>
-    <div class="table-wrap"><table><thead><tr><th>نام کاربری</th><th>نام</th><th>نقش</th></tr></thead>
+    <div class="table-wrap"><table><thead><tr><th>نام کاربری</th><th>نام</th><th>نقش</th><th>وضعیت</th><th>مدیریت حساب</th></tr></thead>
         <tbody>@foreach (var person in Model.Users)
-        { <tr><td>@person.Username</td><td>@person.Name</td><td>@Amadban.Pages.StaffModel.Roles[person.Role]</td></tr> }</tbody>
+        { <tr><td>@person.Username</td><td>@person.Name</td><td>@Amadban.Pages.StaffModel.Roles[person.Role]</td>
+              <td>@(person.Active ? "فعال" : "غیرفعال")</td>
+              <td><div class="actions">
+                  <form method="post" asp-page-handler="Reset" class="actions">
+                      <input type="hidden" name="id" value="@person.Id">
+                      <label>رمز تازه<input name="password" type="password" minlength="12" maxlength="256" required autocomplete="new-password"></label>
+                      <button class="button" type="submit">تغییر رمز</button>
+                  </form>
+                  @if (person.Id.ToString() != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                  {
+                      <form method="post" asp-page-handler="State">
+                          <input type="hidden" name="id" value="@person.Id">
+                          <button class="button" name="action" value="@(person.Active ? "deactivate" : "activate")" type="submit">@(person.Active ? "غیرفعال‌کردن" : "فعال‌کردن")</button>
+                      </form>
+                  }
+              </div></td></tr> }</tbody>
     </table></div>
+</section>
+<section class="card">
+    <h2>سابقه مدیریت حساب‌ها</h2>
+    <div class="table-wrap"><table><thead><tr><th>زمان</th><th>اقدام</th><th>حساب</th><th>ثبت‌کننده</th></tr></thead>
+    <tbody>@foreach (var entry in Model.Events)
+    { <tr><td>@Persian.Time(entry.At)</td><td>@(entry.Action == "reset-password" ? "تغییر رمز" : entry.Action == "activate" ? "فعال‌سازی" : "غیرفعال‌سازی")</td><td>@entry.Target</td><td>@entry.Actor</td></tr> }
+    </tbody></table></div>
 </section>

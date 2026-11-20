@@ -28,7 +28,8 @@ public sealed class LoginModel(Store store) : PageModel
             return Page();
         }
         var identity = new ClaimsIdentity(
-            [new(ClaimTypes.NameIdentifier, user.Id.ToString()), new(ClaimTypes.Name, user.Name), new(ClaimTypes.Role, user.Role)],
+            [new(ClaimTypes.NameIdentifier, user.Id.ToString()), new(ClaimTypes.Name, user.Name),
+             new(ClaimTypes.Role, user.Role), new("session_stamp", user.SecurityStamp.ToString())],
             CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
         return RedirectToPage("/Index");

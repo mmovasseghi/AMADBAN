@@ -17,6 +17,7 @@ public sealed class DetailModel(Store store) : PageModel
         ? Role == "agent" : Role is "agent" or "warehouse" or "chief");
     public bool CanKardex => Entry.Summary.Warehouse && Role == "kardex";
     public bool CanAttach => Role is "agent" or "chief" or "warehouse";
+    public bool CanReceive => Role is "warehouse" or "chief";
     public bool Editable => Entry.Summary.Delivery is "open" or "returned";
     public static readonly Dictionary<string, string> AttachmentKinds = new()
     {
@@ -86,6 +87,26 @@ public sealed class DetailModel(Store store) : PageModel
     {
         if (!HandlesFinance) return Forbid();
         Message = await store.UpdateFinanceAsync(id, Actor, Role, action);
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostPosAsync(long id, bool embedded)
+    {
+        if (!HandlesFinance) return Forbid();
+        Message = await store.SetPosInInvoiceAsync(id, embedded, Actor);
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostReceiptAsync(long id, string? date, string? operation)
+    {
+        if (!CanReceive) return Forbid();
+        var day = Persian.ParseDate(date);
+        Message = day is null ? "تاریخ شمسی ورود یا اصلاح انبار را بررسی کنید." : operation switch
+        {
+            "receive" => await store.ReceiveInvoiceAsync(id, day.Value, Actor),
+            "void" => await store.VoidInvoiceReceiptAsync(id, day.Value, Actor),
+            _ => "اقدام انبار معتبر نیست."
+        };
         return RedirectToPage(new { id });
     }
 }

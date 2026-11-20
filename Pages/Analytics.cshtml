@@ -1,0 +1,44 @@
+@page
+@model Amadban.Pages.AnalyticsModel
+@{
+    ViewData["Title"] = "گزارش تحلیلی";
+    var groups = new[] { ("vendor", "فروشنده"), ("subject", "موضوع خرید"), ("credit", "کد اعتباری"), ("kind", "نوع خرید") };
+}
+<header class="hero"><div><div class="eyebrow">گزارش عملیاتی</div><h1>تحلیل خریدها</h1><p>مبلغ، پرداخت و پرونده‌های برگشتی در بازه انتخابی</p></div>
+    <a class="button" asp-page="/Index" asp-route-Report="true">فهرست پرونده‌ها</a></header>
+<section class="card">
+    <form method="get" class="filters">
+        <label>گروه‌بندی<select name="Group">@foreach (var (value, label) in groups) { <option value="@value" selected="@(Model.Group == value)">@label</option> }</select></label>
+        <label>از تاریخ شمسی<input name="From" value="@Model.From" dir="ltr" maxlength="10" required></label>
+        <label>تا تاریخ شمسی<input name="To" value="@Model.To" dir="ltr" maxlength="10" required></label>
+        <label>فروشنده، موضوع یا شماره<input name="Search" value="@Model.Search" maxlength="100"></label>
+        <label>موضوع<input name="Subject" value="@Model.Subject" maxlength="100"></label>
+        <label>کد اعتباری<input name="Credit" value="@Model.Credit" maxlength="40"></label>
+        <label>نوع خرید<select name="Kind"><option value="">همه</option><option value="cash" selected="@(Model.Kind == "cash")">نقدی</option><option value="credit" selected="@(Model.Kind == "credit")">اعتباری</option></select></label>
+        <label>وضعیت<select name="Status"><option value="">همه</option><option value="due" selected="@(Model.Status == "due")">نزدیک یا گذشته از موعد پرداخت</option><option value="kardex" selected="@(Model.Status == "kardex")">کارتکس ثبت‌نشده</option><option value="kardex-late" selected="@(Model.Status == "kardex-late")">کارتکس دیرکرده</option><option value="kardex-current" selected="@(Model.Status == "kardex-current")">کارتکس این ماه</option><option value="returned" selected="@(Model.Status == "returned")">برگشتی</option><option value="paid" selected="@(Model.Status == "paid")">پرداخت‌شده</option><option value="closed" selected="@(Model.Status == "closed")">بسته‌شده</option></select></label>
+        <button class="button primary" type="submit">محاسبه گزارش</button>
+    </form>
+    <div asp-validation-summary="All" class="validation"></div>
+    @if (ViewData.ModelState.IsValid)
+    {
+        <p class="notice">@Model.Overview.Count پرونده · مجموع @Persian.Money(Model.Overview.Total) ریال · پرداخت‌شده @Persian.Money(Model.Overview.Paid) ریال · برگشتی @Model.Overview.Returned پرونده</p>
+        <p><a class="button" asp-page="/Index" asp-page-handler="Export" asp-route-Status="@Model.Status" asp-route-Search="@Model.Search"
+              asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit"
+              asp-route-From="@Model.From" asp-route-To="@Model.To">دریافت ردیف‌های این گزارش برای اکسل</a></p>
+        <div class="table-wrap"><table><thead><tr><th>@groups.First(x => x.Item1 == Model.Group).Item2</th><th>تعداد پرونده</th><th>جمع مبلغ (ریال)</th><th>پرداخت‌شده (ریال)</th><th>مانده در انتظار پرداخت (ریال)</th><th>برگشتی</th></tr></thead>
+            <tbody>@foreach (var row in Model.Groups)
+            {
+                <tr><td>@if (Model.Group == "credit" && row.Label == "بدون کد") { <span>@row.Label</span> }
+                    else { <a asp-page="/Index" asp-route-Report="true" asp-route-From="@Model.From" asp-route-To="@Model.To"
+                           asp-route-Search="@(Model.Group == "vendor" ? row.Label : Model.Search)"
+                           asp-route-Subject="@(Model.Group == "subject" ? row.Label : Model.Subject)"
+                           asp-route-Credit="@(Model.Group == "credit" ? row.Label : Model.Credit)"
+                           asp-route-Kind="@(Model.Group == "kind" ? (row.Label == "نقدی" ? "cash" : "credit") : Model.Kind)"
+                           asp-route-Status="@Model.Status">@row.Label</a> }</td><td>@row.Count</td><td>@Persian.Money(row.Total)</td>
+                    <td>@Persian.Money(row.Paid)</td><td>@Persian.Money(row.Total - row.Paid)</td><td>@row.Returned</td></tr>
+            }
+            @if (Model.Groups.Count == 0) { <tr><td colspan="6" class="empty">در این بازه پرونده‌ای وجود ندارد.</td></tr> }
+            </tbody></table></div>
+        <p>۳۰ گروه با بیشترین مبلغ نمایش داده می‌شود. دکمه اکسل همه ردیف‌های منطبق را دریافت می‌کند.</p>
+    }
+</section>

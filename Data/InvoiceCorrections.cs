@@ -24,6 +24,20 @@ public sealed partial class Store
         }
 
         var total = entry.Lines.Sum(x => x.Amount);
+        if (await Scalar(conn, tx, "SELECT id FROM warehouse_receipts WHERE invoice_id=$1 AND state='active'", id) is not null)
+        {
+            var stockedLines = new List<(string Title, string Unit, decimal Quantity)>();
+            await using (var cmd = Command(conn, tx,
+                "SELECT title,unit,quantity FROM invoice_lines WHERE invoice_id=$1 ORDER BY position", id))
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync()) stockedLines.Add((reader.GetString(0), reader.GetString(1), reader.GetDecimal(2)));
+            }
+            if (!entry.Warehouse || stockedLines.Count != entry.Lines.Count ||
+                stockedLines.Where((line, position) => line.Title != entry.Lines[position].Title ||
+                    line.Unit != entry.Lines[position].Unit || line.Quantity != entry.Lines[position].Quantity).Any())
+                return "اقلام به انبار وارد شده‌اند. ابتدا در پرونده، ورود انبار را برگردانید و پس از اصلاح فاکتور دوباره ثبت کنید.";
+        }
         if (issued && kind != entry.Kind) return "نوع پرداخت سند صادرشده ثابت است.";
         var prepayment = await FindPrepayment(conn, tx, id, byInvoice: true);
         if ((paid || prepayment is not null) && total != previous)

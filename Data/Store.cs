@@ -3,7 +3,7 @@ using Npgsql;
 
 namespace Amadban.Data;
 
-public sealed record Staff(long Id, string Username, string Name, string Role, string Hash);
+public sealed record Staff(long Id, string Username, string Name, string Role, string Hash, Guid SecurityStamp);
 public sealed record InvoiceSummary(long Id, long? Document, string Number, string Vendor, string Subject,
     DateOnly Date, string Kind, long Total, bool Paid, string Delivery, bool Warehouse, string? Kardex);
 public sealed record InvoiceLine(string Title, string Unit, decimal Quantity, long Price, long Amount);
@@ -11,7 +11,8 @@ public sealed record InvoiceEntry(Guid Submission, string Number, string Vendor,
     string Kind, bool Warehouse, bool Meeting, bool Account, bool Tax, IReadOnlyList<InvoiceLine> Lines, long CashCredit);
 public sealed record Attachment(long Id, string Kind, string Name);
 public sealed record InvoiceEvent(string Action, string Actor, DateTime At);
-public sealed record InvoiceDetail(InvoiceSummary Summary, bool Meeting, bool Account, bool Tax, bool Proxy, DateOnly? KardexDate,
+public sealed record InvoiceDetail(InvoiceSummary Summary, bool Meeting, bool Account, bool Tax, bool Proxy, bool PosInInvoice,
+    DateOnly? KardexDate, DateOnly? WarehouseReceiptDate, bool HasManualStock,
     IReadOnlyList<InvoiceLine> Lines, IReadOnlyList<Attachment> Attachments, IReadOnlyList<InvoiceEvent> Events);
 
 public sealed partial class Store(NpgsqlDataSource source)
@@ -21,6 +22,37 @@ public sealed partial class Store(NpgsqlDataSource source)
         id, document_number, number, vendor, subject, invoice_date, kind, total, paid_at IS NOT NULL,
         delivery_state, warehouse_required, kardex_number
         """;
+    private const string InvoiceCriteria = """
+            FROM invoices i WHERE invoice_date BETWEEN $1 AND $2
+              AND ($3 = '' OR strpos(lower(vendor || ' ' || subject || ' ' || number || ' ' || coalesce(document_number::text, '')), lower($3)) > 0)
+              AND ($4 = '' OR strpos(lower(subject), lower($4)) > 0)
+              AND ($5 = '' OR i.kind=$5)
+              AND ($6 = '' OR EXISTS (SELECT 1 FROM credit_codes c WHERE c.id=i.cash_credit_code AND c.code=$6)
+                            OR EXISTS (SELECT 1 FROM prepayments p JOIN credit_codes c ON c.id=p.code_id
+                                      WHERE p.invoice_id=i.id AND p.state<>'void' AND c.code=$6))
+            """;
+
+    private static string InvoiceStatusFilter(string status) => status switch
+    {
+        "due" => " AND kind='credit' AND paid_at IS NULL AND invoice_date+45 <= $7",
+        "returned" => " AND delivery_state='returned'",
+        "kardex" => " AND warehouse_required AND kardex_number IS NULL",
+        "kardex-late" => " AND warehouse_required AND kardex_number IS NULL AND invoice_date < $7",
+        "kardex-current" => " AND warehouse_required AND kardex_number IS NULL AND invoice_date >= $7",
+        "document" => " AND document_number IS NULL",
+        "paid" => " AND paid_at IS NOT NULL",
+        "ready" => " AND delivery_state IN ('open','returned') AND " + ReadyConditions,
+        "delivered" => " AND delivery_state='delivered'",
+        "closed" => " AND delivery_state='closed'",
+        _ => ""
+    };
+
+    private static DateOnly? StatusDateArgument(string status) => status switch
+    {
+        "due" => Persian.Today.AddDays(7),
+        "kardex-late" or "kardex-current" => Persian.ParseDate(Persian.Date(Persian.Today)[..7] + "/01"),
+        _ => null
+    };
 
     public async Task InitializeAsync(string directory, string? adminPassword)
     {
@@ -43,10 +75,10 @@ public sealed partial class Store(NpgsqlDataSource source)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null,
-            "SELECT id, username, display_name, role, password_hash FROM staff WHERE username=$1 AND active", username);
+            "SELECT id, username, display_name, role, password_hash, security_stamp FROM staff WHERE username=$1 AND active", username);
         await using var r = await cmd.ExecuteReaderAsync();
         if (!await r.ReadAsync()) return null;
-        var staff = new Staff(r.GetInt64(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4));
+        var staff = new Staff(r.GetInt64(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4), r.GetGuid(5));
         return Passwords.VerifyHashedPassword(username, staff.Hash, password) == PasswordVerificationResult.Failed ? null : staff;
     }
 
@@ -54,39 +86,23 @@ public sealed partial class Store(NpgsqlDataSource source)
         string status, string search, string subject, string kind, string credit, DateOnly from, DateOnly to, int page, bool totals = false)
     {
         await using var conn = await source.OpenConnectionAsync();
-        var filter = status switch
-        {
-            "due" => " AND kind='credit' AND paid_at IS NULL AND invoice_date+45 <= $7",
-            "returned" => " AND delivery_state='returned'",
-            "kardex" => " AND warehouse_required AND kardex_number IS NULL",
-            "document" => " AND document_number IS NULL",
-            "paid" => " AND paid_at IS NOT NULL",
-            "ready" => " AND delivery_state IN ('open','returned') AND " + ReadyConditions,
-            "delivered" => " AND delivery_state='delivered'",
-            "closed" => " AND delivery_state='closed'",
-            _ => ""
-        };
-        const string criteria = """
-            FROM invoices i WHERE invoice_date BETWEEN $1 AND $2
-              AND ($3 = '' OR strpos(lower(vendor || ' ' || subject || ' ' || number || ' ' || coalesce(document_number::text, '')), lower($3)) > 0)
-              AND ($4 = '' OR strpos(lower(subject), lower($4)) > 0)
-              AND ($5 = '' OR i.kind=$5)
-              AND ($6 = '' OR EXISTS (SELECT 1 FROM credit_codes c WHERE c.id=i.cash_credit_code AND c.code=$6)
-                            OR EXISTS (SELECT 1 FROM prepayments p JOIN credit_codes c ON c.id=p.code_id
-                                      WHERE p.invoice_id=i.id AND p.state<>'void' AND c.code=$6))
-            """;
+        var filter = InvoiceStatusFilter(status);
         var rows = new List<InvoiceSummary>();
         var offset = (page - 1) * 25;
-        var listArgs = status == "due" ? new object[] { from, to, search, subject, kind, credit, Persian.Today.AddDays(7), offset } : [from, to, search, subject, kind, credit, offset];
-        await using (var cmd = Command(conn, null, "SELECT " + SummaryColumns + " " + criteria + " " + filter +
+        var listArgs = StatusDateArgument(status) is DateOnly cutoff
+            ? new object[] { from, to, search, subject, kind, credit, cutoff, offset }
+            : [from, to, search, subject, kind, credit, offset];
+        await using (var cmd = Command(conn, null, "SELECT " + SummaryColumns + " " + InvoiceCriteria + " " + filter +
             " ORDER BY invoice_date DESC, id DESC LIMIT 26 OFFSET $" + listArgs.Length, listArgs))
         await using (var r = await cmd.ExecuteReaderAsync())
         {
             while (await r.ReadAsync()) rows.Add(ReadSummary(r));
         }
         if (!totals) return (rows, 0, 0);
-        var args = status == "due" ? new object[] { from, to, search, subject, kind, credit, Persian.Today.AddDays(7) } : [from, to, search, subject, kind, credit];
-        await using var summary = Command(conn, null, "SELECT count(*), coalesce(sum(total),0)::bigint " + criteria + " " + filter, args);
+        var args = StatusDateArgument(status) is DateOnly summaryCutoff
+            ? new object[] { from, to, search, subject, kind, credit, summaryCutoff }
+            : [from, to, search, subject, kind, credit];
+        await using var summary = Command(conn, null, "SELECT count(*), coalesce(sum(total),0)::bigint " + InvoiceCriteria + " " + filter, args);
         await using var sr = await summary.ExecuteReaderAsync();
         await sr.ReadAsync();
         return (rows, sr.GetInt64(0), sr.GetInt64(1));
@@ -129,10 +145,10 @@ public sealed partial class Store(NpgsqlDataSource source)
     {
         await using var conn = await source.OpenConnectionAsync();
         InvoiceSummary summary;
-        bool meeting, account, tax, proxy;
+        bool meeting, account, tax, proxy, posInInvoice;
         DateOnly? kardexDate;
         await using (var cmd = Command(conn, null, "SELECT " + SummaryColumns +
-            ", meeting_required, account_required, tax_required, kardex_date, proxy_required FROM invoices WHERE id=$1", id))
+            ", meeting_required, account_required, tax_required, kardex_date, proxy_required, pos_in_invoice FROM invoices WHERE id=$1", id))
         await using (var r = await cmd.ExecuteReaderAsync())
         {
             if (!await r.ReadAsync()) return null;
@@ -142,6 +158,7 @@ public sealed partial class Store(NpgsqlDataSource source)
             tax = r.GetBoolean(14);
             kardexDate = r.IsDBNull(15) ? null : r.GetFieldValue<DateOnly>(15);
             proxy = r.GetBoolean(16);
+            posInInvoice = r.GetBoolean(17);
         }
         var lines = new List<InvoiceLine>();
         await using (var cmd = Command(conn, null,
@@ -166,7 +183,20 @@ public sealed partial class Store(NpgsqlDataSource source)
         {
             while (await r.ReadAsync()) events.Add(new(r.GetString(0), r.GetString(1), r.GetDateTime(2)));
         }
-        return new(summary, meeting, account, tax, proxy, kardexDate, lines, attachments, events);
+        DateOnly? warehouseReceiptDate;
+        bool hasManualStock;
+        await using (var cmd = Command(conn, null, """
+            SELECT (SELECT receipt_date FROM warehouse_receipts WHERE invoice_id=$1 AND state='active'),
+                   EXISTS(SELECT 1 FROM stock_events WHERE invoice_id=$1 AND receipt_id IS NULL)
+            """, id))
+        await using (var r = await cmd.ExecuteReaderAsync())
+        {
+            await r.ReadAsync();
+            warehouseReceiptDate = r.IsDBNull(0) ? null : r.GetFieldValue<DateOnly>(0);
+            hasManualStock = r.GetBoolean(1);
+        }
+        return new(summary, meeting, account, tax, proxy, posInInvoice, kardexDate, warehouseReceiptDate,
+            hasManualStock, lines, attachments, events);
     }
 
     public async Task<bool> IssueDocumentAsync(long id, long actor, string role)
@@ -237,15 +267,13 @@ public sealed partial class Store(NpgsqlDataSource source)
         if (entry.Summary.Document is null) missing.Add("شماره سند");
         if (!entry.Summary.Paid) missing.Add("ثبت پرداخت");
         if (!own.Contains("invoice")) missing.Add("اسکن فاکتور");
-        if (entry.Summary.Kind == "cash" && !own.Contains("pos")) missing.Add("پرفراژ کارت‌خوان");
+        if (entry.Summary.Kind == "cash" && !entry.PosInInvoice && !own.Contains("pos")) missing.Add("پرفراژ کارت‌خوان");
         if (entry.Meeting && !own.Contains("meeting")) missing.Add("صورت‌جلسه");
         if (entry.Account && !own.Contains("account")) missing.Add("تأییدیه حساب");
-        if (entry.Tax)
-        {
-            if (entry.Summary.Kind == "credit" && !own.Contains("taxpayer")) missing.Add("برگه مؤدیان");
-            if (!own.Contains("tax")) missing.Add("برگه ثبت مالیات");
-        }
+        if (entry.Tax && entry.Summary.Kind == "credit" && !own.Contains("taxpayer")) missing.Add("برگه مؤدیان");
+        if (!own.Contains("tax")) missing.Add("برگه ثبت مالیات");
         if (entry.Proxy && !own.Contains("proxy")) missing.Add("برگه نیابتی");
+        if (entry.Summary.Warehouse && entry.WarehouseReceiptDate is null && !entry.HasManualStock) missing.Add("ورود اقلام به انبار");
         if (entry.Summary.Warehouse && entry.Summary.Kardex is null) missing.Add("ثبت کارتکس");
         return missing;
     }

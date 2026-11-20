@@ -1,0 +1,20 @@
+@page
+@model Amadban.Pages.ActivityModel
+@{ ViewData["Title"] = "اطلاعیه‌های رئیس آماد"; }
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/megaphone.webp" width="82" height="82" alt=""></span>
+    <div><div class="eyebrow">پیگیری همه بخش‌ها</div><h1>اطلاعیه‌های آماد</h1><p>هر ثبت مهم در خرید، کارتکس، انبار و امور اداری با نام ثبت‌کننده اینجا دیده می‌شود.</p></div></div>
+    <a class="button" asp-page="/Index">بازگشت به کارتابل</a></header>
+<section class="activity-list" aria-label="رویدادهای آماد">
+    @foreach (var item in Model.Items)
+    {
+        <a class="activity-card" href="@item.TargetUrl"><span class="activity-icon"><img src="/icon3d/@(item.Icon).webp" width="52" height="52" alt=""></span>
+            <span class="activity-body"><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></span>
+            <span class="activity-more">دیدن جزئیات ←</span></a>
+    }
+    @if (Model.Items.Count == 0) { <div class="card empty">هنوز رویدادی ثبت نشده است.</div> }
+</section>
+@if (Model.P>1 || Model.HasNext)
+{ <nav class="pagination" aria-label="صفحه اطلاعیه‌ها">
+    @if (Model.P>1) { <a class="button" asp-route-P="@(Model.P-1)">جدیدتر</a> }
+    @if (Model.HasNext) { <a class="button" asp-route-P="@(Model.P+1)">قدیمی‌تر</a> }
+</nav> }

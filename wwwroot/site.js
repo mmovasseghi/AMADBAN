@@ -14,12 +14,30 @@
                 clones.push(clone);
             }
         }
-        try {
-            window.print();
-        } finally {
-            clones.forEach(clone => clone.remove());
-        }
+        const cleanup = () => clones.forEach(clone => clone.remove());
+        window.addEventListener('afterprint', cleanup, { once: true });
+        window.print();
+        // Some older browsers do not fire afterprint reliably.
+        setTimeout(cleanup, 30000);
     });
+
+    const notificationBadge = document.querySelector('[data-notification-badge]');
+    if (notificationBadge) setInterval(async () => {
+        if (document.hidden) return;
+        try {
+            const response = await fetch('/Activity?handler=Unread', { cache: 'no-store' });
+            if (!response.ok) return;
+            const data = await response.json();
+            const count = Number(data.count) || 0;
+            const label = count > 99 ? '۹۹+' : String(count);
+            notificationBadge.textContent = label;
+            notificationBadge.hidden = count === 0;
+            const sidebarBadge = document.querySelector('.notification-pill');
+            if (sidebarBadge) { sidebarBadge.textContent = label; sidebarBadge.hidden = count === 0; }
+        } catch (_) {
+            // The next normal page visit will refresh the indicator.
+        }
+    }, 90000);
 
     const supplier = document.querySelector('[data-supplier]');
     if (supplier) {
@@ -63,6 +81,72 @@
         const updateCashCode = () => { cashCode.hidden = paymentKind.value !== 'cash'; };
         paymentKind.addEventListener('change', updateCashCode);
         updateCashCode();
+    }
+
+    const dispatch = document.querySelector('[data-dispatch-lines]');
+    if (dispatch) {
+        const template = document.querySelector('[data-dispatch-template]');
+        const add = document.querySelector('[data-dispatch-add]');
+        const list = document.getElementById('dispatch-products');
+        const department = document.querySelector('[name="department"]');
+        const recipient = document.querySelector('[name="recipient"]');
+        let timer;
+        const reindex = () => Array.from(dispatch.rows).forEach((row, index) =>
+            row.querySelectorAll('[data-dispatch-field]').forEach(input => {
+                input.name = 'lines[' + index + '].' + input.dataset.dispatchField;
+            }));
+        const addRow = () => {
+            if (dispatch.rows.length >= 30) return;
+            dispatch.appendChild(template.content.cloneNode(true));
+            reindex();
+            dispatch.lastElementChild.querySelector('input').focus();
+        };
+        add.addEventListener('click', addRow);
+        dispatch.addEventListener('click', event => {
+            if (!event.target.closest('[data-dispatch-remove]')) return;
+            const row = event.target.closest('tr');
+            if (dispatch.rows.length === 1) row.querySelectorAll('input').forEach(input => input.value = '');
+            else { row.remove(); reindex(); }
+        });
+        dispatch.addEventListener('input', event => {
+            if (!event.target.matches('[data-product-code]')) return;
+            clearTimeout(timer);
+            const term = event.target.value.trim();
+            if (term.length < 2 || term.length > 80) return;
+            timer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
+                    if (!response.ok) return;
+                    const products = await response.json();
+                    list.textContent = '';
+                    products.forEach(product => {
+                        const option = document.createElement('option');
+                        option.value = product.code;
+                        option.label = product.name + ' · موجودی ' + product.stock + ' ' + product.unit;
+                        list.appendChild(option);
+                    });
+                } catch (_) {
+                    // The printed product code can still be entered directly.
+                }
+            }, 220);
+        });
+        dispatch.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' || event.isComposing || !event.target.matches('[data-dispatch-field]')) return;
+            event.preventDefault();
+            const inputs = Array.from(dispatch.querySelectorAll('[data-dispatch-field]'));
+            const next = inputs[inputs.indexOf(event.target) + 1];
+            if (next) next.focus(); else addRow();
+        });
+        const filterRecipients = () => {
+            recipient.value = '';
+            Array.from(recipient.options).forEach(option => {
+                if (!option.value) return;
+                option.disabled = option.dataset.department !== department.value;
+                option.hidden = option.disabled;
+            });
+        };
+        department.addEventListener('change', filterRecipients);
+        filterRecipients();
     }
 
     const lines = document.querySelector('[data-lines]');

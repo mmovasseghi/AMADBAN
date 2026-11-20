@@ -3,15 +3,23 @@
 @{
     ViewData["Title"] = "ورود";
 }
-<section class="login card">
-    @await Html.PartialAsync("_BrandMarks", false)
-    <div class="eyebrow">بیمارستان امام سجاد (ع) فراجا</div>
-    <h1>ورود به آمادبان</h1>
-    <p>دایره آماد و پشتیبانی</p>
-    <form method="post">
-        <div asp-validation-summary="All" class="validation"></div>
-        <label>نام کاربری<input asp-for="Username" autocomplete="username" maxlength="100" required></label>
-        <label>رمز ورود<input asp-for="Password" type="password" autocomplete="current-password" maxlength="256" required></label>
-        <button class="primary" type="submit">ورود</button>
-    </form>
-</section>
+<div class="login-shell">
+    <section class="login-intro" aria-label="معرفی سامانه">
+        <div class="login-org"><div class="login-logos"><img src="/BrandAsset/faraja" width="63" height="86" alt="نشان فراجا"><img src="/BrandAsset/health" width="76" height="86" alt="نشان معاونت بهداشت، امداد و درمان فراجا"></div>
+            <span>بیمارستان فوق تخصصی امام سجاد (ع) فراجا<small>دایره آماد و پشتیبانی</small></span></div>
+        <div class="login-illustration"><img src="/icon3d/cube.webp" width="112" height="112" alt=""><img src="/icon3d/file-text.webp" width="72" height="72" alt=""></div>
+        <div><p class="eyebrow">سامانه داخلی بیمارستان</p><h1>آمادبان</h1><p>خرید، انبار، کارتکس و اسناد در یک مسیر روشن و قابل پیگیری</p></div>
+        <div class="login-points"><span>ثبت آسان فاکتور</span><span>پیگیری هر سند</span><span>گزارش‌های کاربردی</span></div>
+    </section>
+    <section class="login card">
+        <div class="login-welcome"><img src="/icon3d/key.webp" width="64" height="64" alt=""><div><p class="eyebrow">خوش آمدید</p><h2>ورود به حساب کاربری</h2></div></div>
+        <p>نام کاربری و رمزی را که رئیس آماد برای شما ثبت کرده وارد کنید.</p>
+        <form method="post">
+            <div asp-validation-summary="All" class="validation"></div>
+            <label>نام کاربری<input asp-for="Username" autocomplete="username" maxlength="100" required autofocus placeholder="نام کاربری شما"></label>
+            <label>رمز ورود<input asp-for="Password" type="password" autocomplete="current-password" maxlength="256" required placeholder="رمز ورود شما"></label>
+            <button class="button primary login-submit" type="submit">ورود به آمادبان <svg aria-hidden="true"><use href="/icons.svg#check"></use></svg></button>
+        </form>
+        <p class="login-foot">اگر نام کاربری یا رمز را ندارید، از رئیس آماد دریافت کنید.</p>
+    </section>
+</div>

@@ -1,0 +1,56 @@
+@page
+@model Amadban.Pages.DispatchModel
+@{
+    ViewData["Title"] = "ارسال کالا به بخش";
+}
+<header class="hero"><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>بخش و تحویل‌گیرنده را انتخاب کنید، اقلام را وارد کنید و برگه تحویل را چاپ کنید.</p></div>
+    <a class="button" asp-page="/Stock">موجودی کالاها</a></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <div class="steps"><span>۱ · بخش و تحویل‌گیرنده</span><span>۲ · کالا و تعداد</span><span>۳ · چاپ و امضا</span></div>
+    <form method="post" asp-page-handler="Issue" class="dispatch-form">
+        <input type="hidden" name="submission" value="@Model.Submission">
+        <div class="fields">
+            <label>بخش مقصد<select name="department" required><option value="">بخش را انتخاب کنید</option>
+                @foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }
+            </select></label>
+            <label>شخص تحویل‌گیرنده<select name="recipient" required><option value="">تحویل‌گیرنده همان بخش را انتخاب کنید</option>
+                @foreach (var person in Model.People.Where(p => p.DepartmentId is not null))
+                { <option value="@person.Id" data-department="@person.DepartmentId">@person.Department · @person.Name @(person.Position.Length > 0 ? "· " + person.Position : "")</option> }
+            </select></label>
+            <label>نام انباردار روی برگه<select name="warehouse" required><option value="">انباردار را انتخاب کنید</option>
+                @foreach (var member in Model.WarehouseStaff) { <option value="@member.Id">@member.Name</option> }
+            </select></label>
+            <label>تاریخ تحویل (شمسی)<input name="date" value="@Persian.Date(Persian.Today)" dir="ltr" required maxlength="10"></label>
+            <label>یادداشت، در صورت نیاز<input name="note" maxlength="250" placeholder="مثلاً درخواست بخش یا شماره نامه"></label>
+        </div>
+        <h2>کالاهای تحویلی</h2>
+        <p>نام کالا یا کد را تایپ کنید و از پیشنهادها کد کالا را برگزینید. موجودی هر کالا کنار نام آن نمایش داده می‌شود.</p>
+        <datalist id="dispatch-products">@foreach (var p in Model.Hints)
+        { <option value="@p.Code" label="@p.Name · موجودی @p.Stock.ToString("0.###") @p.Unit"></option> }</datalist>
+        <div class="table-wrap"><table class="entry-table"><thead><tr><th>کالا</th><th>تعداد تحویل</th><th></th></tr></thead>
+            <tbody data-dispatch-lines><tr><td><input name="lines[0].code" data-dispatch-field="code" data-product-code list="dispatch-products" required aria-label="کد کالا" placeholder="نام یا کد کالا"></td>
+                <td><input name="lines[0].quantity" data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد تحویل" placeholder="تعداد"></td>
+                <td><button class="button quiet" type="button" data-dispatch-remove aria-label="حذف ردیف">×</button></td></tr></tbody></table></div>
+        <template data-dispatch-template><tr><td><input data-dispatch-field="code" data-product-code list="dispatch-products" required aria-label="کد کالا" placeholder="نام یا کد کالا"></td>
+            <td><input data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد تحویل" placeholder="تعداد"></td>
+            <td><button class="button quiet" type="button" data-dispatch-remove aria-label="حذف ردیف">×</button></td></tr></template>
+        <div class="actions between"><button class="button" type="button" data-dispatch-add>افزودن کالای دیگر</button>
+            <button class="button primary" type="submit">ثبت خروج و بازکردن برگه چاپ</button></div>
+    </form>
+    <p class="notice">پس از امضای تحویل‌گیرنده و انباردار، حتماً یک نسخه از برگه را در خود انبار نگه دارید. این برگه به اسکن و بارگذاری نیاز ندارد.</p>
+</section>
+<section class="card"><h2>برگه‌های خروج اخیر</h2>
+    <div class="table-wrap"><table><thead><tr><th>شماره برگه</th><th>تاریخ</th><th>بخش</th><th>تحویل‌گیرنده</th><th>چاپ دوباره</th></tr></thead><tbody>
+    @foreach (var issue in Model.Recent) { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
+    @if (Model.Recent.Count == 0) { <tr><td colspan="5" class="empty">هنوز برگه خروج ثبت نشده است.</td></tr> }
+    </tbody></table></div>
+</section>
+<section class="card"><details><summary>تعریف بخش و تحویل‌گیرنده جدید</summary>
+    <div class="detail-grid">
+        <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش جدید<input name="name" maxlength="120" required placeholder="مثلاً بخش جراحی"></label><button class="button" type="submit">ثبت بخش</button></form>
+        <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
+            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>سمت یا توضیح<input name="position" maxlength="120" placeholder="مثلاً مسئول بخش"></label>
+            <button class="button" type="submit">ثبت شخص</button></form>
+    </div>
+</details></section>

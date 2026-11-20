@@ -59,8 +59,10 @@ builder.Services.AddRateLimiter(options =>
 });
 builder.Services.AddRazorPages(options => options.Conventions.AuthorizeFolder("/"))
     .AddMvcOptions(options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+builder.Services.AddResponseCompression(options => options.EnableForHttps = false);
 
 var app = builder.Build();
+app.UseResponseCompression();
 app.UseExceptionHandler("/Error");
 app.Use(async (context, next) =>
 {
@@ -68,13 +70,17 @@ app.Use(async (context, next) =>
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Content-Security-Policy"] =
-        "default-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'";
+        "default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'";
     await next();
 });
 app.UseStaticFiles(new StaticFileOptions
 {
+    ServeUnknownFileTypes = false,
     OnPrepareResponse = context =>
     {
+        var path = context.File.Name;
+        if (path.EndsWith(".woff2", StringComparison.OrdinalIgnoreCase))
+            context.Context.Response.Headers.ContentType = "font/woff2";
         context.Context.Response.Headers.CacheControl = context.Context.Request.Query.ContainsKey("v")
             ? "public,max-age=31536000,immutable" : "public,max-age=86400";
     }

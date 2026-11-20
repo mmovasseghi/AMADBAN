@@ -8,64 +8,49 @@
     var request = await Store.RequestSignerAsync(row.Id);
     var payment = row.Kind == "credit" ? await Store.ReadPrepaymentAsync(row.Id, true) : null;
     var requestDate = row.Date.AddDays(-1);
+    var displayRows = Math.Max(Model.Entry.Lines.Count, Model.Rows == 0 ? 11 : Model.Rows);
+    string Signer(string role) => signers.TryGetValue(role, out var name) ? name : "........................";
 }
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>سند @row.Document · آمادبان</title>
-    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
-    <script src="~/site.js" asp-append-version="true" defer></script>
-</head>
-<body>
-        <nav class="print-controls">
-        <label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
-        <button type="button" data-print>چاپ سند A4</button><a asp-page="Detail" asp-route-id="@row.Id">بازگشت به پرونده</a>
-        <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Documents)
-        { <option value="@key" selected="@(key==Model.Template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
-        <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
-            <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
-    </nav>
-    <div class="document-print-page"><article class="document-sheet">
-        <header>
-            @await Html.PartialAsync("_BrandMarks", true)
-            <p>بسمه‌تعالی</p>
-            <h1>درخواست خرید، گزارش دریافت، سند هزینه فرعی خرید کالا و خدمات</h1>
-            <p>بیمارستان امام سجاد (ع) فراجا ـ دایره آماد و پشتیبانی</p>
-        </header>
-        <p class="document-letter">از: آماد &nbsp; به: ریاست محترم بیمارستان. با احترام، این یگان به کالا و خدمات زیر نیاز دارد؛ خواهشمند است دستور فرمایید نسبت به تهیه و تدارک آنها اقدام لازم معمول شود.</p>
-        <section class="metadata">
-            <span>شماره سند <b>@row.Document</b></span><span>شماره فاکتور <b>@row.Number</b></span>
-            <span>تاریخ درخواست <bdi>@Persian.Date(requestDate)</bdi></span><span>تاریخ فاکتور <bdi>@Persian.Date(row.Date)</bdi></span>
-            <span>فروشنده <b>@row.Vendor</b></span><span>بخش درخواست‌کننده <b>@(request.Department ?? "—")</b></span>
-            <span>شماره پیش‌پرداخت <b>@(payment is null || row.Kind == "cash" ? "" : $"پ {payment.Number}")</b></span>
-        </section>
-        <table>
-            <thead><tr><th>ردیف</th><th>مشخصات کالا یا خدمت</th><th>واحد</th><th>تعداد</th><th>قیمت واحد (ریال)</th><th>مبلغ کل (ریال)</th></tr></thead>
-            <tbody>
-                @for (var i = 0; i < Model.Entry.Lines.Count; i++)
-                {
-                    var line = Model.Entry.Lines[i];
-                    <tr><td>@(i + 1)</td><td>@line.Title</td><td>@line.Unit</td><td>@line.Quantity.ToString("0.###")</td><td>@Persian.Money(line.Price)</td><td>@Persian.Money(line.Amount)</td></tr>
-                }
-                @for (var i = Model.Entry.Lines.Count; i < Model.Rows; i++)
-                { <tr><td>@(i + 1)</td><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr> }
-            </tbody>
-        </table>
-        <section class="metadata totals"><span>جمع کل به عدد <b>@Persian.Money(row.Total) ریال</b></span><span>جمع کل به حروف <b>@PersianWords.Number(row.Total) ریال</b></span><span>شماره کارتکس <b>@(row.Kardex ?? "................")</b></span></section>
-        <section class="signatures"><div>مسئول قسمت درخواست‌کننده<p>@signers.GetValueOrDefault("requester")</p></div>
-            <div>مسئول مالی / عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
-            <div>فرمانده / رئیس (دارنده مجوز ماده ۵۳)<p>@signers.GetValueOrDefault("chief")</p></div></section>
-        <section class="signatures"><div>اقدام‌کننده / تنظیم‌کننده<p>اقلام تصویبی با کنترل کیفیت و قیمت خریداری شد.</p><p>@signers.GetValueOrDefault("agent")</p></div>
-            <div>کارشناس / رئیس قسمت<p>اقلام یا خدمات بررسی و با مندرجات سند تطبیق داده شد.</p><p>@(request.Expert ?? signers.GetValueOrDefault("expert"))</p></div>
-            <div>انباردار<p>اقلام انباری بررسی و دریافت شد.</p><p>@signers.GetValueOrDefault("warehouse")</p></div></section>
-        <section class="metadata"><span>گواهی گزارش دریافت: @(row.Warehouse ? "اقلام به انبار تحویل شد." : "خدمت یا کالای غیرانباری بررسی شد.")</span>
-            <span>تاریخ دریافت @(row.Warehouse ? Persian.Date(row.Date) : "")</span><span>تاریخ دریافت انبار @(row.Warehouse ? Persian.Date(row.Date) : "")</span></section>
-        <section class="signatures"><div>کارتکس<p>@signers.GetValueOrDefault("kardex")</p></div>
-            <div>فرمانده / رئیس (دارنده مجوز ماده ۵۳)<p>پرداخت با اطلاع و دستور اینجانب است.</p><p>@signers.GetValueOrDefault("chief")</p></div>
-            <div>ممیز اسناد هزینه<p>صحت ارقام و تشریفات صوری سند بررسی شد.</p><p>@signers.GetValueOrDefault("auditor")</p></div>
-            <div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div></section>
-    </article></div>
-</body>
-</html>
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>سند @row.Document · آمادبان</title>
+<link rel="stylesheet" href="~/print.css" asp-append-version="true"><link rel="stylesheet" href="~/official-print.css" asp-append-version="true">
+<script src="~/site.js" asp-append-version="true" defer></script></head><body>
+<nav class="print-controls"><label>تعداد نسخه <input type="number" data-print-copies min="1" max="12" value="1"></label>
+    <button type="button" data-print>چاپ سند A4</button><a asp-page="Detail" asp-route-id="@row.Id">بازگشت به پرونده</a>
+    <form method="get"><label>قالب <select name="template">@foreach (var (key,title) in Amadban.Pages.PrintSettingsModel.Documents)
+    { <option value="@key" selected="@(key==Model.Template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
+    <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
+        <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
+</nav>
+<div class="document-print-page"><article class="official-document official-paper document-sheet">
+    <section class="od-heading od-frame"><strong>درخواست خرید، گزارش دریافت، سند هزینه فرعی خرید کالا و خدمات</strong>
+        <span>شماره درخواست: <b>@row.Document</b></span><span>تاریخ درخواست: <bdi>@Persian.Date(requestDate)</bdi></span></section>
+    <section class="od-requests od-frame">
+        <div class="od-request-letter"><p>از: آماد <b>@row.Number</b></p><p>به: ریاست محترم بیمارستان</p>
+            <p>با احترام، این یگان به کالا و خدمات ذیل نیاز دارد؛ خواهشمند است دستور فرمایید نسبت به تهیه و تدارک آنها اقدام لازم معمول نمایند.</p></div>
+        <div class="od-requester"><b>مسئول قسمت درخواست‌کننده</b><p>مبلغ هزینه در حدود اعتبار مصوب بوده و انجام آن برای این قسمت مورد تأیید می‌باشد.</p><strong>@Signer("requester")</strong><small>@request.Department</small><span>امضاء</span></div>
+        <div class="od-finance-top"><b>مسئول مالی / عامل ذی‌حساب</b><p>خرید اقلام درخواست‌شده از محل ردیف اعتباری .......... برنامه .......... فعالیت .......... بلامانع و دارای اعتبار می‌باشد.</p><strong>@Signer("finance")</strong><span>امضاء</span></div>
+        <div class="od-chief-top"><b>فرمانده / رئیس<br>(دارنده مجوز ماده ۵۳ ق.م.ع.ک)</b><strong>@Signer("chief")</strong><span>امضاء</span></div>
+    </section>
+    <table class="od-lines od-frame"><colgroup><col style="width:3%"><col style="width:7%"><col style="width:29%"><col style="width:5%"><col style="width:7%"><col style="width:7%"><col style="width:6%"><col style="width:9%"><col style="width:11%"><col style="width:12%"><col style="width:4%"></colgroup>
+        <thead><tr><th rowspan="2">ردیف</th><th rowspan="2">تاریخ</th><th colspan="5">مشخصات جنس / خدمت درخواستی</th><th rowspan="2">قیمت واحد (ریال)</th><th rowspan="2">مبلغ کل (ریال)</th><th rowspan="2">مشخصات فروشنده</th><th rowspan="2">رسیدگیرنده وجه</th></tr>
+            <tr><th>نوع جنس / خدمت با مشخصات کامل</th><th>کد</th><th>موجودی انبار</th><th>مقدار / تعداد مورد نیاز</th><th>تصویبی مقدار / تعداد واحد</th></tr></thead>
+        <tbody>@for(var i=0;i<displayRows;i++)
+        { var line = i<Model.Entry.Lines.Count ? Model.Entry.Lines[i] : null;
+            <tr><td>@(i+1)</td><td>@(i==0?Persian.Date(row.Date):"")</td><td class="od-item-title">@(line?.Title ?? "")</td><td></td><td></td>
+                <td>@(line?.Unit ?? "")</td><td>@(line?.Quantity.ToString("0.###") ?? "")</td><td>@(line is null?"":Persian.Money(line.Price))</td>
+                <td>@(line is null?"":Persian.Money(line.Amount))</td><td>@(i==0?row.Vendor:"")</td><td></td></tr> }
+        </tbody></table>
+    <section class="od-total od-frame"><div>جمع کل به حروف: <b>@PersianWords.Number(row.Total) ریال</b></div><strong>@Persian.Money(row.Total)</strong>
+        <b>@(payment is null || row.Kind=="cash" ? "" : $"پ {payment.Number}")</b></section>
+    <section class="od-bottom od-frame">
+        <div class="od-agent"><h2>افسرعامل</h2><p>اقلام تصویبی فوق، توسط اینجانب با تأمین کیفیت و پایین‌ترین بهای ممکن خریداری و در تاریخ <b>@(row.Warehouse?Persian.Date(row.Date):"")</b> ضمن تحویل اقلام فوق به انبار، گواهی و سند گردید.</p>
+            <b>اقدام‌کننده / تنظیم‌کننده</b><strong>@Signer("agent")</strong><span>امضاء</span></div>
+        <div class="od-expert"><h2>گواهی گزارش دریافت</h2><b>کارشناس / رئیس قسمت</b><p>اقلام و وسایل مندرج در این سند بازرسی و قبول شده و مشخصات آنها با مندرجات سند فوق تطبیق دارد.</p>
+            <strong>@(request.Expert ?? Signer("expert"))</strong><span>امضاء</span></div>
+        <div class="od-warehouse"><h2>انباردار</h2><p>اقلام و وسایل مندرج در سند، بازرسی و قبول شده و در تاریخ <b>@(row.Warehouse?Persian.Date(row.Date):"")</b> دریافت داشتم.</p>
+            <strong>@Signer("warehouse")</strong><span>امضاء</span><small>کارتکس: @Signer("kardex") · شماره رسید: @(row.Kardex ?? "...........")</small></div>
+        <div class="od-chief-bottom"><h2>فرمانده / رئیس<br>(دارنده مجوز ماده ۵۳ ق.م.ع.ک)</h2><p>پرداخت مندرج در این سند، با اطلاع و دستور اینجانب می‌باشد.</p><strong>@Signer("chief")</strong><span>امضاء</span></div>
+        <div class="od-finance-bottom"><h2>مسئول مالی / عامل ذی‌حساب</h2><p>این سند که از محل اعتبار مصوب هزینه گردیده، از نظر صحت ارقام مندرج و تشریفات صوری مورد قبول می‌باشد.</p>
+            <b>ممیز اسناد هزینه</b><strong>@Signer("auditor")</strong><b>عامل ذی‌حساب</b><strong>@Signer("finance")</strong><small>شماره سند هزینه (........) · شماره سند حسابداری (........)</small></div>
+    </section>
+</article></div></body></html>

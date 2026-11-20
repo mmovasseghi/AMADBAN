@@ -14,7 +14,7 @@
     var template = Request.Query["template"].ToString();
     if (!Amadban.Pages.PrintSettingsModel.Prepayments.ContainsKey(template))
         template = await Store.PrintPreferenceAsync(long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!), "prepayment") ?? "readable";
-    var signers = await Store.SignersAsync();
+    var signers = await Store.SignerIdentitiesAsync();
     var supplier = await Store.SupplierByNameAsync(payment.Vendor);
     var confirmation = supplier is not null
         && (await Store.SupplierDocumentsAsync(supplier.Id)).Any(file => file.Kind == "account");
@@ -25,6 +25,11 @@
     var purpose = first is null ? (payment.Proforma ?? "—") : first == last ? first : first + " - " + last;
     var payee = supplier?.Kind == "person" && payment.Owner != payment.Vendor
         ? payment.Owner + " (" + payment.Vendor + ")" : payment.Owner;
+    var official = new OfficialPrepaymentPrint(payment.Number, linked?.Summary.Number ?? payment.Proforma ?? "",
+        linked is null ? Persian.Date(DateOnly.FromDateTime(payment.CreatedAt)) : Persian.Date(linked.Summary.Date),
+        payment.Code,payment.CodeTitle,purpose,payment.Sheba,payment.Bank,payee,
+        linked?.Summary.Total ?? payment.Amount,document,payment.State,signers,false,template,
+        payment.Permit,payment.PermitDate,payment.Tax);
 }
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -33,6 +38,7 @@
     <title>پیش‌پرداخت @payment.Number · آمادبان</title>
     <link rel="stylesheet" href="~/print.css" asp-append-version="true">
     <link rel="stylesheet" href="~/portrait.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/official-print.css" asp-append-version="true">
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -48,39 +54,6 @@
     <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="prepayment"><input type="hidden" name="id" value="@number">
         <input type="hidden" name="template" value="@template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
 </nav>
-<article>
-    <header>@await Html.PartialAsync("_BrandMarks", true)<p>بسمه‌تعالی</p><h1>پیش‌پرداخت</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
-    <p>با احترام، خواهشمند است مقرر فرمایید مدیریت مالی برابر اطلاعات و مجوز درج‌شده در این برگه برای صدور وجه اقدام کند.</p>
-    <section class="metadata">
-        <span>شماره پیش‌پرداخت <b>@payment.Number</b></span>
-        <span>شماره سند <b>@(document?.ToString() ?? "—")</b></span>
-        <span>تاریخ فاکتور <b>@(linked is null ? "—" : Persian.Date(linked.Summary.Date))</b></span>
-        <span>شماره فاکتور <b>@(linked?.Summary.Number ?? payment.Proforma ?? "—")</b></span>
-    </section>
-    <table>
-        <tbody>
-            <tr><th>کد ردیف اعتباری</th><td>@payment.Code</td></tr>
-            <tr><th>برنامه / طرح</th><td>@payment.CodeTitle</td></tr>
-            <tr><th>بابت</th><td>@purpose</td></tr>
-            <tr><th>دروجه شماره شبا</th><td><bdi>@payment.Sheba</bdi></td></tr>
-            <tr><th>بانک</th><td>@payment.Bank</td></tr>
-            <tr><th>به نام</th><td>@payee</td></tr>
-            @if (template == "permit") { <tr><th>شماره و تاریخ مجوز</th><td>@payment.Permit · @payment.PermitDate</td></tr> }
-            @if (template == "tax") { <tr><th>مالیات</th><td>@Persian.Money(payment.Tax) ریال</td></tr> }
-            <tr><th>مبلغ</th><td>@Persian.Money(linked?.Summary.Total ?? payment.Amount) ریال</td></tr>
-            <tr><th>مبلغ به حروف</th><td>@PersianWords.Number(linked?.Summary.Total ?? payment.Amount) ریال</td></tr>
-            @if (payment.State == "void") { <tr><th>وضعیت</th><td>باطل‌شده</td></tr> }
-        </tbody>
-    </table>
-    <p>پرداخت مبلغ درج‌شده با آگاهی و دستور مقام مجاز انجام می‌شود. مبلغ از محل اعتبارات مربوط قابل پرداخت است.</p>
-    <section class="signatures"><div>تقاضای هزینه<p>@signers.GetValueOrDefault("petty_authorizer")</p></div>
-        <div>گواهی مقام مجاز<p>@signers.GetValueOrDefault("chief")</p></div></section>
-    <section class="signatures"><div>عامل ذی‌حساب<p>@signers.GetValueOrDefault("finance")</p></div>
-        <div>اعتبارات<p>@signers.GetValueOrDefault("credit_officer")</p></div>
-        <div>حسابداری<p>@signers.GetValueOrDefault("accounting")</p></div></section>
-    <section class="prepayment-declaration"><h2>حواله وجه</h2><p>مبلغ فوق طبق چک شماره ..................... در وجه ..................... حواله یا پرداخت شد.</p>
-        <h2>گواهی دریافت و تعهد افسرعامل</h2><p>متعهد می‌شوم وجه دریافت‌شده برابر قوانین و مقررات مربوط هزینه و اسناد آن را تحویل دهم.</p>
-        <p>نام، درجه/رتبه و امضای افسرعامل: @signers.GetValueOrDefault("agent")</p></section>
-</article>
+@await Html.PartialAsync("_OfficialPrepayment",official)
 </body>
 </html>

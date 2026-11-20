@@ -8,7 +8,8 @@ public sealed record CreditBalance(long Id, string Code, string Title, long Allo
 }
 
 public sealed record Prepayment(long Number, long? Invoice, string? Proforma, string Vendor, long CodeId,
-    string Code, string CodeTitle, string Owner, string Bank, string Sheba, long Amount, string State, string Permit, string PermitDate, long Tax);
+    string Code, string CodeTitle, string Owner, string Bank, string Sheba, long Amount, string State, string Permit, string PermitDate, long Tax,
+    DateTime CreatedAt);
 public sealed record CreditChange(string? Source, string Destination, long Amount, string Actor, DateTime At, string Operation, long? SourceBefore, long? DestinationBefore);
 
 public sealed partial class Store
@@ -229,7 +230,7 @@ public sealed partial class Store
     }
 
     private const string PrepaymentSelect = """
-        SELECT p.number,p.invoice_id,p.proforma_number,p.vendor,p.code_id,c.code,c.title,p.owner,p.bank,p.sheba,p.amount,p.state,p.permit_number,p.permit_date,p.tax_amount
+        SELECT p.number,p.invoice_id,p.proforma_number,p.vendor,p.code_id,c.code,c.title,p.owner,p.bank,p.sheba,p.amount,p.state,p.permit_number,p.permit_date,p.tax_amount,p.created_at
         FROM prepayments p JOIN credit_codes c ON c.id=p.code_id
         """;
 
@@ -242,7 +243,7 @@ public sealed partial class Store
 
     private static Prepayment ReadPrepayment(NpgsqlDataReader r) => new(r.GetInt64(0), r.IsDBNull(1) ? null : r.GetInt64(1),
         r.IsDBNull(2) ? null : r.GetString(2), r.GetString(3), r.GetInt64(4), r.GetString(5), r.GetString(6),
-        r.GetString(7), r.GetString(8), r.GetString(9), r.GetInt64(10), r.GetString(11), r.GetString(12), r.GetString(13), r.GetInt64(14));
+        r.GetString(7), r.GetString(8), r.GetString(9), r.GetInt64(10), r.GetString(11), r.GetString(12), r.GetString(13), r.GetInt64(14),r.GetDateTime(15));
 
     private static Task<int> LockCredit(NpgsqlConnection conn, NpgsqlTransaction tx) =>
         Exec(conn, tx, "SELECT pg_advisory_xact_lock(782541996)");

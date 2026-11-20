@@ -1,5 +1,7 @@
 namespace Amadban.Data;
 
+public sealed record SignerIdentity(string Rank, string Name);
+
 public sealed partial class Store
 {
     public async Task<(byte[] Content, string Type, DateTime Updated)?> BrandImageAsync(string code)
@@ -32,6 +34,19 @@ public sealed partial class Store
         await using var r = await cmd.ExecuteReaderAsync();
         var result = new Dictionary<string, string>();
         while (await r.ReadAsync()) result.Add(r.GetString(0), r.GetString(1));
+        return result;
+    }
+
+    public async Task<Dictionary<string, SignerIdentity>> SignerIdentitiesAsync()
+    {
+        await using var conn = await source.OpenConnectionAsync();
+        await using var cmd = Command(conn, null, """
+            SELECT s.role,coalesce(p.rank,''),coalesce(p.name,s.name)
+            FROM signers s LEFT JOIN people p ON p.id=s.person_id
+            """);
+        await using var r = await cmd.ExecuteReaderAsync();
+        var result = new Dictionary<string, SignerIdentity>();
+        while (await r.ReadAsync()) result[r.GetString(0)] = new(r.GetString(1), r.GetString(2));
         return result;
     }
 

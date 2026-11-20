@@ -1,0 +1,51 @@
+@model OfficialPrepaymentPrint
+@{
+    SignerIdentity Signer(string role) => Model.Signers.TryGetValue(role, out var identity) ? identity : new("", "........................");
+    string FullSigner(string role) => string.Join(" ", new[]{Signer(role).Rank,Signer(role).Name}.Where(x => !string.IsNullOrWhiteSpace(x)));
+    var account = Model.Sheba.StartsWith("IR", StringComparison.OrdinalIgnoreCase) ? Model.Sheba[2..] : Model.Sheba;
+}
+<article class="official-payment official-paper">
+    <section class="op-header op-frame">
+        <div class="op-side op-kinds"><span>@(Model.Petty ? "☑" : "□") تنخواه</span><span>@(Model.Petty ? "□" : "☑") پیش‌پرداخت</span><span>□ علی‌الحساب</span></div>
+        <div class="op-header-main">
+            <div class="op-identity"><b>بسمه تعالی</b><img src="/BrandAsset/faraja" alt="نشان فراجا"><strong>فرماندهی انتظامی جمهوری اسلامی ایران</strong></div>
+            <div class="op-numbers"><span>شماره: <b>@Model.Number</b></span><span>تاریخ: <b>@Model.Date</b></span><span>شماره فاکتور: <b>@Model.InvoiceNumber</b></span></div>
+        </div>
+    </section>
+    @if(Model.State=="void") { <p class="op-void">باطل‌شده ـ این برگه برای پرداخت معتبر نیست.</p> }
+    <section class="op-decision op-frame">
+        <div class="op-side">تقاضای<br>سرویس<br>هزینه</div>
+        <div class="op-decision-copy"><p>با احترام خواهشمند است مقرر فرمایید مدیریت مالی از محل اعتبارات این اداره کل / اداره برابر مجوز شماره .......... اداره کل طرح و برنامه و بودجه به تاریخ .... / .... / .... به شرح ذیل چک صادر نماید.</p><p>درجه/رتبه و نام و نام خانوادگی: <b>@FullSigner("petty_authorizer")</b></p></div>
+        <div class="op-sign-box">امضاء</div>
+    </section>
+    <section class="op-decision op-frame">
+        <div class="op-side">گواهی<br>مقام<br>مجاز</div>
+        <div class="op-decision-copy"><p>@(Model.Petty ? "" : "پرداخت مبلغ مندرج در زیر با آگاهی و دستور من می‌باشد.")</p><p>درجه/رتبه و نام و نام خانوادگی: <b>@FullSigner("chief")</b></p></div>
+        <div class="op-sign-box">امضاء</div>
+    </section>
+    <section class="op-transaction op-frame">
+        <div class="op-side">ردیف<br><br>۱</div>
+        <div class="op-credit"><span>کد ردیف اعتباری</span><strong>@Model.Code</strong></div>
+        <div class="op-program"><span>برنامه / طرح</span><strong>@(Model.Petty ? "افسر عاملی" : Model.CodeTitle)</strong></div>
+        <div class="op-description">
+            <div class="op-description-heading">شرح</div>
+            <div class="op-purpose"><b>بابت</b><span>@Model.Purpose</span></div>
+            <div class="op-bank-line"><b>دروجه شماره</b><bdi>@account</bdi><span>IR</span><b>بانک</b><strong>@Model.Bank</strong></div>
+            <div class="op-payee"><b>به نام</b><strong>@Model.Payee</strong><b>مبلغ</b></div>
+        </div>
+    </section>
+    @if(Model.Template=="permit" && !Model.Petty) { <div class="op-extra">مجوز: @Model.Permit · تاریخ مجوز: @Model.PermitDate</div> }
+    @if(Model.Template=="tax" && !Model.Petty) { <div class="op-extra">مالیات: @Persian.Money(Model.Tax) ریال</div> }
+    <section class="op-amount op-frame"><div class="op-side">به حروف</div><div class="op-amount-words">@PersianWords.Number(Model.Amount) ریال</div><strong>@Persian.Money(Model.Amount)</strong></section>
+    <p class="op-credit-note">مبلغ نوشته‌شده بالا از محل اعتبارات مربوطه قابل پرداخت می‌باشد.</p>
+    <section class="op-approvals op-frame">
+        <div class="op-side">۶<br>مالی و عامل<br>ذی‌حساب</div>
+        <table><thead><tr><th>سمت</th><th>درجه / رتبه</th><th>نام و نام خانوادگی</th><th>شماره سند</th><th>امضاء</th></tr></thead>
+            <tbody><tr><td>عامل ذی‌حساب</td><td>@Signer("finance").Rank</td><td>@Signer("finance").Name</td><td rowspan="3" class="op-document-number">@(Model.Document?.ToString() ?? "")</td><td></td></tr>
+                <tr><td>اعتبارات</td><td>@Signer("credit_officer").Rank</td><td>@Signer("credit_officer").Name</td><td></td></tr>
+                <tr><td>حسابداری</td><td>@Signer("accounting").Rank</td><td>@Signer("accounting").Name</td><td></td></tr></tbody></table>
+    </section>
+    <section class="op-transfer op-frame"><div class="op-side">حواله وجه</div><div><p>مبلغ <b>@Persian.Money(Model.Amount)</b> ریال طبق چک شماره ......................... به شماره حساب ..............................</p><p>در وجه ............................... حواله / پرداخت شد.</p></div></section>
+    <section class="op-pledge op-frame"><div class="op-side">گواهی<br>گیرنده<br>وجه</div><div><p>مبلغ <b>@Persian.Money(Model.Amount)</b> ریال طی چک شماره .................... دریافت و تعهد می‌نمایم که مبلغ مذکور را برابر مفاد مواد ۲۷، ۲۸، ۲۹، ۵۴، ۶۰، ۶۱، ۶۳، ۶۴ قانون محاسبات عمومی کشور مصوب سال ۱۳۶۶ و اصلاحات بعد از آن، آیین‌نامه اجرایی ماده ۵۴ و ۶۱ قانون مذکور و سایر قوانین و مقررات مربوطه هزینه و اسناد مربوط را تحویل نمایم. بدیهی است عواقب و مسئولیت ناشی از عدم اجرای صحیح موارد قانونی ذکرشده بر عهده اینجانب بوده و طبق قوانین و مقررات جاری کشور رفتار خواهد شد.</p></div></section>
+    <section class="op-agent"><span>درجه/رتبه و نام و نام خانوادگی: <b>@FullSigner("agent")</b></span><span>امضاء</span></section>
+</article>

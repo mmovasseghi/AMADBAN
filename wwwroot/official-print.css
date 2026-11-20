@@ -1,0 +1,84 @@
+.official-paper{background:#fff;color:#000;font-family:Vazirmatn,Tahoma,sans-serif;font-size:10px;line-height:1.55}
+.official-paper *{box-sizing:border-box}
+.official-paper .op-frame,.official-paper .od-frame{border:1px solid #111;margin-top:-1px}
+.official-payment{width:190mm;max-width:none;margin:0 auto 12px;padding:0;min-height:267mm}
+.official-payment .op-side{border-left:1px solid #111;text-align:center;font-size:9px;line-height:2;padding:2mm .3mm}
+.official-payment .op-kinds{display:flex;flex-direction:column;justify-content:space-around;align-items:center;white-space:nowrap;font-size:8px;padding:1mm 0}
+.official-payment .op-header{display:grid;grid-template-columns:15mm 1fr;height:31mm}
+.op-header-main{position:relative;text-align:center}
+.op-identity{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;padding:1mm}
+.op-identity img{width:14mm;height:16mm;object-fit:contain;filter:grayscale(1)}
+.op-identity strong{font-size:12px;font-weight:500}
+.op-numbers{position:absolute;left:4mm;top:6mm;display:flex;flex-direction:column;gap:1.5mm;text-align:right;min-width:37mm}
+.op-numbers span{display:flex;justify-content:space-between;gap:2mm;white-space:nowrap}
+.op-decision{display:grid;grid-template-columns:9mm 1fr 39mm;min-height:24mm}
+.op-decision-copy{display:flex;flex-direction:column;justify-content:space-between;padding:2mm 3mm;font-size:10px}
+.op-decision-copy p:last-child{font-size:9px}
+.op-sign-box{border-right:1px solid #111;text-align:center;padding:2mm}
+.op-void{border:2px solid #111;text-align:center;font-weight:bold;padding:1mm}
+.op-transaction{display:grid;grid-template-columns:9mm 26mm 17mm 1fr;min-height:46mm}
+.op-credit,.op-program{border-left:1px solid #111;display:flex;flex-direction:column;text-align:center}
+.op-credit span,.op-program span,.op-description-heading{border-bottom:1px solid #111;text-align:center;min-height:7mm;padding:1mm 0}
+.op-credit strong,.op-program strong{flex:1;display:flex;align-items:center;justify-content:center;padding:1mm;font-size:11px}
+.op-program strong{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px}
+.op-description{display:grid;grid-template-rows:7mm 14mm 12mm 13mm}
+.op-purpose,.op-bank-line,.op-payee{border-top:1px solid #111;display:flex;align-items:center;gap:2mm;padding:1mm 2mm}
+.op-purpose{border-top:0;justify-content:space-between;font-size:11px}
+.op-purpose span{flex:1;text-align:center;font-size:11px}
+.op-bank-line{justify-content:space-between}.op-bank-line bdi{font-size:11px;letter-spacing:.3px}
+.op-bank-line strong{font-size:10px}.op-payee{justify-content:space-between}.op-payee strong{flex:1;text-align:center}
+.op-extra{border:1px solid #111;margin-top:-1px;padding:1mm 3mm}
+.op-amount{display:grid;grid-template-columns:9mm 1fr 30mm;align-items:stretch;min-height:11mm}
+.op-amount .op-side{font-size:8px;align-content:center}.op-amount-words{text-align:center;align-content:center;font-size:12px}
+.op-amount strong{border-right:1px solid #111;text-align:center;align-content:center;font-size:13px}
+.op-credit-note{border:1px solid #111;margin-top:-1px;padding:1mm 3mm;text-align:right;min-height:5mm}
+.op-approvals{display:grid;grid-template-columns:9mm 1fr;min-height:42mm}
+.op-approvals table{margin:0;height:100%;table-layout:fixed}
+.op-approvals th,.op-approvals td{text-align:center;border:1px solid #111;padding:.6mm 1mm}
+.op-approvals th:first-child,.op-approvals td:first-child{width:16%}
+.op-approvals th:nth-child(2),.op-approvals td:nth-child(2){width:12%}
+.op-approvals th:nth-child(4){width:22%}.op-approvals th:nth-child(5){width:16%}
+.op-approvals .op-document-number{font-size:21px;font-weight:700}
+.op-transfer,.op-pledge{display:grid;grid-template-columns:9mm 1fr}
+.op-transfer{min-height:12mm}.op-transfer>div:last-child{padding:1mm 3mm}
+.op-transfer p{display:flex;justify-content:space-between}
+.op-pledge{min-height:36mm}.op-pledge>div:last-child{padding:3mm 4mm;text-align:justify;line-height:2.3}
+.op-agent{border:1px solid #111;margin-top:-1px;min-height:24mm;display:flex;justify-content:space-around;align-items:end;padding:0 5mm 4mm}
+.official-document{width:279mm;max-width:none;margin:0 auto 12px;padding:0;font-size:11px;line-height:1.4}
+.od-heading{height:7mm;display:grid;grid-template-columns:1fr 35mm 39mm;align-items:center;text-align:center;font-size:10px;white-space:nowrap}
+.od-heading>*+*{border-right:1px solid #111;height:100%;align-content:center}
+.od-heading b{font-size:12px}
+.od-requests{display:grid;grid-template-columns:40% 20% 20% 20%;min-height:32mm}
+.od-requests>div{border-left:1px solid #111;padding:1mm 2mm;text-align:center;display:flex;flex-direction:column;justify-content:space-between}
+.od-requests>div:last-child{border-left:0}
+.od-request-letter{text-align:right!important;font-size:11px}
+.od-request-letter p{padding:1mm 0}.od-request-letter p:first-child{display:flex;justify-content:space-between}
+.od-request-letter p:last-child{font-weight:700;font-size:11px}
+.od-requests b{font-size:11px}.od-requests strong{font-size:10px}.od-requests span{align-self:center}
+.official-document .od-lines{width:100%;margin:0;table-layout:fixed;height:99mm;border-spacing:0}
+.od-lines th,.od-lines td{border:1px solid #111;text-align:center;padding:.4mm;overflow-wrap:anywhere;vertical-align:middle}
+.od-lines th{font-size:10px}.od-lines td{font-size:10px}.od-lines .od-item-title{text-align:right;font-weight:700}
+.od-total{display:grid;grid-template-columns:1fr 30mm 22mm;align-items:center;height:8mm;text-align:center}
+.od-total>div{text-align:right;padding:0 2mm}.od-total>*+*{border-right:1px solid #111;height:100%;align-content:center}
+.od-total strong{font-size:12px}.od-total>b{font-size:11px}
+.od-bottom{display:grid;grid-template-columns:25% 17% 17% 17% 24%;height:45mm}
+.od-bottom>div{border-left:1px solid #111;text-align:center;padding:1mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.od-bottom>div:last-child{border-left:0}
+.od-bottom h2{font-size:10px;margin:0;border-bottom:1px solid #111;min-height:5mm}
+.od-bottom p{font-size:9px;text-align:justify}.od-bottom b{font-size:9px}.od-bottom strong{font-size:10px}.od-bottom span{align-self:center}
+.od-bottom small{font-size:8px;border-top:1px solid #111}
+.official-meeting{width:190mm;max-width:none;margin:0 auto 12px;padding:0;font-size:11px;min-height:267mm}
+.official-meeting .om-header{border:0;text-align:center;padding:0;margin:18mm 0 5mm}
+.om-header h1{font-size:13px}.om-header p{font-size:11px}
+.om-description{min-height:24mm;padding:2mm 3mm;text-align:justify;line-height:2}
+.official-meeting .om-table{width:100%;margin:2mm 0 0;table-layout:fixed;height:135mm}
+.om-table th,.om-table td{border:1px solid #111;text-align:center;vertical-align:middle;padding:.5mm 1mm;overflow-wrap:anywhere;font-size:9px}
+.om-table th{font-weight:700}.om-table td:nth-child(4){text-align:right}
+.om-table tfoot th{text-align:right}.om-table tfoot td{text-align:center;font-weight:700}
+.om-signers{margin-top:20mm;padding:0 2mm;font-size:10px}
+.om-signers>p{margin-bottom:10mm}.om-signers>div{display:flex;justify-content:space-between;gap:8mm}
+@media print{
+  .official-payment,.official-meeting{width:192mm;max-width:none;min-height:0;margin:0;padding:0}
+  .official-document{width:279mm;max-width:none;margin:0;padding:0}
+  .official-paper img{filter:grayscale(1)}
+}

@@ -46,27 +46,40 @@ else if (Model.IsAgent)
 {
     <section class="card">
         <h2>@(Model.Invoice is null ? "پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice.Summary.Document}")</h2>
-        <form method="post" asp-page-handler="Reserve" class="filters">
+        <p>اطلاعات را به ترتیب وارد کنید. اگر اعتبار کافی نباشد، مقدار کسری به شما نشان داده می‌شود و می‌توانید همین فرم را ادامه دهید.</p>
+        <form method="post" asp-page-handler="Reserve" class="payment-form">
             <input type="hidden" name="submission" value="@Model.Submission">
             <input type="hidden" name="invoice" value="@(Model.Invoice?.Summary.Id ?? 0)">
-            @if (Model.Invoice is null)
-            {
-                <label>شماره پیش‌فاکتور<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
-                <label>فروشنده<input name="vendor" value="@Model.Pending?.Vendor" maxlength="180" required></label>
-            }
-            <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" selected="@(Model.Pending?.Code == c.Id)">@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
-            @if (Model.Accounts.Count > 0)
-            {
-                <label>حساب ثبت‌شده فروشنده<select data-account><option value="">انتخاب حساب</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Sheba</option> }</select></label>
-            }
-            <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required></label>
-            <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required></label>
-            <label>شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required></label>
-            <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
-            <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80"></label>
-            <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10"></label>
-            <label>مالیات جداگانه درج‌شونده (ریال)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
-            <button class="button primary" type="submit">ثبت و رزرو اعتبار</button>
+            <div class="form-step"><div class="step-head"><span>۱</span><div><h2>خرید و اعتبار</h2><p>کد اعتباری و مبلغ این پیش‌پرداخت را مشخص کنید.</p></div></div>
+                <div class="fields">
+                    @if (Model.Invoice is null)
+                    {
+                        <label>شماره پیش‌فاکتور<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
+                        <label>فروشنده<input name="vendor" value="@Model.Pending?.Vendor" maxlength="180" required></label>
+                    }
+                    <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" selected="@(Model.Pending?.Code == c.Id)">@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
+                    <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
+                </div>
+            </div>
+            <div class="form-step"><div class="step-head"><span>۲</span><div><h2>حساب دریافت‌کننده</h2><p>اگر حساب فروشنده از قبل ثبت شده، آن را انتخاب کنید تا اطلاعات پر شود.</p></div></div>
+                <div class="fields">
+                    @if (Model.Accounts.Count > 0)
+                    {
+                        <label>حساب ثبت‌شده فروشنده<select data-account><option value="">انتخاب حساب</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Sheba</option> }</select></label>
+                    }
+                    <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required></label>
+                    <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required></label>
+                    <label>شماره شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required></label>
+                </div>
+            </div>
+            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>اطلاعات تکمیلی</h2><p>شماره مجوز و مالیات را فقط در صورت وجود وارد کنید.</p></div></div>
+                <div class="fields">
+                    <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80"></label>
+                    <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10"></label>
+                    <label>مالیات جداگانه درج‌شونده (ریال)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
+                </div>
+            </div>
+            <div class="actions between"><p>پس از ثبت، برگه چاپ می‌شود و مبلغ از مانده قابل استفاده این کد رزرو خواهد شد.</p><button class="button primary" type="submit">ثبت و رزرو اعتبار</button></div>
         </form>
         @if (Model.Pending is not null)
         {

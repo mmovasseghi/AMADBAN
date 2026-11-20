@@ -16,7 +16,7 @@
             </select></label>
             <label>شخص تحویل‌گیرنده<select name="recipient" required><option value="">تحویل‌گیرنده همان بخش را انتخاب کنید</option>
                 @foreach (var person in Model.People.Where(p => p.DepartmentId is not null))
-                { <option value="@person.Id" data-department="@person.DepartmentId">@person.Department · @person.Name @(person.Position.Length > 0 ? "· " + person.Position : "")</option> }
+                { <option value="@person.Id" data-department="@person.DepartmentId">@person.Department · @person.Rank @person.Name @(person.Position.Length > 0 ? "· " + person.Position : "")</option> }
             </select></label>
             <label>نام انباردار روی برگه<select name="warehouse" required><option value="">انباردار را انتخاب کنید</option>
                 @foreach (var member in Model.WarehouseStaff) { <option value="@member.Id">@member.Name</option> }

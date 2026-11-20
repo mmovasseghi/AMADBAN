@@ -145,7 +145,7 @@ public sealed partial class Store
         string department, recipient, position, warehouse, note;
         DateOnly date;
         await using (var cmd = Command(conn, null, """
-            SELECT i.id,d.name,p.name,p.position,s.display_name,i.issue_date,i.note
+            SELECT i.id,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN people p ON p.id=i.recipient_id JOIN staff s ON s.id=i.warehouse_person_id
             WHERE i.number=$1
@@ -174,7 +174,7 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var cmd = Command(conn, null, """
-            SELECT i.id,i.number,d.name,p.name,p.position,s.display_name,i.issue_date,i.note
+            SELECT i.id,i.number,d.name,concat_ws(' ',NULLIF(p.rank,''),p.name),p.position,s.display_name,i.issue_date,i.note
             FROM stock_issues i JOIN departments d ON d.id=i.department_id
             JOIN people p ON p.id=i.recipient_id JOIN staff s ON s.id=i.warehouse_person_id
             ORDER BY i.id DESC LIMIT 25

@@ -154,7 +154,7 @@
             @foreach (var p in Model.Proformas)
             {
                 <tr><td>@p.Number</td><td>@p.Vendor</td><td class="numbers">@Persian.Money(p.Amount)</td>
-                    <td class="actions"><a class="button quiet" asp-page="/Credit" asp-route-number="@p.Number">مدیریت</a>
+                    <td class="actions"><a class="button" asp-page="/Credit" asp-route-number="@p.Number">مدیریت</a>
                         <a class="button" asp-page="/PrintPrepayment" asp-route-number="@p.Number">چاپ A4</a></td></tr>
             }</tbody></table></div>
         </section>

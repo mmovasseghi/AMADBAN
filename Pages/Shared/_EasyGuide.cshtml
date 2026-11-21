@@ -27,7 +27,7 @@
         title = "راهنمای کوتاه"; tag = "رئیس آماد";
         steps.Add(("کارهای معطل", "کارت‌های رنگی پایین همین صفحه", null, null));
         steps.Add(("فاکتور و انبار", "ثبت یا باز کردن پرونده؛ قدم بعدی داخل پرونده", "/Invoices/New", "ثبت فاکتور"));
-        steps.Add(("گزارش", "منوی «گزارش و تنظیمات» در نوار کنار", null, null));
+        steps.Add(("گزارش", "لینک‌های گزارش و تنظیمات در همان نوار کنار", null, null));
     }
     else
     {
@@ -35,8 +35,8 @@
         steps.Add(("پرونده", "صفحهٔ اصلی → کلیک روی سطر", "/Index", "صفحهٔ اصلی"));
     }
 }
-<details class="role-guide">
-    <summary><span>@title</span><small>@tag</small></summary>
+<section class="role-guide card" aria-label="@title">
+    <div class="role-guide-head"><span>@title</span><small>@tag</small></div>
     <ol>
         @foreach (var (bold, text, linkPage, linkText) in steps)
         {
@@ -49,4 +49,4 @@
             </li>
         }
     </ol>
-</details>
+</section>

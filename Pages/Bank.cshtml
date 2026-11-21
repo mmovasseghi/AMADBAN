@@ -42,9 +42,12 @@
         @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)">قبلی</a> }
         @if (Model.Checks.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)">بعدی</a> }
     </nav>
-    <details><summary>اصلاح مشخصات چک‌های ثبت‌شده</summary>
+    <h2>اصلاح مشخصات چک‌های ثبت‌شده</h2>
         @foreach (var c in Model.Checks.Take(25))
-        { <details><summary>صیاد @c.Sayad · @c.Recipient</summary><form method="post" asp-page-handler="Correct" class="fields">
+        {
+            <div class="stock-chief-panel">
+                <h3>صیاد @c.Sayad · @c.Recipient</h3>
+                <form method="post" asp-page-handler="Correct" class="fields">
             <input type="hidden" name="id" value="@c.Id">
             <label>صیاد<input name="sayad" value="@c.Sayad" required maxlength="16"></label>
             <label>حساب<input name="account" value="@c.Account" required maxlength="50"></label>
@@ -57,8 +60,9 @@
             <label>پیش‌پرداخت<select name="prepayment"><option value="0">بدون پیوند</option>
                 @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" @(c.Prepayment==item.Number ? "selected" : null)>@item.Number · @item.Vendor</option> }
             </select></label><button class="button" type="submit">ذخیره اصلاح</button>
-        </form></details> }
-    </details>
+        </form>
+            </div>
+        }
 </section>
 
 @if (Model.BankPrepayments.Count > 0)

@@ -177,9 +177,10 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .menu-more>summary::-webkit-details-marker{display:none}
 .menu-more-body{display:grid;gap:2px;padding-top:6px}
 .role-guide{margin:0 0 14px;border:1px solid #dcebe3;border-radius:13px;background:#f7fbf9;font-size:13px;color:#3a5d52}
-.role-guide>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;font-weight:700;color:#17644d;padding:9px 13px}
-.role-guide>summary::-webkit-details-marker{display:none}
-.role-guide>summary small{font-size:11px;font-weight:600;color:#5a7d73;padding:2px 8px;border-radius:999px;background:#e5f2ec}
+.role-guide-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700;color:#17644d;padding:9px 13px}
+.role-guide-head small{font-size:11px;font-weight:600;color:#5a7d73;padding:2px 8px;border-radius:999px;background:#e5f2ec}
+.easy-hint-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700;color:#17644d;padding-bottom:8px}
+.easy-hint-tag{font-size:11px;font-weight:600;color:#5a7d73;padding:2px 8px;border-radius:999px;background:#e5f2ec}
 .role-guide ol{margin:0;padding:8px 13px 12px 32px;line-height:1.65;border-top:1px dashed #dcebe3}
 .role-guide li+li{margin-top:3px}
 .role-guide a{font-weight:700}
@@ -218,11 +219,7 @@ html.simple-ui .login form input{min-height:54px;font-size:18px}
 html.simple-ui .login-submit{min-height:56px;font-size:18px}
 html.simple-ui .menu-more{font-size:15px}
 html.simple-ui details summary{font-size:16px}
-.receipt-help-short{display:none}
-html.simple-ui .receipt-help-short{display:block}
-html.simple-ui .receipt-help-long{display:none}
-.hero-more{border:1px solid #d4e8de;border-radius:12px;padding:6px 10px;background:#f7fbf9}
-.hero-more>summary{cursor:pointer;font-weight:700;color:#1a5c48}
+.hero-actions{flex-wrap:wrap}
 .work-advanced{margin-top:12px}
 html.simple-ui .role-guide{font-size:15px}
-html.simple-ui .role-guide>summary{font-size:16px}
+html.simple-ui .role-guide-head{font-size:16px}

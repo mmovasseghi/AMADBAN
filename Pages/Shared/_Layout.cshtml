@@ -51,21 +51,17 @@
                 }
                 @if (User.IsInRole("chief") || User.IsInRole("agent"))
                 {
-                <details class="menu-more" open>
-                    <summary><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش و تنظیمات</summary>
-                    <div class="menu-more-body">
-                        <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>
-                        <a class="@(activePage == "/Analytics" ? "active" : "")" asp-page="/Analytics"><img class="menu-icon" src="/icon3d/calculator.webp" width="30" height="30" alt=""> تحلیل خریدها</a>
-                        @if (User.IsInRole("chief"))
-                        {
-                            <a class="@(activePage == "/Activity" ? "active" : "")" asp-page="/Activity"><img class="menu-icon" src="/icon3d/megaphone.webp" width="30" height="30" alt=""> اطلاعیه‌های آماد
-                                @if (unreadActivity>0) { <span class="notification-pill">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</span> }
-                            </a>
-                            <a class="@(activePage == "/Organization" ? "active" : "")" asp-page="/Organization"><img class="menu-icon" src="/icon3d/setting.webp" width="30" height="30" alt=""> نشان و امضا</a>
-                            <a class="@(activePage == "/Staff" ? "active" : "")" asp-page="/Staff"><img class="menu-icon" src="/icon3d/key.webp" width="30" height="30" alt=""> کاربران</a>
-                        }
-                    </div>
-                </details>
+                    <span class="menu-caption">گزارش و تنظیمات</span>
+                    <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>
+                    <a class="@(activePage == "/Analytics" ? "active" : "")" asp-page="/Analytics"><img class="menu-icon" src="/icon3d/calculator.webp" width="30" height="30" alt=""> تحلیل خریدها</a>
+                    @if (User.IsInRole("chief"))
+                    {
+                        <a class="@(activePage == "/Activity" ? "active" : "")" asp-page="/Activity"><img class="menu-icon" src="/icon3d/megaphone.webp" width="30" height="30" alt=""> اطلاعیه‌های آماد
+                            @if (unreadActivity>0) { <span class="notification-pill">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</span> }
+                        </a>
+                        <a class="@(activePage == "/Organization" ? "active" : "")" asp-page="/Organization"><img class="menu-icon" src="/icon3d/setting.webp" width="30" height="30" alt=""> نشان و امضا</a>
+                        <a class="@(activePage == "/Staff" ? "active" : "")" asp-page="/Staff"><img class="menu-icon" src="/icon3d/key.webp" width="30" height="30" alt=""> کاربران</a>
+                    }
                 }
             </nav>
             <div class="org">سامانه داخلی آماد و پشتیبانی</div>

@@ -1,12 +1,12 @@
 @model EasyGuidePanel
-<details class="easy-hint card" @(Model.PinnedOpen ? "open" : null)>
-    <summary class="easy-hint-summary">
+<section class="easy-hint card" aria-label="@Model.Title">
+    <div class="easy-hint-summary">
         <span class="easy-hint-title">@Model.Title</span>
         @if (!string.IsNullOrWhiteSpace(Model.Eyebrow))
         {
             <span class="easy-hint-tag">@Model.Eyebrow</span>
         }
-    </summary>
+    </div>
     @if (!string.IsNullOrWhiteSpace(Model.Lead))
     {
         <p class="easy-hint-lead">@Model.Lead</p>
@@ -22,9 +22,9 @@
                 }
                 @if (!string.IsNullOrWhiteSpace(step.Page))
                 {
-                    <a class="easy-hint-link" asp-page="@step.Page">@(step.LinkText ?? "برو")</a>
+                    <a class="button" asp-page="@step.Page">@(step.LinkText ?? "برو")</a>
                 }
             </li>
         }
     </ol>
-</details>
+</section>

@@ -30,8 +30,8 @@
                 <button class="button primary" type="submit">اعمال روی موجودی</button>
             </form>
         </div>
-        <details>
-            <summary>انبارگردانی — مانده را برابر شمارش واقعی کنید</summary>
+        <div class="stock-chief-panel">
+            <h3>انبارگردانی — مانده را برابر شمارش واقعی کنید</h3>
             <p>اگر در انبار شمردید و عدد با سیستم فرق دارد، موجودی واقعی را بنویسید.</p>
             <form method="post" asp-page-handler="Count" class="filters">
                 <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
@@ -40,9 +40,9 @@
                 <label>یادداشت<input name="note" maxlength="120"></label>
                 <button class="button" type="submit">ثبت شمارش</button>
             </form>
-        </details>
-        <details>
-            <summary>اصلاح نام، کد یا واحد کالا</summary>
+        </div>
+        <div class="stock-chief-panel">
+            <h3>اصلاح نام، کد یا واحد کالا</h3>
             <form method="post" asp-page-handler="CorrectProduct" class="filters">
                 <input type="hidden" name="id" value="@product.Id">
                 <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
@@ -51,7 +51,7 @@
                 <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
                 <button type="submit" class="button">ذخیره مشخصات</button>
             </form>
-        </details>
+        </div>
         }
         <form method="get" class="filters">
             <input type="hidden" name="ProductId" value="@product.Id">
@@ -79,7 +79,7 @@
     <div class="table-wrap"><table><thead><tr><th>شناسه کالا</th><th>نام</th><th>موجودی</th><th>حداقل</th><th>گردش</th></tr></thead><tbody>
       @foreach (var item in Model.Products.Take(25))
       {
-          <tr><td>@item.Code</td><td>@item.Name</td><td>@item.Stock.ToString("0.###") @item.Unit</td><td>@item.Minimum.ToString("0.###")</td><td><a class="button quiet" asp-route-ProductId="@item.Id" asp-route-Search="@Model.Search" asp-route-Low="@Model.Low">@(Model.CanEditStock ? "گردش و ویرایش" : "گردش")</a></td></tr>
+          <tr><td>@item.Code</td><td>@item.Name</td><td>@item.Stock.ToString("0.###") @item.Unit</td><td>@item.Minimum.ToString("0.###")</td><td><a class="button" asp-route-ProductId="@item.Id" asp-route-Search="@Model.Search" asp-route-Low="@Model.Low">@(Model.CanEditStock ? "گردش و ویرایش" : "گردش")</a></td></tr>
       }
     </tbody></table></div>
     <nav class="pagination" aria-label="صفحه کالا">

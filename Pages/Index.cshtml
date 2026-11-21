@@ -42,7 +42,7 @@
 }
 @if (User.IsInRole("chief") && Model.Activity.Count > 0)
 {
-    <section class="card activity-preview"><div class="actions between"><h2>تازه‌ترین کارهای آماد</h2><a class="button quiet" asp-page="/Activity">همه اطلاعیه‌ها</a></div>
+    <section class="card activity-preview"><div class="actions between"><h2>تازه‌ترین کارهای آماد</h2><a class="button" asp-page="/Activity">همه اطلاعیه‌ها</a></div>
         @foreach (var item in Model.Activity)
         { <a asp-page="/ActivityDetail" asp-route-id="@item.Id"><img src="/icon3d/@(item.Icon).webp" width="29" height="29" alt=""><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></a> }
     </section>

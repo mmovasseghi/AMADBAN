@@ -213,7 +213,7 @@
     @if(Model.Entry.TaxBatchId is long batchId)
     { <p><a asp-page="/TaxBatch" asp-page-handler="File" asp-route-id="@batchId" asp-route-invoice="@row.Id" target="_blank" rel="noopener">برگه مالیات گروهی @batchId</a></p>
         @if(Model.HandlesFinance && Model.Editable)
-        { <form method="post" asp-page-handler="TaxUnlink"><button class="button quiet" type="submit" data-confirm="پیوند این سند با برگه مالیات گروهی برداشته شود؟">اصلاح پیوند برگه مالیات</button></form> }
+        { <form method="post" asp-page-handler="TaxUnlink"><button class="button" type="submit" data-confirm="پیوند این سند با برگه مالیات گروهی برداشته شود؟">اصلاح پیوند برگه مالیات</button></form> }
     }
     @if (Model.HandlesFinance && Model.Editable && row.Kind == "credit")
     {

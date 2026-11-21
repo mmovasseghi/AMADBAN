@@ -3,7 +3,17 @@
 @{
     ViewData["Title"] = Model.Invoice is not null || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار و پیش‌پرداخت";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1><p>مانده هر کد را ببینید، اعتبار را جابه‌جا کنید و پیش‌پرداخت را به سند وصل کنید.</p></div></div><a class="button" asp-page="/Credit">کدهای اعتباری</a></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1>
+        <p>ثبت پیش‌پرداخت → چاپ برگه A4. برای فاکتور چکی از دکمهٔ <strong>پیش‌پرداخت</strong> داخل همان پرونده هم می‌توانید بیایید.</p></div></div>
+        @if (Model.Payment is { } pmt)
+        {
+            <a class="button primary" asp-page="/PrintPrepayment" asp-route-number="@pmt.Number">چاپ پیش‌پرداخت</a>
+        }
+        else if (Model.Proformas.Count > 0)
+        {
+            <a class="button" href="#open-prepayments">پیش‌پرداخت‌های منتظر اتصال</a>
+        }
+</header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.Payment is { } payment)
 {
@@ -22,7 +32,7 @@
                 <label>کد صحیح<select name="code">@foreach (var c in Model.Codes) { <option value="@c.Id" @(c.Id == payment.CodeId ? "selected" : null)>@c.Code · @c.Title</option> }</select></label>
                 <button class="button" name="action" value="code">اصلاح کد</button>
             </form>
-            @if (Model.IsAgent && payment.State == "reserved")
+            @if (Model.CanPrepay && payment.State == "reserved")
             {
                 <form method="post" asp-page-handler="Action" class="actions">
                     <input type="hidden" name="number" value="@payment.Number"><input type="hidden" name="invoice" value="@payment.Invoice">
@@ -31,7 +41,7 @@
                     <button class="button" name="action" value="void">ابطال و آزادکردن اعتبار</button>
                 </form>
             }
-            @if (Model.IsAgent && payment.Invoice is null)
+            @if (Model.CanPrepay && payment.Invoice is null)
             {
                 <form method="post" asp-page-handler="Link" class="filters">
                     <input type="hidden" name="number" value="@payment.Number">
@@ -42,7 +52,7 @@
         }
     </section>
 }
-else if (Model.IsAgent)
+else if (Model.CanPrepay)
 {
     <section class="card">
         <h2>@(Model.Invoice is null ? "پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice.Summary.Document}")</h2>
@@ -122,9 +132,14 @@ else if (Model.IsAgent)
     </section>
     @if (Model.Proformas.Count > 0)
     {
-        <section class="card"><h2>پیش‌پرداخت‌های منتظر اتصال به سند</h2>
+        <section class="card" id="open-prepayments"><h2>پیش‌پرداخت‌های منتظر اتصال به سند</h2>
+            <div class="table-wrap"><table><thead><tr><th>شماره</th><th>فروشنده</th><th>مبلغ</th><th>اقدام</th></tr></thead><tbody>
             @foreach (var p in Model.Proformas)
-            { <a asp-page="/Credit" asp-route-number="@p.Number">@p.Number · @p.Vendor · @Persian.Money(p.Amount) ریال</a> }
+            {
+                <tr><td>@p.Number</td><td>@p.Vendor</td><td class="numbers">@Persian.Money(p.Amount)</td>
+                    <td class="actions"><a class="button quiet" asp-page="/Credit" asp-route-number="@p.Number">مدیریت</a>
+                        <a class="button" asp-page="/PrintPrepayment" asp-route-number="@p.Number">چاپ A4</a></td></tr>
+            }</tbody></table></div>
         </section>
     }
     @if (Model.History.Count > 0)

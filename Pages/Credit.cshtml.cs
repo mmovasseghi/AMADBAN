@@ -20,6 +20,7 @@ public sealed class CreditModel(Store store) : PageModel
     public InvoiceDetail? Invoice { get; private set; }
     public Prepayment? Payment { get; private set; }
     public bool IsAgent => User.IsInRole("agent");
+    public bool CanPrepay => User.IsInRole("agent") || User.IsInRole("chief");
     public Guid Submission { get; } = Guid.NewGuid();
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string Role => User.FindFirstValue(ClaimTypes.Role)!;
@@ -69,7 +70,7 @@ public sealed class CreditModel(Store store) : PageModel
     public async Task<IActionResult> OnPostReserveAsync(Guid submission, long invoice, string? proforma, string? vendor,
         long code, string? owner, string? bank, string? sheba, string? amount, string? permit, string? permitDate, string? tax)
     {
-        if (!IsAgent) return Forbid();
+        if (!CanPrepay) return Forbid();
         proforma = Persian.Latin(proforma);
         vendor = vendor?.Trim() ?? "";
         owner = owner?.Trim() ?? "";
@@ -91,7 +92,7 @@ public sealed class CreditModel(Store store) : PageModel
             if (result.Number is long number)
             {
                 Message = result.Message;
-                return RedirectToPage(new { invoice, number });
+                return RedirectToPage("/PrintPrepayment", new { number });
             }
             Message = result.Message;
         }
@@ -108,7 +109,7 @@ public sealed class CreditModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostLinkAsync(long number, long invoice)
     {
-        if (!IsAgent) return Forbid();
+        if (!CanPrepay) return Forbid();
         Message = await store.LinkProformaAsync(number, invoice, Actor);
         return RedirectToPage(new { number });
     }

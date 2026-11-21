@@ -14,7 +14,7 @@ USERS = {"admin": "chief", "ofis": "agent", "anbardar": "warehouse", "kardex1": 
 DENY_MARKERS = ("Exception", "NullReference", "500 Internal", "SqlException", "developer exception")
 PAGES_ALL = [
     "/Index", "/Stock", "/Dispatch", "/Departments", "/KardexQueue", "/WarehouseReport",
-    "/Invoices/New", "/Analytics", "/Suppliers", "/Bank", "/Login",
+    "/Invoices/New", "/Credit", "/Analytics", "/Suppliers", "/Bank", "/Login",
 ]
 PAGES_FINANCE = ["/Credit", "/Petty", "/TaxBatch", "/Activity", "/Organization", "/Staff"]
 
@@ -63,12 +63,14 @@ def add(sev, who, detail):
 
 for user, role in USERS.items():
     op, cj = login(user)
-    code, body = fetch(op, "/Index")
+    code, index_html = fetch(op, "/Index")
     if code >= 500:
         add("high", user, f"/Index returned {code}")
     for mk in DENY_MARKERS:
-        if mk.lower() in body.lower():
+        if mk.lower() in index_html.lower():
             add("high", user, f"/Index contains {mk}")
+    if role in ("agent", "chief") and "پیش‌پرداخت" not in index_html:
+        add("high", user, "prepayment menu link missing from layout")
 
     paths = PAGES_ALL + (PAGES_FINANCE if role in ("chief", "agent") else [])
     if role == "chief":
@@ -102,6 +104,12 @@ for user, role in USERS.items():
         add("high", user, "menu-more visible in layout")
     if role == "agent" and not menu_more:
         add("medium", user, "agent missing menu-more")
+    if user == "ofis":
+        _, credit = fetch(op, "/Credit")
+        if "پیش‌پرداخت بر اساس پیش‌فاکتور" not in credit and "ثبت و رزرو" not in credit:
+            add("high", "ofis", "Credit page missing prepayment create form")
+        if "PrintPrepayment" not in credit and "/PrintPrepayment" not in credit and "چاپ" not in credit:
+            pass  # print route not on list page until prepayment exists
 
     if user == "anbardar":
         token, _ = antiforgery(op, "/Stock")

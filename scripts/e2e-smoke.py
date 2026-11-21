@@ -106,7 +106,11 @@ for user, role in USERS.items():
         add("medium", user, "agent missing menu-more")
     if user == "ofis":
         _, credit = fetch(op, "/Credit")
-        if "پیش‌پرداخت بر اساس پیش‌فاکتور" not in credit and "ثبت و رزرو" not in credit:
+        if (
+            "پیش‌پرداخت بر اساس پیش‌فاکتور" not in credit
+            and "پیش‌پرداخت این سند" not in credit
+            and "ثبت و رزرو" not in credit
+        ):
             add("high", "ofis", "Credit page missing prepayment create form")
         if "PrintPrepayment" not in credit and "/PrintPrepayment" not in credit and "چاپ" not in credit:
             pass  # print route not on list page until prepayment exists

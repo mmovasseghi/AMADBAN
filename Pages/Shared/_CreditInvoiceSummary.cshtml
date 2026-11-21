@@ -1,0 +1,9 @@
+@model Amadban.Pages.CreditModel
+@if (Model.Invoice is { } inv)
+{
+    <section class="card">
+        <h2>پروندهٔ مرتبط</h2>
+        <p><strong>@inv.Summary.Vendor</strong> · @inv.Summary.Subject · سند @inv.Summary.Document · @Persian.Money(inv.Summary.Total) ریال</p>
+        <a class="button quiet" asp-page="/Invoices/Detail" asp-route-id="@inv.Summary.Id">بازگشت به پرونده</a>
+    </section>
+}

@@ -4,7 +4,7 @@
     ViewData["Title"] = Model.Invoice is not null || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار و پیش‌پرداخت";
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1>
-        <p>ثبت پیش‌پرداخت → چاپ برگه A4. برای فاکتور چکی از دکمهٔ <strong>پیش‌پرداخت</strong> داخل همان پرونده هم می‌توانید بیایید.</p></div></div>
+        <p>دو مسیر: <strong>پیش‌فاکتور</strong> (بدون سند) یا <strong>پیش‌پرداخت همان سند</strong> از پروندهٔ چکی بعد از صدور شماره سند.</p></div></div>
         @if (Model.Payment is { } pmt)
         {
             <a class="button primary" asp-page="/PrintPrepayment" asp-route-number="@pmt.Number">چاپ پیش‌پرداخت</a>
@@ -52,10 +52,27 @@
         }
     </section>
 }
-else if (Model.CanPrepay)
+<partial name="_CreditInvoiceSummary" />
+@if (Model.InvoicePrepayNotice is not null)
+{
+    <p class="notice" role="status">@Model.InvoicePrepayNotice</p>
+}
+@if (Model.ShowProformaForm)
 {
     <section class="card">
-        <h2>@(Model.Invoice is null ? "پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice.Summary.Document}")</h2>
+        <h2>انتخاب نوع پیش‌پرداخت</h2>
+        <p><strong>پیش‌فاکتور:</strong> هنوز سند ندارید → فرم «پیش‌فاکتور» در همین صفحه (پایین).</p>
+        <p><strong>سند صادرشده:</strong> پروندهٔ چکی در کارتابل → دکمهٔ سبز <strong>پیش‌پرداخت این سند</strong>، یا شناسهٔ پرونده:</p>
+        <form method="get" class="filters">
+            <label>شناسهٔ پرونده (از کارتابل روی سطر کلیک کنید؛ در آدرس مرورگر <code>Detail/123</code> عدد ۱۲۳ است)<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
+            <button class="button primary" type="submit">پیش‌پرداخت این سند</button>
+        </form>
+    </section>
+}
+@if (Model.ShowProformaForm || Model.ShowInvoiceForm)
+{
+    <section class="card" id="prepay-form">
+        <h2>@(Model.Invoice is null ? "۱ — پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice!.Summary.Document} (همان فاکتور)")</h2>
         <p>اطلاعات را به ترتیب وارد کنید. اگر اعتبار کافی نباشد، مقدار کسری به شما نشان داده می‌شود و می‌توانید همین فرم را ادامه دهید.</p>
         <form method="post" asp-page-handler="Reserve" class="payment-form">
             <input type="hidden" name="submission" value="@Model.Submission">
@@ -82,11 +99,11 @@ else if (Model.CanPrepay)
                     <label>شماره شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required></label>
                 </div>
             </div>
-            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>اطلاعات تکمیلی</h2><p>شماره مجوز و مالیات را فقط در صورت وجود وارد کنید.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>اطلاعات تکمیلی (همه اختیاری)</h2><p>اگر مجوز یا مالیات جدا ندارید، این بخش را خالی بگذارید.</p></div></div>
                 <div class="fields">
-                    <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80"></label>
-                    <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10"></label>
-                    <label>مالیات جداگانه درج‌شونده (ریال)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
+                    <label>شماره مجوز (اختیاری)<input name="permit" value="@Model.Pending?.Permit" maxlength="80" placeholder="در صورت نداشتن خالی بگذارید"></label>
+                    <label>تاریخ مجوز (اختیاری)<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10" placeholder="۱۴۰۵/۰۱/۰۱"></label>
+                    <label>مالیات جداگانه (اختیاری)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
                 </div>
             </div>
             <div class="actions between"><p>پس از ثبت، برگه چاپ می‌شود و مبلغ از مانده قابل استفاده این کد رزرو خواهد شد.</p><button class="button primary" type="submit">ثبت و رزرو اعتبار</button></div>
@@ -105,7 +122,7 @@ else if (Model.CanPrepay)
         }
     </section>
 }
-@if (Model.Invoice is null && Model.Payment is null)
+@if (Model.Payment is null)
 {
     @if (Model.Notices.Count > 0)
     {

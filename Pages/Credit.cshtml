@@ -52,7 +52,7 @@
                     <input type="hidden" name="number" value="@payment.Number"><input type="hidden" name="invoice" value="@payment.Invoice">
                     @if (payment.Invoice is not null) { <label class="inline"><input type="checkbox" name="proxy" value="true"> پرداخت گروهی در بانک</label> }
                     <button class="button primary" name="action" value="pay">ثبت پرداخت قطعی</button>
-                    <button class="button" name="action" value="void">ابطال و آزادکردن اعتبار</button>
+                    <button class="button" name="action" value="void" data-confirm="پیش‌پرداخت باطل شود و اعتبار آزاد گردد؟">ابطال و آزادکردن اعتبار</button>
                 </form>
             }
         }

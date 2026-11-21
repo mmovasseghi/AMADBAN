@@ -1,5 +1,14 @@
 (() => {
     'use strict';
+    const fetchWithTimeout = async (url, options = {}, ms = 15000) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), ms);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+            clearTimeout(timer);
+        }
+    };
     const simpleKey = 'amadban-simple-ui';
     const simpleOn = () => {
         const v = localStorage.getItem(simpleKey);
@@ -17,28 +26,54 @@
         });
     };
     syncSimpleToggle();
+    window.addEventListener('pageshow', () => {
+        document.querySelectorAll('button.primary[type="submit"][aria-busy], input.primary[type="submit"][aria-busy]').forEach(el => {
+            el.disabled = false;
+            el.removeAttribute('aria-busy');
+        });
+    });
     document.querySelectorAll('[data-simple-ui-toggle]').forEach(btn => btn.addEventListener('click', () => {
         localStorage.setItem(simpleKey, simpleOn() ? '0' : '1');
         syncSimpleToggle();
     }));
 
-    document.querySelectorAll('[data-confirm]').forEach(button => {
-        const form = button.closest('form');
-        if (!form) return;
+    document.querySelectorAll('form').forEach(form => {
+        const confirmButtons = form.querySelectorAll('[data-confirm]');
+        if (!confirmButtons.length) return;
         form.addEventListener('submit', event => {
-            if (event.submitter !== button) return;
-            const message = button.getAttribute('data-confirm') || 'مطمئن هستید؟';
+            const single = confirmButtons.length === 1;
+            const btn = event.submitter;
+            const active = single
+                ? confirmButtons[0]
+                : (btn?.hasAttribute?.('data-confirm') ? btn : null);
+            if (!active) return;
+            const message = active.getAttribute('data-confirm') || 'مطمئن هستید؟';
             if (!window.confirm(message)) event.preventDefault();
         });
+    });
+
+    document.querySelectorAll('form[method="post"]').forEach(form => {
+        form.addEventListener('submit', () => {
+            form.querySelectorAll('button.primary[type="submit"], input.primary[type="submit"]').forEach(el => {
+                el.disabled = true;
+                el.setAttribute('aria-busy', 'true');
+                window.setTimeout(() => {
+                    el.disabled = false;
+                    el.removeAttribute('aria-busy');
+                }, 25000);
+            });
+        }, { once: false });
     });
 
     document.querySelectorAll('table[data-clickable-rows] tbody tr').forEach(row => {
         const open = row.querySelector('td a.button[href], td:last-child a[href]');
         if (!open) return;
+        const href = open.getAttribute('href');
+        if (!href) return;
         row.classList.add('row-openable');
         row.addEventListener('click', event => {
             if (event.target.closest('a, button, input, select, textarea, label')) return;
-            open.click();
+            window.location.assign(href);
         });
     });
 
@@ -87,7 +122,7 @@
     if (notificationBadge) setInterval(async () => {
         if (document.hidden) return;
         try {
-            const response = await fetch('/Activity?handler=Unread', { cache: 'no-store' });
+            const response = await fetchWithTimeout('/Activity?handler=Unread', { cache: 'no-store' }, 12000);
             if (!response.ok) return;
             const data = await response.json();
             const count = Number(data.count) || 0;
@@ -114,7 +149,7 @@
             if (term.length < 2) return;
             timer = setTimeout(async () => {
                 try {
-                    const response = await fetch('/Suppliers?handler=Names&search=' + encodeURIComponent(term));
+                    const response = await fetchWithTimeout('/Suppliers?handler=Names&search=' + encodeURIComponent(term));
                     if (!response.ok) return;
                     const names = await response.json();
                     if (supplier.value.trim() !== term) return;
@@ -209,7 +244,7 @@
             if (term.length < 2 || term.length > 80) return;
             timer = setTimeout(async () => {
                 try {
-                    const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
+                    const response = await fetchWithTimeout('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
                     if (!response.ok) return;
                     const products = await response.json();
                     list.textContent = '';
@@ -248,7 +283,7 @@
             recipient.disabled = true;
             const requestId = ++recipientRequest;
             try {
-                const response = await fetch('/Dispatch?handler=Recipients&department=' + encodeURIComponent(departmentId), { cache: 'no-store' });
+                const response = await fetchWithTimeout('/Dispatch?handler=Recipients&department=' + encodeURIComponent(departmentId), { cache: 'no-store' });
                 if (!response.ok || requestId !== recipientRequest) return;
                 const people = await response.json();
                 if (requestId !== recipientRequest) return;
@@ -304,7 +339,7 @@
             expert.disabled = true;
             const requestId = ++expertRequest;
             try {
-                const response = await fetch(`/Invoices/Detail/${invoiceId}?handler=Experts&department=${encodeURIComponent(departmentId)}`, { cache: 'no-store' });
+                const response = await fetchWithTimeout(`/Invoices/Detail/${invoiceId}?handler=Experts&department=${encodeURIComponent(departmentId)}`, { cache: 'no-store' });
                 if (!response.ok || requestId !== expertRequest) return;
                 const people = await response.json();
                 if (requestId !== expertRequest) return;
@@ -342,7 +377,7 @@
         const loadReceiptSuggestions = async (input, term) => {
             if (term.length < 1 || term.length > 80) return;
             try {
-                const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
+                const response = await fetchWithTimeout('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
                 if (!response.ok) return;
                 const products = await response.json();
                 suggestions.textContent = '';

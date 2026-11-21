@@ -30,7 +30,7 @@
         </ul>
     </section>
 }
-@if (Model.Alerts is { } alerts)
+@if (Model.Alerts is { } alerts && (User.IsInRole("chief") || User.IsInRole("agent")))
 {
     <section class="alert-grid" aria-label="کارهای نیازمند پیگیری">
         <a class="alert-tile" asp-page="/Index" asp-route-Status="kardex-late"><img src="/icon3d/clock.webp" width="48" height="48" alt=""><strong>@alerts.LateKardex</strong><span>کارتکس عقب‌افتاده</span></a>

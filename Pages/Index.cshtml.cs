@@ -1,10 +1,12 @@
 using Amadban.Data;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Amadban.Pages;
 
+[Authorize]
 public sealed class IndexModel(Store store) : PageModel
 {
     [BindProperty(SupportsGet = true)] public string Status { get; set; } = "";
@@ -24,7 +26,7 @@ public sealed class IndexModel(Store store) : PageModel
     public List<ActivityItem> Activity { get; private set; } = [];
     public SetupHints? Setup { get; private set; }
 
-    public async Task OnGetAsync()
+    public async Task<IActionResult> OnGetAsync()
     {
         P = Math.Clamp(P, 1, 4000);
         Search = Persian.Latin(Search);
@@ -43,11 +45,14 @@ public sealed class IndexModel(Store store) : PageModel
             (from != null && to != null && from > to))
         {
             ModelState.AddModelError("", "بازه تاریخ را به‌صورت شمسی و با ترتیب درست وارد کنید.");
-            return;
+            return Page();
         }
-        var roles = User.IsInRole("warehouse") ? "document" : User.IsInRole("kardex") ? "kardex" : "";
+        var finance = User.IsInRole("chief") || User.IsInRole("agent");
+        if (Report && !finance) return Forbid();
+        var roles = User.IsInRole("warehouse") && !finance ? "document"
+            : User.IsInRole("kardex") && !finance ? "kardex" : "";
         if (!Request.Query.ContainsKey(nameof(Status)) && !Report) Status = roles;
-        if (!Report && (User.IsInRole("chief") || User.IsInRole("agent")))
+        if (!Report && finance)
             Setup = await store.SetupHintsAsync();
         var results = await store.ListAsync(Status, Search, Subject, Kind, Credit, from ?? new DateOnly(1900, 1, 1),
             to ?? new DateOnly(2200, 12, 31), P, Report);
@@ -60,10 +65,12 @@ public sealed class IndexModel(Store store) : PageModel
             Alerts = await store.OperationalAlertsAsync();
             if (User.IsInRole("chief")) Activity = await store.ActivityAsync(1,4);
         }
+        return Page();
     }
 
     public async Task<IActionResult> OnGetExportAsync()
     {
+        if (!User.IsInRole("chief") && !User.IsInRole("agent")) return Forbid();
         Search = Persian.Latin(Search);
         if (Search.Length > 100) Search = Search[..100];
         Subject = (Subject ?? "").Trim();

@@ -1,9 +1,11 @@
 using Amadban.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Amadban.Pages;
 
+[Authorize(Roles = "agent,chief")]
 public sealed class AnalyticsModel(Store store) : PageModel
 {
     [BindProperty(SupportsGet = true)] public string Group { get; set; } = "vendor";

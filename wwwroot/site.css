@@ -184,7 +184,10 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .role-guide li+li{margin-top:3px}
 .role-guide a{font-weight:700}
 .work-next small{font-weight:500;color:#4a6b60}
-.easy-toggle{font-weight:700}
+.sidebar-display-toggle{width:100%;margin-top:auto;min-height:40px;padding:8px 10px;border:1px dashed #cde0d7;border-radius:12px;background:#f5faf8;color:#1a5c48;font:inherit;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
+.sidebar-display-toggle:hover,.sidebar-display-toggle:focus{background:#eaf5ef;border-color:#9dc5b2}
+.sidebar-display-toggle[aria-pressed=true]{border-style:solid;background:#e3f4ea;color:#0e5a42}
+.login-display-toggle{margin-top:12px;max-width:100%}
 .login-help{font-size:16px;line-height:1.8;color:#3d625c}
 
 html.simple-ui{font-size:17px}

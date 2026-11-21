@@ -123,8 +123,11 @@ public sealed class CreditModel(Store store) : PageModel
     public async Task<IActionResult> OnPostLinkAsync(long number, long invoice)
     {
         if (!CanPrepay) return Forbid();
-        Message = await store.LinkProformaAsync(number, invoice, Actor);
-        return RedirectToPage(new { number });
+        var linkResult = await store.LinkProformaAsync(number, invoice, Actor);
+        Message = linkResult;
+        if (linkResult == "پیش‌پرداخت به سند متصل شد.")
+            return RedirectToPage("/PrintPrepayment", new { number });
+        return RedirectToPage(new { invoice });
     }
 
     private static long? ParseAmount(string? amount) =>

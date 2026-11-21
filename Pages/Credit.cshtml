@@ -105,20 +105,24 @@
                     <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10" placeholder="۱۴۰۵/۰۱/۰۱"></label>
                 </div>
             </div>
-            <div class="actions between"><p>پس از ثبت، برگه چاپ می‌شود و مبلغ از مانده قابل استفاده این کد رزرو خواهد شد.</p><button class="button primary" type="submit">ثبت و رزرو اعتبار</button></div>
+            <div class="actions between"><p>بعد از «ثبت و چاپ»، همان لحظه صفحهٔ <strong>چاپ A4</strong> باز می‌شود؛ اعتبار هم رزرو می‌شود.</p><button class="button primary" type="submit">ثبت و چاپ برگه A4</button></div>
         </form>
         @if (Model.Pending is not null)
         {
             <p><a asp-page="/Credit" target="_blank" rel="noopener">افزایش یا انتقال اعتبار در پنجره جدا</a></p>
         }
-        @if (Model.Invoice is not null)
-        {
-            <form method="post" asp-page-handler="Link" class="filters">
-                <input type="hidden" name="invoice" value="@Model.Invoice.Summary.Id">
-                <label>شماره پیش‌پرداخت قبلی<input name="number" type="number" min="1" required></label>
-                <button class="button" type="submit">اتصال پیش‌پرداخت پیش‌فاکتور</button>
-            </form>
-        }
+    </section>
+}
+@if (Model.ShowInvoiceForm && Model.Invoice is { } linkInv)
+{
+    <section class="card">
+        <h2>فقط اگر قبلاً روی پیش‌فاکتور پیش‌پرداخت زده‌اید</h2>
+        <p>اگر <strong>قبل از صدور سند</strong> برگهٔ پیش‌پرداخت گرفته‌اید (شمارهٔ آن را دارید) و نمی‌خواهید دوباره پیش‌پرداخت بزنید، همان شماره را به این سند وصل کنید. در غیر این صورت از فرم بالا «ثبت و چاپ» را بزنید.</p>
+        <form method="post" asp-page-handler="Link" class="filters">
+            <input type="hidden" name="invoice" value="@linkInv.Summary.Id">
+            <label>شمارهٔ برگهٔ پیش‌پرداخت قبلی<input name="number" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۱۲"></label>
+            <button class="button" type="submit">اتصال به این سند (بدون پیش‌پرداخت جدید)</button>
+        </form>
     </section>
 }
 @if (Model.Payment is null)

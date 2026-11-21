@@ -1,39 +1,58 @@
 @page
 @model Amadban.Pages.DepartmentsModel
 @{
-    ViewData["Title"] = "بخش‌های بیمارستان";
+    ViewData["Title"] = "بخش‌ها و مسئولین";
     var missingRecipients = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div>
-    <div class="eyebrow">پایه‌دهی مشترک</div><h1>بخش‌های بیمارستان و تحویل‌گیرندگان</h1>
-    <p>اینجا واحدهای بالینی (اورژانس، اتاق عمل، …) و مسئول دریافت کالا از انبار برای هر بخش ثبت می‌شود. همین لیست در <strong>خروج کالا از انبار</strong> و در <strong>بخش درخواست‌کننده روی سند خرید</strong> استفاده می‌شود.</p></div></div>
-    <div class="actions">@if (User.IsInRole("warehouse") || User.IsInRole("chief")) { <a class="button primary" asp-page="/Dispatch">رفتن به خروج کالا</a> }</div></header>
+    <div class="eyebrow">فهرست مشترک</div><h1>بخش‌ها و مسئولین بخش</h1>
+    <p>هر <strong>بخش بالینی</strong> (اورژانس، اتاق عمل، …) و <strong>اشخاص همان بخش</strong> یک‌بار اینجا ثبت می‌شوند. همان فهرست هم در <strong>سند خرید</strong> (بخش درخواست‌کننده و کارشناس امضا) و هم در <strong>حواله انبار</strong> (بخش مقصد و تحویل‌گیرنده کالا) به‌کار می‌رود.</p></div></div>
+    <div class="actions">
+        @if (User.IsInRole("agent") || User.IsInRole("chief")) { <a class="button" asp-page="/Index">کارتابل خرید</a> }
+        @if (User.IsInRole("warehouse") || User.IsInRole("chief")) { <a class="button" asp-page="/Dispatch">حواله به بخش</a> }
+    </div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+<section class="card">
+    <h2>کاربرد این فهرست</h2>
+    <div class="alert-grid">
+        <div class="alert-tile">
+            <img src="/icon3d/file-text.webp" width="48" height="48" alt="">
+            <strong>سند خرید</strong>
+            <span>بخش درخواست‌کننده · کارشناس / رئیس قسمت روی پرونده و چاپ سند</span>
+        </div>
+        <div class="alert-tile">
+            <img src="/icon3d/folder.webp" width="48" height="48" alt="">
+            <strong>انبار</strong>
+            <span>بخش مقصد · شخص تحویل‌گیرنده کالا روی برگه خروج</span>
+        </div>
+    </div>
+    <p class="form-note">صفحه <a asp-page="/Organization">نشان و امضا</a> فقط برای نام‌های ثابت چاپ فراجا است؛ اشخاص بخش برای کار روزانه همین‌جا تعریف می‌شوند.</p>
+</section>
 @if (Model.Departments.Count == 0)
 {
-    <p class="notice" role="status"><strong>هنوز بخشی ثبت نشده است.</strong> قبل از خروج کالا یا انتخاب «بخش درخواست‌کننده» روی سند، حداقل یک بخش و یک تحویل‌گیرنده برای آن تعریف کنید.</p>
+    <p class="notice" role="status"><strong>هنوز بخشی ثبت نشده است.</strong> قبل از ثبت نام روی سند یا ثبت حواله انبار، حداقل یک بخش و یک مسئول برای آن بخش تعریف کنید.</p>
 }
 else if (missingRecipients.Count > 0)
 {
-    <p class="notice" role="status">برای @missingRecipients.Count بخش هنوز تحویل‌گیرنده ندارید (@string.Join("، ", missingRecipients.Select(r => r.Name))).</p>
+    <p class="notice" role="status">@missingRecipients.Count بخش هنوز شخص ثبت‌شده ندارند (@string.Join("، ", missingRecipients.Select(r => r.Name))).</p>
 }
 <section class="card">
-    <h2>ثبت بخش و تحویل‌گیرنده</h2>
+    <h2>ثبت بخش و شخص</h2>
     <div class="detail-grid">
         <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش<input name="name" maxlength="120" required placeholder="مثلاً اورژانس"></label><button class="button primary" type="submit">ثبت بخش</button></form>
         <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
-            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>درجه<input name="rank" maxlength="80"></label><label>سمت<input name="position" maxlength="120" placeholder="مسئول بخش"></label>
-            <button class="button primary" type="submit">ثبت تحویل‌گیرنده</button></form>
+            <label>نام و نام خانوادگی<input name="name" maxlength="120" required></label><label>درجه<input name="rank" maxlength="80"></label><label>سمت<input name="position" maxlength="120" placeholder="مسئول بخش، رئیس قسمت، …"></label>
+            <button class="button primary" type="submit">ثبت شخص برای این بخش</button></form>
     </div>
-    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>تحویل‌گیرندگان</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>اشخاص (سند خرید و حواله انبار)</th></tr></thead><tbody>
     @foreach (var row in Model.Roster)
     {
-        <tr><td>@row.Name</td><td>@if (row.Recipients.Count == 0) { <span class="badge returned">بدون تحویل‌گیرنده</span> }
+        <tr><td>@row.Name</td><td>@if (row.Recipients.Count == 0) { <span class="badge returned">بدون شخص</span> }
             else { @string.Join(" · ", row.Recipients.Select(p => $"{p.Rank} {p.Name}".Trim() + (p.Position.Length > 0 ? " · " + p.Position : ""))) }</td></tr>
     }
     @if (Model.Roster.Count == 0) { <tr><td colspan="2" class="empty">بخشی ثبت نشده است.</td></tr> }
     </tbody></table></div>
-    <details><summary>اصلاح نام یا بخش تحویل‌گیرنده</summary>
+    <details><summary>اصلاح نام، سمت یا بخش شخص</summary>
         @foreach (var row in Model.Roster)
         {
             foreach (var person in row.Recipients)
@@ -50,5 +69,4 @@ else if (missingRecipients.Count > 0)
             }
         }
     </details>
-    <p class="form-note">صفحه <a asp-page="/Organization">نشان و امضا</a> فقط برای نام‌های چاپی اسناد مالی است؛ برای انبار حتماً همین‌جا بخش را به شخص وصل کنید.</p>
 </section>

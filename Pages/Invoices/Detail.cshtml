@@ -35,10 +35,10 @@
 @if (Model.HandlesFinance && Model.Editable)
 {
     <section class="card"><h2>بخش درخواست‌کننده و کارشناس امضاکننده</h2>
-        <p>کارشناس این سند از بخش درخواست‌کننده انتخاب می‌شود. تحویل‌گیرنده کالا از انبار جداگانه در حواله خروج ثبت می‌شود.</p>
+        <p>بخش و شخص را از همان فهرست مشترک <a asp-page="/Departments">بخش‌ها و مسئولین</a> انتخاب می‌کنید. نام کارشناس روی چاپ سند می‌آید. تحویل فیزیکی کالا از انبار در صفحه <a asp-page="/Dispatch">حواله به بخش</a> جداگانه ثبت می‌شود.</p>
         @if (Model.Departments.Count == 0)
         {
-            <p class="notice" role="status">لیست بخش‌ها خالی است. از منوی <a asp-page="/Departments">بخش‌های بیمارستان</a> بخش و تحویل‌گیرنده را ثبت کنید، سپس اینجا بخش درخواست‌کننده را انتخاب کنید.</p>
+            <p class="notice" role="status">فهرست بخش‌ها خالی است. ابتدا در <a asp-page="/Departments">بخش‌ها و مسئولین</a> بخش و مسئول بخش را ثبت کنید، سپس اینجا انتخاب کنید.</p>
         }
         <form method="post" asp-page-handler="RequestSigner" class="filters" id="request-signer-form" data-invoice-id="@row.Id"
               data-selected-department="@Model.RequestSigner.DepartmentId" data-selected-expert="@Model.RequestSigner.ExpertId">

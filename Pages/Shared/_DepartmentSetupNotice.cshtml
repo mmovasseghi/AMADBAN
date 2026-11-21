@@ -1,22 +1,24 @@
 @model Amadban.Pages.DepartmentSetupNoticeModel
 @{
     var missing = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
+    var departmentsLink = "بخش‌ها و مسئولین";
 }
+<p class="form-note">فهرست <strong>بخش‌ها و مسئولین</strong> مشترک است: هم برای <strong>سند خرید</strong> (درخواست‌کننده و کارشناس) و هم برای <strong>حواله انبار</strong> (مقصد و تحویل‌گیرنده).</p>
 @if (Model.DepartmentCount == 0)
 {
-    <p class="notice" role="status">برای انتخاب بخش مقصد، ابتدا در <a asp-page="/Departments">بخش‌های بیمارستان</a> حداقل یک بخش و تحویل‌گیرنده ثبت کنید.</p>
+    <p class="notice" role="status">برای ادامه، ابتدا در <a asp-page="/Departments">@departmentsLink</a> حداقل یک بخش و یک شخص ثبت کنید.</p>
 }
 else if (missing.Count > 0)
 {
-    <p class="notice" role="status">@missing.Count بخش بدون تحویل‌گیرنده دارند. <a asp-page="/Departments">تکمیل در بخش‌های بیمارستان</a></p>
+    <p class="notice" role="status">@missing.Count بخش بدون شخص ثبت‌شده دارند. <a asp-page="/Departments">تکمیل @departmentsLink</a></p>
 }
 @if (!Model.Compact && Model.Roster.Count > 0)
 {
-    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>تحویل‌گیرنده</th></tr></thead><tbody>
+    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>اشخاص</th></tr></thead><tbody>
     @foreach (var row in Model.Roster.Take(8))
     {
         <tr><td>@row.Name</td><td>@(row.Recipients.Count == 0 ? "—" : string.Join("، ", row.Recipients.Select(p => p.Name)))</td></tr>
     }
     </tbody></table></div>
 }
-<a class="button" asp-page="/Departments">مدیریت بخش‌ها و تحویل‌گیرندگان</a>
+<a class="button" asp-page="/Departments">مدیریت @departmentsLink</a>

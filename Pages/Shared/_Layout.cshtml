@@ -43,7 +43,7 @@
                 @if (User.IsInRole("chief") || User.IsInRole("agent") || User.IsInRole("warehouse"))
                 {
                     <span class="menu-caption">پایه‌دهی</span>
-                    <a class="@(activePage == "/Departments" ? "active" : "")" asp-page="/Departments"><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> بخش‌های بیمارستان</a>
+                    <a class="@(activePage == "/Departments" ? "active" : "")" asp-page="/Departments"><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> بخش‌ها و مسئولین</a>
                 }
                 <span class="menu-caption">پیگیری و گزارش</span>
                 <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>

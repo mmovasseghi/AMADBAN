@@ -101,7 +101,7 @@ public sealed partial class Store
             "SELECT id FROM departments WHERE id=$1 AND active", department) is null) return "بخش معتبر را انتخاب کنید.";
         await Exec(conn, tx, "INSERT INTO people(name,position,rank,department_id) VALUES($1,$2,$3,NULLIF($4,0))",
             name, position, rank, department);
-        await Activity(conn, tx, actor, department > 0 ? "تحویل‌گیرنده بخش تعریف شد" : "شخص امضاکننده تعریف شد",
+        await Activity(conn, tx, actor, department > 0 ? "مسئول بخش تعریف شد" : "شخص امضاکننده تعریف شد",
             (rank.Length > 0 ? rank + " " : "") + name + (position.Length > 0 ? " · " + position : ""), "organization");
         await tx.CommitAsync();
         return "شخص ثبت شد و برای فرم‌های چاپی قابل انتخاب است.";

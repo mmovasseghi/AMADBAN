@@ -23,10 +23,10 @@
         <h2>تکمیل پایه‌دهی سامانه</h2>
         <p>برای اینکه انبار و اسناد خرید بدون گیر کار کنند، موارد زیر را یک‌بار تنظیم کنید.</p>
         <ul class="missing">
-            @if (setup.Departments == 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — هنوز بخشی ثبت نشده</li> }
-            else if (setup.DepartmentsWithoutRecipients > 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — @setup.DepartmentsWithoutRecipients بخش بدون تحویل‌گیرنده</li> }
+            @if (setup.Departments == 0) { <li><a asp-page="/Departments">بخش‌ها و مسئولین</a> — هنوز بخشی ثبت نشده (سند و انبار)</li> }
+            else if (setup.DepartmentsWithoutRecipients > 0) { <li><a asp-page="/Departments">بخش‌ها و مسئولین</a> — @setup.DepartmentsWithoutRecipients بخش بدون شخص</li> }
             @if (setup.Suppliers == 0) { <li><a asp-page="/Suppliers">فروشندگان</a> — پرونده فروشنده ثبت نشده</li> }
-            @if (setup.Departments > 0 && setup.Recipients == 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — حداقل یک تحویل‌گیرنده ثبت کنید</li> }
+            @if (setup.Departments > 0 && setup.Recipients == 0) { <li><a asp-page="/Departments">بخش‌ها و مسئولین</a> — حداقل یک مسئول بخش ثبت کنید</li> }
         </ul>
     </section>
 }

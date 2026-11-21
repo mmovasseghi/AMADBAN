@@ -1,0 +1,35 @@
+@model EasyGuidePanel
+<section class="easy-guide card" aria-label="راهنما">
+    <header class="easy-guide-head">
+        <span class="easy-guide-icon" aria-hidden="true"><img src="/icon3d/@(Model.Icon).webp" width="56" height="56" alt=""></span>
+        <div>
+            <p class="eyebrow">@Model.Eyebrow</p>
+            <h2>@Model.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(Model.Lead))
+            {
+                <p class="easy-guide-lead">@Model.Lead</p>
+            }
+        </div>
+    </header>
+    <ol class="easy-step-grid">
+        @for (var i = 0; i < Model.Steps.Count; i++)
+        {
+            var step = Model.Steps[i];
+            var muted = i == Model.Steps.Count - 1 && Model.Steps.Count > 1;
+            <li class="easy-step-card @(muted ? "easy-step-card-muted" : "")">
+                <span class="easy-step-num" aria-hidden="true">@(i + 1)</span>
+                <div class="easy-step-body">
+                    <h3>@step.Title</h3>
+                    @if (!string.IsNullOrWhiteSpace(step.Detail))
+                    {
+                        <p>@Html.Raw(step.Detail)</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(step.Page))
+                    {
+                        <a class="button @(i == 0 ? "primary" : "")" asp-page="@step.Page">@(step.LinkText ?? "ادامه")</a>
+                    }
+                </div>
+            </li>
+        }
+    </ol>
+</section>

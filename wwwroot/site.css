@@ -199,10 +199,14 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .easy-steps li+li{margin-top:10px}
 .easy-guide-foot{margin:4px 0 0;font-size:15px;text-align:center;padding-top:8px;border-top:1px dashed #d0e6da}
 .easy-guide-foot a{font-weight:700}
-.easy-next{border:2px solid #7fc4a8;background:#ecf9f1}
-.easy-next h2{font-size:20px;color:#0a5a41;margin-bottom:6px}
-.easy-next-action{font-size:22px;font-weight:800;color:#0d4a38;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid #c5e5d4}
-.easy-next-more{margin-top:10px;font-size:15px}
+.easy-next{border:2px solid #8dcfb8;background:linear-gradient(155deg,#e5f8ef,#f6fcfa 55%,#fff);box-shadow:0 12px 28px rgba(28,92,70,.08),inset 0 1px #fff;gap:14px;padding:22px 24px}
+.easy-next-head{border-bottom-color:#c8e8d8;margin-bottom:2px}
+.easy-next-icon{width:64px;height:64px;border-radius:18px}
+.easy-next-icon img{width:44px;height:44px}
+.easy-next-action{margin:4px 0 0;font-size:23px;font-weight:800;line-height:1.55;color:#0c4e3a;padding:18px 20px;border-radius:18px;background:#fff;border:2px solid #b8deca;box-shadow:inset 4px 4px 0 #f0faf4}
+.easy-next-more{margin-top:4px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.65);border:1px dashed #bdd9cb;font-size:15px}
+.easy-next-more summary{cursor:pointer;font-weight:700;color:#1a6b52}
+.easy-next-list{margin:10px 0 0;padding-inline-start:22px;color:#3a5d52;line-height:1.75}
 .easy-toggle{min-height:42px;font-weight:700}
 .login-help{font-size:16px;line-height:1.8;color:#3d625c}
 

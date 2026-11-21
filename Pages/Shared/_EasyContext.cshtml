@@ -1,106 +1,74 @@
+@using Amadban.Pages
 @{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    EasyGuidePanel? panel = page switch
+    {
+        "/Index" => null,
+        "/Invoices/New" => new("file-text", "ثبت فاکتور", "سه قدم ساده",
+            "همان چیزی که روی برگهٔ فاکتور می‌بینید را اینجا بنویسید.",
+            [
+                new("مشخصات روی برگه", "شماره فاکتور، تاریخ شمسی و نام فروشنده."),
+                new("ورود به انبار", "اگر جنس فیزیکی است، تیک <strong>ورود به انبار</strong> را بزنید؛ وگرنه خالی بگذارید."),
+                new("اقلام و ثبت", "هر کالا یک ردیف؛ پایین صفحه دکمهٔ سبز <strong>ثبت</strong> را یک‌بار بزنید.")
+            ]),
+        "/Dispatch" => new("folder", "انبار", "دادن کالا به بخش",
+            "برای تحویل کالا به بخش بیمارستان از بالا به پایین پیش بروید.",
+            [
+                new("بخش و شخص", "از لیست، <strong>بخش مقصد</strong> و <strong>تحویل‌گیرنده</strong> را انتخاب کنید."),
+                new("کالا و تعداد", "نام یا کد کالا را بنویسید؛ تعداد را وارد کنید."),
+                new("چاپ برگه", "دکمهٔ سبز <strong>ثبت خروج و چاپ برگه</strong> — برگه را امضا کنید.")
+            ]),
+        "/Stock" => new("bag", "انبار", "موجودی چطور عوض می‌شود؟",
+            "اینجا بیشتر برای <strong>دیدن مانده</strong> است؛ افزایش موجودی از فاکتور انجام می‌شود.",
+            [
+                new("افزودن از فاکتور", "داخل پروندهٔ خرید، بخش <strong>ورود اقلام به انبار</strong> را بزنید — نه این صفحه."),
+                new("جست‌وجو یا تعریف کالا", "نام کالا را جست‌وجو کنید، یا یک‌بار کالای جدید با کد ثبت کنید."),
+                new("دادن به بخش", null, "/Dispatch", "ارسال کالا به بخش")
+            ]),
+        "/Departments" => new("folder", "پایه‌دهی", "بخش‌ها و مسئولین",
+            "یک‌بار ثبت می‌کنید؛ بعد در فاکتور و حواله از لیست انتخاب می‌شود.",
+            [
+                new("نام بخش", "مثلاً اورژانس، اتاق عمل — دکمهٔ ثبت بخش."),
+                new("نام شخص", "برای همان بخش، نام مسئول یا تحویل‌گیرنده را ثبت کنید."),
+                new("استفاده در کار روزانه", "همان نام‌ها در سند خرید و حوالهٔ انبار ظاهر می‌شوند.")
+            ]),
+        "/KardexQueue" => new("notebook", "کارتکس", "ثبت شماره روی سند",
+            "اول در سامانهٔ فراجا ثبت کنید؛ بعد همان شماره را اینجا بنویسید.",
+            [
+                new("شماره را بنویسید", "در جدول پایین، ستون شماره — عین آنچه روی سند چاپ شده."),
+                new("ثبت شد", "تاریخ امروز معمولاً درست است؛ دکمهٔ سبز <strong>ثبت شد</strong>.")
+            ]),
+        "/Suppliers" => new("boy", "فروشنده", "ثبت یک‌بار، استفاده همیشه",
+            "نام فروشنده را ذخیره کنید تا در فاکتورهای بعد پیشنهاد شود.",
+            [new("اطلاعات و ذخیره", "نام فروشنده را بنویسید و دکمهٔ <strong>ذخیره اطلاعات</strong> را بزنید.")]),
+        "/Bank" => new("card", "بانک", "چک و فرم صیاد",
+            "فیلدها را پر کنید؛ برای چاپ فقط دکمهٔ چاپ را بزنید.",
+            [new("پر کردن و چاپ", "پیش‌نویس بعد از چاپ خودکار پاک می‌شود.")]),
+        "/WarehouseReport" => new("chart", "انبار", "گزارش تحویل",
+            null,
+            [new("تاریخ و نمایش", "از تاریخ و تا تاریخ را بنویسید؛ دکمهٔ <strong>نمایش</strong>.")]),
+        "/Petty" => new("wallet", "تنخواه", "دریافت و خرج",
+            "اول افسرعامل را انتخاب کنید.",
+            [new("ثبت در جدول", "دریافت یا خرید را با دکمهٔ سبز پایین فرم ثبت کنید.")]),
+        "/Credit" => new("money-bag", "اعتبار", "پیش‌پرداخت",
+            null,
+            [new("پرونده را باز کنید", "از لیست یا جست‌وجو؛ مبلغ و تاریخ؛ دکمهٔ <strong>ثبت</strong>.")]),
+        "/TaxBatch" => new("folder", "مالیات", "چند سند با یک برگه",
+            null,
+            [new("تیک و بارگذاری", "سندها را تیک بزنید، برگهٔ مالیات را بارگذاری کنید، <strong>ثبت گروهی</strong>.")]),
+        "/Staff" => User.IsInRole("chief")
+            ? new("key", "مدیر", "کاربر جدید",
+                "برای هر نفر یک نام کاربری و رمز ساده بدهید.",
+                [new("نقش و افزودن", "نام کاربری، رمز، نقش (انباردار، مأمور، کارتکس…)؛ دکمهٔ سبز <strong>افزودن</strong>.")])
+            : null,
+        _ => null
+    };
 }
-@switch (page)
+@if (page == "/Index")
 {
-    case "/Index":
-        <partial name="_EasyGuide" />
-        break;
-    case "/Invoices/New":
-        <section class="easy-guide card" aria-label="راهنما">
-            <header class="easy-guide-head">
-                <span class="easy-guide-icon" aria-hidden="true"><img src="/icon3d/file-text.webp" width="56" height="56" alt=""></span>
-                <div><p class="eyebrow">ثبت فاکتور</p><h2>سه قدم ساده</h2></div>
-            </header>
-            <ol class="easy-steps">
-                <li>شماره، تاریخ و نام فروشنده را <strong>عین برگه</strong> بنویسید.</li>
-                <li>اگر جنس فیزیکی به انبار می‌رود، تیک <strong>ورود به انبار</strong> را بزنید.</li>
-                <li>هر ردیف کالا را جدا بنویسید و پایین صفحه دکمهٔ سبز <strong>ثبت</strong> را بزنید.</li>
-            </ol>
-        </section>
-        break;
-    case "/Dispatch":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>دادن کالا به بخش — سه قدم</h2>
-            <ol class="easy-steps">
-                <li><strong>بخش</strong> و <strong>شخص تحویل‌گیرنده</strong> را از لیست انتخاب کنید.</li>
-                <li>نام یا کد کالا را بنویسید و <strong>تعداد</strong> را بزنید.</li>
-                <li>دکمهٔ سبز <strong>ثبت خروج و چاپ برگه</strong> — برگه را برای امضا بدهید.</li>
-            </ol>
-        </section>
-        break;
-    case "/Stock":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>موجودی انبار</h2>
-            <ol class="easy-steps">
-                <li>افزودن موجودی از <strong>فاکتور</strong> (صفحهٔ همان پرونده) انجام می‌شود، نه اینجا.</li>
-                <li>اینجا فقط <strong>جست‌وجو</strong> کنید یا یک‌بار <strong>کالای جدید</strong> تعریف کنید.</li>
-                <li>برای دادن کالا به بخش از منو <a asp-page="/Dispatch">ارسال کالا به بخش</a> استفاده کنید.</li>
-            </ol>
-        </section>
-        break;
-    case "/Departments":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>نام بخش‌های بیمارستان</h2>
-            <ol class="easy-steps">
-                <li>اول <strong>نام بخش</strong> (مثلاً اورژانس) را ثبت کنید.</li>
-                <li>بعد برای همان بخش <strong>نام شخص</strong> (تحویل‌گیرنده / مسئول) را ثبت کنید.</li>
-                <li>همین نام‌ها در سند خرید و حوالهٔ انبار خودکار می‌آیند.</li>
-            </ol>
-        </section>
-        break;
-    case "/KardexQueue":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>ثبت کارتکس</h2>
-            <ol class="easy-steps">
-                <li>بعد از ثبت در سامانهٔ فراجا، <strong>همان شماره</strong> را در جدول زیر بنویسید.</li>
-                <li>تاریخ امروز معمولاً درست است؛ دکمهٔ سبز <strong>ثبت شد</strong> را بزنید.</li>
-            </ol>
-        </section>
-        break;
-    case "/Suppliers":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>فروشنده</h2>
-            <p class="easy-steps">نام فروشنده را یک‌بار اینجا بنویسید و <strong>ذخیره</strong> بزنید. در ثبت فاکتور بعدی همان نام پیشنهاد می‌شود.</p>
-        </section>
-        break;
-    case "/Bank":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>چک و فرم صیاد</h2>
-            <p class="easy-steps">فیلدها را پر کنید و فقط دکمهٔ <strong>چاپ</strong> را بزنید. پیش‌نویس خودکار پاک می‌شود.</p>
-        </section>
-        break;
-    case "/WarehouseReport":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>گزارش تحویل</h2>
-            <p class="easy-steps">تاریخ را بنویسید و دکمهٔ <strong>نمایش</strong> را بزنید.</p>
-        </section>
-        break;
-    case "/Petty":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>تنخواه</h2>
-            <p class="easy-steps">ابتدا افسرعامل را انتخاب کنید؛ بعد از جدول، دریافت یا خرج را با دکمهٔ سبز ثبت کنید.</p>
-        </section>
-        break;
-    case "/Credit":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>پیش‌پرداخت</h2>
-            <p class="easy-steps">پرونده را از لیست باز کنید یا جست‌وجو کنید؛ مبلغ و تاریخ را بنویسید و <strong>ثبت</strong> بزنید.</p>
-        </section>
-        break;
-    case "/TaxBatch":
-        <section class="easy-guide card" aria-label="راهنما">
-            <h2>مالیات چند سند</h2>
-            <p class="easy-steps">سندهای جدول را تیک بزنید، یک بار برگهٔ مالیات را بارگذاری کنید و <strong>ثبت گروهی</strong> را بزنید.</p>
-        </section>
-        break;
-    case "/Staff":
-        @if (User.IsInRole("chief"))
-        {
-            <section class="easy-guide card" aria-label="راهنما">
-                <h2>کاربران</h2>
-                <p class="easy-steps">برای هر نفر <strong>نام کاربری</strong> و <strong>رمز</strong> بدهید و نقش را انتخاب کنید؛ دکمهٔ سبز <strong>افزودن</strong>.</p>
-            </section>
-        }
-        break;
+    <partial name="_EasyGuide" />
+}
+else if (panel is not null)
+{
+    <partial name="_EasyPanel" model="panel" />
 }

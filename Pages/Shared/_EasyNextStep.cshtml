@@ -1,15 +1,26 @@
 @model IReadOnlyList<string>
 @if (Model.Count > 0)
 {
-    <section class="easy-next card" role="status">
-        <h2>قدم بعدی روی این پرونده</h2>
-        <p>فقط <strong>اولین مورد</strong> را انجام دهید؛ بعد صفحه را یک‌بار تازه کنید (F5).</p>
+    <section class="easy-next card" role="status" aria-label="قدم بعدی">
+        <header class="easy-guide-head easy-next-head">
+            <span class="easy-guide-icon easy-next-icon" aria-hidden="true"><img src="/icon3d/clock.webp" width="48" height="48" alt=""></span>
+            <div>
+                <p class="eyebrow">این پرونده</p>
+                <h2>الان چه کار کنم؟</h2>
+                <p class="easy-guide-lead">فقط <strong>این یک کار</strong>؛ بعد <strong>F5</strong> بزنید تا مرحلهٔ بعد بیاید.</p>
+            </div>
+        </header>
         <p class="easy-next-action">@Model[0]</p>
         @if (Model.Count > 1)
         {
             <details class="easy-next-more">
-                <summary>بعد از آن (@(Model.Count - 1) کار دیگر)</summary>
-                <ul>@foreach (var item in Model.Skip(1)) { <li>@item</li> }</ul>
+                <summary>بعد از آن، @(Model.Count - 1) کار دیگر</summary>
+                <ol class="easy-next-list">
+                    @foreach (var item in Model.Skip(1))
+                    {
+                        <li>@item</li>
+                    }
+                </ol>
             </details>
         }
     </section>

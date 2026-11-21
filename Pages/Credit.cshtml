@@ -2,9 +2,27 @@
 @model Amadban.Pages.CreditModel
 @{
     ViewData["Title"] = Model.Invoice is not null || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار و پیش‌پرداخت";
+    var onDocument = Model.ShowInvoiceForm && Model.Invoice is not null;
+    var beforeDocument = Model.ShowProformaForm;
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1>
-        <p>پیش‌پرداخت روی <strong>همان سند</strong> از پروندهٔ چکی (بعد از صدور شماره سند) → ثبت → چاپ A4.</p></div></div>
+        @if (onDocument)
+        {
+            <p>پیش‌پرداخت <strong>همین سند @Model.Invoice!.Summary.Document</strong> → پر کردن فرم → <strong>ثبت و چاپ A4</strong>.</p>
+        }
+        else if (beforeDocument)
+        {
+            <p><strong>روش معمول:</strong> پروندهٔ چکی → صدور شماره سند → دکمهٔ <strong>پیش‌پرداخت این سند</strong>. فرم پایین فقط قبل از صدور سند است.</p>
+        }
+        else if (Model.Payment is not null)
+        {
+            <p>برگهٔ پیش‌پرداخت ثبت شده — چاپ یا ثبت پرداخت قطعی از همین صفحه.</p>
+        }
+        else
+        {
+            <p>مدیریت کد اعتباری؛ پیش‌پرداخت از <strong>پروندهٔ چکی</strong> بعد از صدور سند.</p>
+        }
+    </div></div>
         @if (Model.Payment is { } pmt)
         {
             <a class="button primary" asp-page="/PrintPrepayment" asp-route-number="@pmt.Number">چاپ پیش‌پرداخت</a>
@@ -19,7 +37,7 @@
         <p>@(payment.State == "paid" ? "پرداخت‌شده" : payment.State == "void" ? "باطل‌شده" : "اعتبار رزرو شده")</p>
         <div class="actions">
             <a class="button" asp-page="/PrintPrepayment" asp-route-number="@payment.Number">چاپ پیش‌پرداخت A4</a>
-            @if (payment.Invoice is long id) { <a class="button" asp-page="/Invoices/Detail" asp-route-id="@id">باز کردن سند</a> }
+            @if (payment.Invoice is long id) { <a class="button" asp-page="/Invoices/Detail" asp-route-id="@id">باز کردن پرونده</a> }
         </div>
         @if (payment.State != "void")
         {
@@ -45,58 +63,65 @@
 {
     <p class="notice" role="status">@Model.InvoicePrepayNotice</p>
 }
-@if (Model.ShowProformaForm)
+@if (beforeDocument)
 {
     <section class="card">
-        <h2>پیش‌پرداخت روی سند</h2>
-        <p>از <strong>کارتابل</strong> پروندهٔ چکی را باز کنید → <strong>پیش‌پرداخت این سند</strong>. یا شناسهٔ پرونده را اینجا بزنید:</p>
+        <h2>پیش‌پرداخت روی سند (پیشنهادی)</h2>
+        <p>شناسهٔ پرونده را از کارتابل بگیرید (در آدرس <code>Detail/123</code> عدد <strong>123</strong> است):</p>
         <form method="get" class="filters">
-            <label>شناسهٔ پرونده (در آدرس مرورگر <code>Detail/123</code> عدد ۱۲۳ است)<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
+            <label>شناسهٔ پرونده<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
             <button class="button primary" type="submit">باز کردن پیش‌پرداخت این سند</button>
         </form>
     </section>
 }
-@if (Model.ShowProformaForm || Model.ShowInvoiceForm)
+@if (onDocument || beforeDocument)
 {
     <section class="card" id="prepay-form">
-        <h2>@(Model.Invoice is null ? "۱ — پیش‌پرداخت بر اساس پیش‌فاکتور" : $"پیش‌پرداخت سند {Model.Invoice!.Summary.Document} (همان فاکتور)")</h2>
-        <p>اطلاعات را به ترتیب وارد کنید. اگر اعتبار کافی نباشد، مقدار کسری به شما نشان داده می‌شود و می‌توانید همین فرم را ادامه دهید.</p>
+        <h2>@(onDocument ? $"فرم پیش‌پرداخت سند {Model.Invoice!.Summary.Document}" : "قبل از صدور سند — برگه با شماره پیش‌فاکتور")</h2>
+        @if (beforeDocument)
+        {
+            <p class="notice" role="status">بعد از صدور شماره سند، پیش‌پرداخت را از <strong>همان پرونده</strong> بزنید. شمارهٔ برگهٔ قدیمی را وصل نمی‌کنیم؛ هر سند یک پیش‌پرداخت جدید دارد.</p>
+        }
+        else
+        {
+            <p>فروشنده و مبلغ از همین پرونده آمده است. بعد از ثبت، مستقیم صفحهٔ چاپ باز می‌شود.</p>
+        }
         <form method="post" asp-page-handler="Reserve" class="payment-form">
             <input type="hidden" name="submission" value="@Model.Submission">
             <input type="hidden" name="invoice" value="@(Model.Invoice?.Summary.Id ?? 0)">
-            <div class="form-step"><div class="step-head"><span>۱</span><div><h2>خرید و اعتبار</h2><p>کد اعتباری و مبلغ این پیش‌پرداخت را مشخص کنید.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۱</span><div><h2>خرید و اعتبار</h2><p>کد اعتباری و مبلغ پیش‌پرداخت.</p></div></div>
                 <div class="fields">
-                    @if (Model.Invoice is null)
+                    @if (beforeDocument)
                     {
-                        <label>شماره پیش‌فاکتور<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
+                        <label>شماره پیش‌فاکتور (از فاکتور فروشنده)<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
                         <label>فروشنده<input name="vendor" value="@Model.Pending?.Vendor" maxlength="180" required></label>
                     }
                     <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" @(Model.Pending?.Code == c.Id ? "selected" : null)>@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
                     <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
                 </div>
             </div>
-            <div class="form-step"><div class="step-head"><span>۲</span><div><h2>حساب دریافت‌کننده</h2><p>فقط <strong>یک شماره شبا</strong> برای چاپ لازم است. اگر حساب فروشنده از قبل ثبت شده، از لیست انتخاب کنید؛ نام، بانک و شبا پایین پر می‌شود. اگر حساب ندارید، سه فیلد را دستی بنویسید.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۲</span><div><h2>حساب دریافت‌کننده</h2><p>یک شبا برای چاپ. با انتخاب حساب ذخیره‌شده، فیلدهای پایین پر می‌شوند.</p></div></div>
                 <div class="fields">
                     @if (Model.Accounts.Count > 0)
                     {
-                        <label>انتخاب حساب ذخیره‌شده (اختیاری)<select data-account><option value="">حساب جدید / دستی</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Owner</option> }</select></label>
+                        <label>حساب ذخیره‌شده (اختیاری)<select data-account><option value="">دستی</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Owner</option> }</select></label>
                     }
                     <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required autocomplete="off"></label>
                     <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required autocomplete="off"></label>
-                    <label>شماره شبا (همان مقدار چاپ)<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required inputmode="text" autocomplete="off" placeholder="IR…"></label>
+                    <label>شماره شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required inputmode="text" autocomplete="off" placeholder="IR…"></label>
                 </div>
             </div>
-            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>مجوز خرید (اختیاری)</h2><p>اکثر پیش‌پرداخت‌ها بدون مجوز ثبت می‌شوند. فقط اگر شماره مجوز طرح و برنامه دارید اینجا بزنید؛ وگرنه خالی بگذارید.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>مجوز (اختیاری)</h2><p>بدون مجوز خالی بگذارید.</p></div></div>
                 <div class="fields">
-                    <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80" placeholder="در صورت نداشتن خالی"></label>
+                    <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80"></label>
                     <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10" placeholder="۱۴۰۵/۰۱/۰۱"></label>
                 </div>
             </div>
-            <div class="actions between"><p>بعد از «ثبت و چاپ»، همان لحظه صفحهٔ <strong>چاپ A4</strong> باز می‌شود؛ اعتبار هم رزرو می‌شود.</p><button class="button primary" type="submit">ثبت و چاپ برگه A4</button></div>
+            <div class="actions between"><button class="button primary" type="submit">ثبت و چاپ برگه A4</button></div>
         </form>
         @if (Model.Pending is not null)
         {
-            <p><a asp-page="/Credit" target="_blank" rel="noopener">افزایش یا انتقال اعتبار در پنجره جدا</a></p>
+            <p><a asp-page="/Credit" target="_blank" rel="noopener">افزایش اعتبار در پنجرهٔ جدا</a></p>
         }
     </section>
 }
@@ -127,7 +152,9 @@
     </section>
     @if (Model.Proformas.Count > 0)
     {
-        <section class="card" id="open-prepayments"><h2>پیش‌پرداخت‌های بدون پرونده (چاپ مجدد)</h2>
+        <section class="card" id="open-prepayments">
+            <h2>برگه‌های قدیمی بدون پرونده</h2>
+            <p>فقط چاپ مجدد یا مدیریت؛ سند جدید از پرونده پیش‌پرداخت بزنید.</p>
             <div class="table-wrap"><table><thead><tr><th>شماره</th><th>فروشنده</th><th>مبلغ</th><th>اقدام</th></tr></thead><tbody>
             @foreach (var p in Model.Proformas)
             {

@@ -182,7 +182,7 @@ public sealed partial class Store
                     """, id, proxy, actor) != 1) return "سند برای ثبت پرداخت آماده نیست.";
                 await Event(conn, tx, id, actor, "ثبت پرداخت اعتباری");
             }
-            else if (proxy) return "نوع پرداخت گروهی پس از اتصال به سند ثبت می‌شود.";
+            else if (proxy) return "پرداخت گروهی فقط وقتی پیش‌پرداخت به همین پرونده ثبت شده باشد.";
             await Exec(conn, tx, "UPDATE prepayments SET state='paid' WHERE number=$1", number);
         }
         else if (action == "void" && role == "agent" && p.State == "reserved")

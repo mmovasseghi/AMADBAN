@@ -71,7 +71,6 @@
                 </details>
                 }
             </nav>
-            <button class="sidebar-display-toggle" type="button" data-simple-ui-toggle aria-pressed="false">متن بزرگ‌تر</button>
             <div class="org">سامانه داخلی آماد و پشتیبانی</div>
         </aside>
         <div class="workspace">
@@ -92,6 +91,12 @@
                 @if (!isPrint && contentPage is not "/Invoices/Detail") { <partial name="_EasyContext" /> }
                 @RenderBody()
             </main>
+            @if (!isPrint)
+            {
+                <footer class="workspace-foot" aria-label="تنظیمات نمایش">
+                    <button type="button" class="display-toggle" data-simple-ui-toggle aria-pressed="false">متن بزرگ‌تر برای خواندن راحت‌تر</button>
+                </footer>
+            }
         </div>
     </div>
 }

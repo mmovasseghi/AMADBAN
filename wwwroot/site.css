@@ -184,10 +184,13 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .role-guide li+li{margin-top:3px}
 .role-guide a{font-weight:700}
 .work-next small{font-weight:500;color:#4a6b60}
-.sidebar-display-toggle{width:100%;margin-top:auto;min-height:40px;padding:8px 10px;border:1px dashed #cde0d7;border-radius:12px;background:#f5faf8;color:#1a5c48;font:inherit;font-size:12px;font-weight:700;cursor:pointer;text-align:center}
-.sidebar-display-toggle:hover,.sidebar-display-toggle:focus{background:#eaf5ef;border-color:#9dc5b2}
-.sidebar-display-toggle[aria-pressed=true]{border-style:solid;background:#e3f4ea;color:#0e5a42}
-.login-display-toggle{margin-top:12px;max-width:100%}
+.workspace-foot{display:flex;justify-content:center;padding:10px 22px 16px;border-top:1px solid #e8efec;background:transparent}
+.display-toggle{margin:0;padding:0;border:0;background:transparent;color:#5a7d73;font:inherit;font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.display-toggle:hover,.display-toggle:focus{color:#0f674e}
+.display-toggle[aria-pressed=true]{color:#0c5c48;font-weight:700}
+.login-display-toggle{margin-top:14px;width:100%;text-align:center;text-decoration:none;padding:10px;border:1px dashed #cce0d7;border-radius:12px;background:#f6fbf8}
+.login-display-toggle:hover{background:#ecf7f1}
+.login-display-toggle[aria-pressed=true]{border-style:solid;background:#e3f4ea}
 .stock-chief-panel{padding:14px;border:1px solid #c8e4d5;border-radius:14px;background:linear-gradient(145deg,#f0faf5,#fff)}
 .stock-chief-panel h3{margin:0 0 8px;font-size:17px;color:#0f5a45}
 .login-help{font-size:16px;line-height:1.8;color:#3d625c}

@@ -4,17 +4,18 @@
     const simpleOn = () => localStorage.getItem(simpleKey) === '1';
     const syncSimpleToggle = () => {
         document.documentElement.classList.toggle('simple-ui', simpleOn());
-        const btn = document.querySelector('[data-simple-ui-toggle]');
-        if (!btn) return;
         const on = simpleOn();
-        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        btn.textContent = on ? 'متن بزرگ‌تر: روشن' : 'متن بزرگ‌تر';
+        const label = 'متن بزرگ‌تر برای خواندن راحت‌تر';
+        document.querySelectorAll('[data-simple-ui-toggle]').forEach(el => {
+            el.setAttribute('aria-pressed', on ? 'true' : 'false');
+            el.textContent = on ? label + ' (روشن)' : label;
+        });
     };
     syncSimpleToggle();
-    document.querySelector('[data-simple-ui-toggle]')?.addEventListener('click', () => {
+    document.querySelectorAll('[data-simple-ui-toggle]').forEach(btn => btn.addEventListener('click', () => {
         localStorage.setItem(simpleKey, simpleOn() ? '0' : '1');
         syncSimpleToggle();
-    });
+    }));
 
     const printButton = document.querySelector('[data-print]');
     if (printButton) printButton.addEventListener('click', () => {

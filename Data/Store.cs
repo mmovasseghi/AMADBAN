@@ -114,6 +114,8 @@ public sealed partial class Store(NpgsqlDataSource source)
 
     public async Task<long> AddInvoiceAsync(InvoiceEntry entry, long actor)
     {
+        if (entry.Lines.Count is < 1 or > 20)
+            throw new ArgumentOutOfRangeException(nameof(entry), "Invoice must contain between 1 and 20 lines.");
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
         var inserted = await Scalar(conn, tx, """

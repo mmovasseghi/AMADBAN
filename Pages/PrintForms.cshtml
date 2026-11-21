@@ -9,6 +9,7 @@
 <!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>@Model.Title · آمادبان</title>
 <link rel="stylesheet" href="~/print.css" asp-append-version="true">
 @if(Model.Kind!="proxy") { <link rel="stylesheet" href="~/portrait.css" asp-append-version="true"><link rel="stylesheet" href="~/official-print.css" asp-append-version="true"> }
+else { <link rel="stylesheet" href="~/proxy-print.css" asp-append-version="true"> }
 <script src="~/site.js" asp-append-version="true" defer></script></head><body>
 <nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="1" min="1" max="12"></label><button type="button" data-print>چاپ A4</button><a asp-page="/Index">کارتابل</a></nav>
 @if(Model.Invoice is { } invoice)
@@ -20,8 +21,10 @@
     <article class="official-meeting official-paper">
         <header class="om-header"><p>(بسمه تعالی)</p><h1>صورت‌جلسه انجام کار یا مصرف اقلام خریداری‌شده</h1></header>
         <p class="om-description">بدین‌وسیله گواهی می‌گردد در مورخه <bdi>@Persian.Date(invoice.Summary.Date.AddDays(-1))</bdi>،
-            بابت <b>@invoice.Summary.Subject</b>، اقلام یا خدمات زیر برابر فاکتور شماره <b>@invoice.Summary.Number</b>
-            خریداری یا انجام شده و توسط امضاکنندگان زیر بررسی و تأیید گردید.</p>
+            بابت <b>@invoice.Summary.Subject</b> به شرح جدول ذیل، جمعاً به مبلغ <b>@PersianWords.Number(invoice.Summary.Total) ریال</b>
+            توسط <b>@Signer("agent")</b> افسرعامل اداره آماد و پشتیبانی به <b>@invoice.Summary.Vendor</b> پرداخت گردیده است.
+            کار انجام‌شده یا اقلام خریداری‌شده مربوط به بیمارستان امام سجاد (ع) فراجا بوده و تحویل آن اداره گردیده است؛
+            مراتب صحت آن در حضور امضاکنندگان زیر صورت‌جلسه و تأیید شد.</p>
         <table class="om-table"><colgroup><col style="width:6%"><col style="width:16%"><col style="width:15%"><col style="width:31%"><col style="width:8%"><col style="width:14%"><col style="width:10%"></colgroup>
             <thead><tr><th>ردیف</th><th>شماره سند / مجوز ط.ب.ب</th><th>شماره فاکتور</th><th>شرح اقلام خریداری‌شده و کار انجام‌شده</th><th>واحد</th><th>مبلغ فاکتور</th><th>توضیحات</th></tr></thead>
             <tbody>@for(var i=0;i<rows;i++)
@@ -39,13 +42,13 @@
 }
 else if(Model.Kind=="proxy")
 {
-    <article><header><p>بسمه تعالی</p><h1>@Model.Title</h1><p>بیمارستان امام سجاد (ع) فراجا ـ آماد و پشتیبانی</p></header>
-        <table><thead><tr><th>ردیف</th><th>نام صاحب حساب</th><th>شماره شبا</th><th>نام بانک</th><th>بابت</th><th>مبلغ ریال</th><th>شناسه واریز</th></tr></thead>
-            <tbody>@for(var i=0;i<Model.Payments.Count;i++)
-            { var entry=Model.Payments[i];<tr><td>@(i+1)</td><td>@entry.Owner</td><td><bdi>@entry.Sheba</bdi></td><td>@entry.Bank</td>
-                <td>پیش‌پرداخت @entry.Number · @entry.Vendor</td><td>@Persian.Money(entry.Amount)</td><td></td></tr> }</tbody></table>
-        <p>جمع کل @Persian.Money(Model.Payments.Sum(p=>p.Amount)) ریال</p>
-        <section class="signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section>
+    <article class="official-proxy"><header><h1>فرم نیابتی</h1><p>بیمارستان امام سجاد (ع) فراجا ـ آماد و پشتیبانی</p></header>
+        <table><thead><tr><th>ردیف</th><th>شماره حساب / شبا</th><th>نام بانک</th><th>مبلغ (ریال)</th><th>نام صاحب حساب</th><th>بابت</th><th>شناسه واریز</th></tr></thead>
+            <tbody>@for(var i=0;i<16;i++)
+            { var entry=i<Model.Payments.Count?Model.Payments[i]:null;<tr><td>@(i+1)</td><td><bdi>@entry?.Account</bdi></td><td>@entry?.Bank</td>
+                <td>@(entry is null?"":Persian.Money(entry.Amount))</td><td>@entry?.Owner</td><td>@entry?.Purpose</td><td></td></tr> }</tbody>
+            <tfoot><tr><th colspan="3">جمع کل</th><td>@Persian.Money(Model.Payments.Sum(p=>p.Amount))</td><td colspan="3">ریال</td></tr></tfoot></table>
+        <section class="proxy-signatures"><div>مهر و امضای مشتری<br><b>@Signer("agent")</b></div><div>مهر و امضای شعبه</div></section>
     </article>
 }
 </body></html>

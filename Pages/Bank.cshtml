@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "ثبت چک و چاپ بانکی";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/card.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">مدارک بانکی</div><h1>ثبت چک و چاپ بانکی</h1><p>چک را ثبت کنید؛ فرم صیاد A4 و فیش بانکی A5 را از فهرست چاپ کنید.</p></div></div></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/card.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">مدارک بانکی</div><h1>ثبت چک و فرم صیاد</h1><p>چک‌ها را ثبت کنید و فرم رسمی عملیات چک در سامانه صیاد را روی A4 چاپ کنید.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <section class="card">
     <h2>اطلاعات چک</h2>
@@ -15,6 +15,7 @@
         <label>تاریخ چک<input name="date" value="@Persian.Date(Persian.Today)" required dir="ltr"></label>
         <label>مبلغ (ریال)<input name="amount" inputmode="numeric" required></label>
         <label>در وجه<input name="recipient" maxlength="150" required></label>
+        <label>کد ملی / شناسه ملی ذی‌نفع<input name="recipientIdentity" maxlength="30" inputmode="numeric" dir="ltr"></label>
         <label>پیش‌پرداخت مرتبط (اختیاری)<select name="prepayment"><option value="0">بدون پیش‌پرداخت</option>
             @foreach (var item in Model.BankPrepayments) { <option value="@item.Number">شماره @item.Number · @item.Vendor</option> }
         </select></label>
@@ -24,14 +25,14 @@
 <section class="card">
     <h2>چک‌های ثبت‌شده</h2>
     <form method="get" asp-page="/PrintBank" asp-antiforgery="false">
+        <div class="filters"><label>نوع عملیات بانکی<select name="operation"><option>ثبت</option><option>تأیید</option><option>انتقال</option><option>ابطال</option><option>لغو ثبت</option><option>رفع انسداد</option></select></label></div>
         <div class="table-wrap"><table>
-            <thead><tr><th>انتخاب</th><th>شناسه صیاد</th><th>ذی‌نفع</th><th>بانک</th><th>پیش‌پرداخت</th><th>مبلغ ریال</th><th>فیش</th></tr></thead>
+            <thead><tr><th>انتخاب</th><th>شناسه صیاد</th><th>ذی‌نفع</th><th>بانک</th><th>پیش‌پرداخت</th><th>مبلغ ریال</th></tr></thead>
             <tbody>
             @foreach (var c in Model.Checks.Take(25))
             {
                 <tr><td><input type="checkbox" name="ids" value="@c.Id" aria-label="انتخاب چک @c.Sayad"></td><td>@c.Sayad</td>
-                    <td>@c.Recipient</td><td>@c.Bank</td><td>@(c.Prepayment?.ToString() ?? "—")</td><td>@Persian.Money(c.Amount)</td>
-                    <td><a asp-page="/PrintBank" asp-route-ids="@c.Id" asp-route-kind="slip">فیش A5</a></td></tr>
+                    <td>@c.Recipient</td><td>@c.Bank</td><td>@(c.Prepayment?.ToString() ?? "—")</td><td>@Persian.Money(c.Amount)</td></tr>
             }
             </tbody>
         </table></div>
@@ -52,6 +53,7 @@
             <label>تاریخ<input name="date" value="@Persian.Date(c.Date)" required></label>
             <label>مبلغ ریال<input name="amount" value="@c.Amount" required></label>
             <label>در وجه<input name="recipient" value="@c.Recipient" required maxlength="150"></label>
+            <label>کد ملی / شناسه ملی<input name="recipientIdentity" value="@c.RecipientIdentity" maxlength="30" dir="ltr"></label>
             <label>پیش‌پرداخت<select name="prepayment"><option value="0">بدون پیوند</option>
                 @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" selected="@(c.Prepayment==item.Number)">@item.Number · @item.Vendor</option> }
             </select></label><button class="button" type="submit">ذخیره اصلاح</button>

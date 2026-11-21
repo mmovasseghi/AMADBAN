@@ -23,33 +23,34 @@ public sealed class BankModel(Store store) : PageModel
     }
 
     public async Task<IActionResult> OnPostAsync(string? sayad, string? account, string? bank, string? branch,
-        string? date, string? amount, string? recipient, long prepayment)
+        string? date, string? amount, string? recipient, string? recipientIdentity, long prepayment)
     {
         sayad = Persian.Latin(sayad).Replace(" ", "");
         account = Persian.Latin(account);
         bank = bank?.Trim() ?? "";
         branch = branch?.Trim() ?? "";
         recipient = recipient?.Trim() ?? "";
+        recipientIdentity = Persian.Latin(recipientIdentity).Replace(" ", "");
         Message = sayad.Length != 16 || sayad.Any(c => !char.IsAsciiDigit(c)) || account.Length is < 1 or > 50 ||
-            bank.Length is < 1 or > 80 || branch.Length is < 1 or > 80 || recipient.Length is < 1 or > 150 ||
+            bank.Length is < 1 or > 80 || branch.Length is < 1 or > 80 || recipient.Length is < 1 or > 150 || recipientIdentity.Length > 30 ||
             Persian.ParseDate(date) is not DateOnly day ||
             !long.TryParse(Persian.Latin(amount).Replace(",", "").Replace("٬", ""), out var value) || value is <= 0 or > 1_000_000_000_000_000L
             ? "شناسه صیاد ۱۶ رقمی و اطلاعات چک را بررسی کنید."
-            : await store.SaveCheckAsync(sayad, account, bank, branch, day, value, recipient, Actor,prepayment);
+            : await store.SaveCheckAsync(sayad, account, bank, branch, day, value, recipient, recipientIdentity, Actor,prepayment);
         return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostCorrectAsync(long id,string? sayad,string? account,string? bank,string? branch,
-        string? date,string? amount,string? recipient,long prepayment)
+        string? date,string? amount,string? recipient,string? recipientIdentity,long prepayment)
     {
         sayad=Persian.Latin(sayad).Replace(" ","");account=Persian.Latin(account).Trim();
-        bank=bank?.Trim()??"";branch=branch?.Trim()??"";recipient=recipient?.Trim()??"";
+        bank=bank?.Trim()??"";branch=branch?.Trim()??"";recipient=recipient?.Trim()??"";recipientIdentity=Persian.Latin(recipientIdentity).Replace(" ","");
         Message=id<=0 || sayad.Length!=16 || sayad.Any(c=>!char.IsAsciiDigit(c)) || account.Length is <1 or >50 ||
-            bank.Length is <1 or >80 || branch.Length is <1 or >80 || recipient.Length is <1 or >150 ||
+            bank.Length is <1 or >80 || branch.Length is <1 or >80 || recipient.Length is <1 or >150 || recipientIdentity.Length>30 ||
             Persian.ParseDate(date) is not DateOnly day ||
             !long.TryParse(Persian.Latin(amount).Replace(",","").Replace("٬",""),out var value) || value is <=0 or >1_000_000_000_000_000L
             ? "مشخصات چک را بررسی کنید."
-            : await store.CorrectCheckAsync(id,sayad,account,bank,branch,day,value,recipient,prepayment,Actor);
+            : await store.CorrectCheckAsync(id,sayad,account,bank,branch,day,value,recipient,recipientIdentity,prepayment,Actor);
         return RedirectToPage();
     }
 }

@@ -1,0 +1,8 @@
+.official-sayad-form{background:#fff;color:#000;font-family:Vazirmatn,Tahoma,sans-serif}
+.official-sayad-form{box-sizing:border-box;width:277mm;min-height:185mm;margin:auto;padding:7mm 9mm;border:1px solid #111;font-size:11px;line-height:1.9}
+.official-sayad-form h1{text-align:center;font-size:17px;margin:2mm 0 6mm}.official-sayad-form p{margin:1.5mm 0}.sayad-branch{text-align:right}.sayad-text{text-align:justify}
+.sayad-operations{display:flex;justify-content:center;gap:10mm;margin:3mm 0;font-size:12px}.sayad-operations .selected{font-weight:800}
+.sayad-table{table-layout:fixed;margin-top:4mm}.sayad-table th,.sayad-table td{border:1px solid #111;text-align:center;padding:.8mm;font-size:9px;height:7mm}
+.sayad-table th:first-child{width:5%}.sayad-table th:nth-child(2){width:14%}.sayad-table th:nth-child(3){width:13%}.sayad-table th:nth-child(4){width:17%}.sayad-table th:nth-child(5){width:10%}.sayad-table th:nth-child(6){width:13%}.sayad-table th:nth-child(7){width:16%}
+.sayad-signatures{display:grid;grid-template-columns:1fr 1fr;margin-top:7mm}.sayad-signatures div{height:22mm;text-align:center;padding:3mm;border-top:1px solid #111}
+@page{size:A4 landscape;margin:9mm}@media print{.official-sayad-form{width:277mm;height:185mm;min-height:0;margin:0;padding:4mm 7mm;overflow:hidden}}

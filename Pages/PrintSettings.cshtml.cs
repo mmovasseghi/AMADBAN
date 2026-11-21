@@ -9,11 +9,13 @@ public sealed class PrintSettingsModel(Store store) : PageModel
 {
     public static readonly Dictionary<string, string> Documents = new()
     {
-        ["readable"] = "خوانا", ["rows7"] = "۷ خطی", ["rows9"] = "۹ خطی", ["rows12"] = "۱۲ خطی"
+        ["readable"] = "خودکار و خوانا (حداکثر ۲۰ قلم)", ["excel11"] = "نمونه رسمی ۱۱ ردیفی",
+        ["rows7"] = "۷ خطی", ["rows9"] = "۹ خطی", ["rows12"] = "۱۲ خطی", ["rows20"] = "۲۰ خطی"
     };
     public static readonly Dictionary<string, string> Prepayments = new()
     {
-        ["readable"] = "خوانا", ["permit"] = "با فیلد مجوز", ["tax"] = "با فیلد مالیات"
+        ["readable"] = "نمونه رسمی پیش‌پرداخت", ["excel-old"] = "نمونه قدیمی متصل به سند ۷۹۷",
+        ["permit"] = "با فیلد مجوز", ["tax"] = "با فیلد مالیات"
     };
     public async Task<IActionResult> OnPostAsync(string? form, string? template, long id)
     {

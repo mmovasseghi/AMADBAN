@@ -71,9 +71,9 @@ public sealed class NewModel(Store store) : PageModel
         if (date is null) ModelState.AddModelError("", "تاریخ فاکتور را به‌صورت شمسی وارد کنید.");
         if (Kind is not ("cash" or "credit")) ModelState.AddModelError("", "نوع خرید را انتخاب کنید.");
         if (Submission == Guid.Empty) return BadRequest();
-        if (Lines.Count > 100) ModelState.AddModelError("", "هر فاکتور حداکثر ۱۰۰ قلم دارد.");
+        if (Lines.Count > 20) ModelState.AddModelError("", "هر فاکتور حداکثر ۲۰ قلم دارد. فاکتورهای بیشتر از ۲۰ قلم در آمادبان پذیرفته نمی‌شوند.");
         var lines = new List<InvoiceLine>();
-        foreach (var line in Lines.Take(100))
+        foreach (var line in Lines.Take(20))
         {
             var title = line.Title?.Trim() ?? "";
             var unit = line.Unit?.Trim() ?? "";

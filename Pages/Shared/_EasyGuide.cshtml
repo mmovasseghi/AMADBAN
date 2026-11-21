@@ -1,0 +1,47 @@
+@{
+    var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+}
+<section class="easy-guide card" aria-label="راهنمای کار">
+    <h2>امروز چه کار کنم؟</h2>
+    @if (User.IsInRole("warehouse"))
+    {
+        <ol class="easy-steps">
+            <li><strong>فاکتور آماده انبار</strong> — از <a asp-page="/Index" asp-route-Status="document">کارتابل</a> پرونده‌ای که «سند دارد» را باز کنید.</li>
+            <li><strong>افزودن به موجودی</strong> — داخل پرونده دکمهٔ سبز <strong>«ثبت ورود همه اقلام فاکتور»</strong> را بزنید (کد کالا معمولاً خودش پر می‌شود).</li>
+            <li><strong>دادن کالا به بخش</strong> — از منو <a asp-page="/Dispatch">«ارسال کالا به بخش»</a> حواله بسازید.</li>
+            <li><strong>دیدن مانده</strong> — از <a asp-page="/Stock">«موجودی انبار»</a> نام کالا را جست‌وجو کنید.</li>
+        </ol>
+    }
+    else if (User.IsInRole("agent") && !User.IsInRole("chief"))
+    {
+        <ol class="easy-steps">
+            <li><strong>ثبت فاکتور جدید</strong> — <a asp-page="/Invoices/New">اینجا بزنید</a>؛ شماره، تاریخ و فروشنده را مثل برگه بنویسید.</li>
+            <li>اگر جنس به انبار می‌رود، تیک <strong>«ورود به انبار»</strong> را بزنید.</li>
+            <li><strong>پیگیری</strong> — همان <a asp-page="/Index">کارتابل</a>; روی هر سطر کلیک کنید تا وضعیت را ببینید.</li>
+        </ol>
+    }
+    else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
+    {
+        <ol class="easy-steps">
+            <li><strong>ثبت کارتکس</strong> — منوی <a asp-page="/KardexQueue">«ثبت سریع کارتکس»</a>؛ شماره پرونده را وارد کنید و ثبت کنید.</li>
+            <li>اگر پرونده در لیست نبود، از <a asp-page="/Index">کارتابل</a> آن را پیدا کنید و باز کنید.</li>
+        </ol>
+    }
+    else if (User.IsInRole("chief"))
+    {
+        <ol class="easy-steps">
+            <li><strong>کارهای معطل</strong> — کارت‌های رنگی بالای همین صفحه (کارتکس، پرداخت، برگشتی).</li>
+            <li><strong>فاکتور</strong> — <a asp-page="/Invoices/New">ثبت</a> یا از کارتابل باز کنید؛ داخل پرونده مراحل به ترتیب نشان داده می‌شود.</li>
+            <li><strong>انبار و بخش‌ها</strong> — <a asp-page="/Departments">بخش‌ها</a>، <a asp-page="/Stock">موجودی</a>، <a asp-page="/Dispatch">ارسال به بخش</a>.</li>
+            <li>گزارش‌ها و تنظیمات در منوی پایین: <strong>«گزارش‌ها و کارهای دیگر»</strong>.</li>
+        </ol>
+    }
+    else
+    {
+        <p>از <a asp-page="/Index">کارتابل</a> پروندهٔ خود را پیدا کنید و روی آن کلیک کنید.</p>
+    }
+    @if (page != "/Index")
+    {
+        <p class="easy-guide-foot"><a asp-page="/Index">بازگشت به صفحهٔ اصلی (کارتابل)</a></p>
+    }
+</section>

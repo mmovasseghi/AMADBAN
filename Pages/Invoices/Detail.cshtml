@@ -18,6 +18,7 @@
         <a class="button" asp-page="/Index">بازگشت</a>
     </div>
 </header>
+<partial name="_EasyNextStep" model="missing" />
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <section class="card">
     <div class="stage"><span>فاکتور ثبت شد</span><span>@(row.Document is null ? "منتظر صدور سند" : "سند صادر شد")</span><span>@(row.Paid ? "پرداخت شد" : "منتظر پرداخت")</span><strong>@(missing.Count == 0 && row.Delivery == "open" ? "آماده تحویل" : Amadban.Pages.IndexModel.Badge(row))</strong></div>
@@ -120,7 +121,8 @@
                 <label>تاریخ شمسی گردش<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
                 @if (Model.Entry.WarehouseReceiptDate is null)
                 {
-                    <p>نام هر قلم روی فاکتور و چاپ عوض نمی‌شود؛ فقط <strong>موجودی انبار</strong> به کالای انتخاب‌شده اضافه می‌شود. اگر نام فاکتور با نام کالای انبار <strong>شروع شود</strong> (مثلاً فاکتور «سیب درجه یک» و کالای «سیب»)، کد همان کالا از قبل پر می‌شود — قبل از ثبت بررسی کنید. <strong>بدون کد و بدون تیک «کالای جدید»</strong> ورود ثبت نمی‌شود تا اشتباهاً سیبِ جدا ساخته نشود. فقط وقتی واقعاً قلم تازه در انبار ندارید، تیک «کالای جدید» را بزنید.</p>
+                    <p class="receipt-help-long">نام هر قلم روی فاکتور و چاپ عوض نمی‌شود؛ فقط <strong>موجودی انبار</strong> به کالای انتخاب‌شده اضافه می‌شود. اگر نام فاکتور با نام کالای انبار <strong>شروع شود</strong> (مثلاً فاکتور «سیب درجه یک» و کالای «سیب»)، کد همان کالا از قبل پر می‌شود — قبل از ثبت بررسی کنید. <strong>بدون کد و بدون تیک «کالای جدید»</strong> ورود ثبت نمی‌شود تا اشتباهاً سیبِ جدا ساخته نشود. فقط وقتی واقعاً قلم تازه در انبار ندارید، تیک «کالای جدید» را بزنید.</p>
+                    <p class="receipt-help-short">اگر جلوی هر ردیف <strong>کد پر شده</strong>، همان را نگه دارید و دکمهٔ سبز پایین را بزنید. اگر خالی بود و کالای جدید می‌خواهید، تیک «ساخت قلم جدید» را بزنید.</p>
                     <datalist id="receipt-products"></datalist>
                     <div class="table-wrap"><table><thead><tr><th>نام عین فاکتور</th><th>تعداد و واحد</th><th>کد کالا در انبار</th><th>کالای جدید</th></tr></thead><tbody>
                     @foreach (var item in Model.ReceiptMatches) { <tr><td>@item.Title</td><td>@item.Quantity.ToString("0.###") @item.Unit</td>

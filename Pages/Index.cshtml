@@ -17,6 +17,7 @@
         <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
     }
 </header>
+<partial name="_EasyGuide" />
 @if (Model.Setup is { } setup && (setup.Departments == 0 || setup.Suppliers == 0 || setup.DepartmentsWithoutRecipients > 0))
 {
     <section class="card" aria-label="راه‌اندازی اولیه">
@@ -51,8 +52,10 @@
     <div class="tabs" aria-label="وضعیت پرونده">
         @foreach (var (code, label, icon) in tabs)
         {
+            var extra = code is "paid" or "tax-pending" or "delivered" or "closed" or "kardex";
             <a class="tab @(Model.Status == code ? "selected" : "")" asp-page="/Index" asp-route-Status="@code"
-               asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">
+               asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To"
+               @(extra ? "data-tab-extra" : null)>
                 <svg aria-hidden="true"><use href="/icons.svg#@icon"></use></svg> @label
             </a>
         }

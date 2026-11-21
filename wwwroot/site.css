@@ -171,3 +171,48 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .login-emblem{display:grid;place-items:center;width:180px;height:180px;border:1px solid #cce4d9;border-radius:42px;background:linear-gradient(145deg,#fff,#dcefe6);box-shadow:12px 12px 25px rgba(36,85,71,.12),-9px -9px 22px #fff}
 .login-emblem img{width:140px;height:140px;object-fit:contain}
 .login-illustration img:first-child{width:140px;height:140px}
+
+.menu-more{border:1px solid #d5e8de;border-radius:14px;padding:6px 8px;background:#f5faf7}
+.menu-more>summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;font-size:13px;font-weight:700;color:#1a5c48;padding:6px 4px}
+.menu-more>summary::-webkit-details-marker{display:none}
+.menu-more-body{display:grid;gap:2px;padding-top:6px}
+.easy-guide{border:2px solid #b8dcc8;background:linear-gradient(145deg,#f2fbf5,#fff)}
+.easy-guide h2{font-size:20px;color:#0f6049}
+.easy-steps{margin:10px 0 0;padding-inline-start:26px;font-size:16px;line-height:1.85;color:#274b44}
+.easy-steps li+li{margin-top:10px}
+.easy-guide-foot{margin:12px 0 0;font-size:15px}
+.easy-next{border:2px solid #7fc4a8;background:#ecf9f1}
+.easy-next h2{font-size:20px;color:#0a5a41;margin-bottom:6px}
+.easy-next-action{font-size:22px;font-weight:800;color:#0d4a38;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid #c5e5d4}
+.easy-next-more{margin-top:10px;font-size:15px}
+.easy-toggle{min-height:42px;font-weight:700}
+.login-help{font-size:16px;line-height:1.8;color:#3d625c}
+
+html:not(.simple-ui) .easy-guide,html:not(.simple-ui) .easy-next{display:none}
+html.simple-ui{font-size:17px}
+html.simple-ui body{font-size:17px;line-height:1.85}
+html.simple-ui h1{font-size:32px}html.simple-ui h2{font-size:21px}
+html.simple-ui label{font-size:16px}html.simple-ui .card p,html.simple-ui .hero p{font-size:16px}
+html.simple-ui input,html.simple-ui select{min-height:52px;font-size:17px;padding:10px 14px}
+html.simple-ui .button,html.simple-ui .primary{min-height:52px;font-size:16px;padding:10px 20px}
+html.simple-ui .sidebar nav a{min-height:50px;font-size:15px;padding:8px 10px}
+html.simple-ui .tab{font-size:15px;min-height:42px;padding:8px 14px}
+html.simple-ui .tab[data-tab-extra]{display:none}
+html.simple-ui .tabs-more-link{font-size:14px;color:#3d6860}
+html.simple-ui table{font-size:16px}html.simple-ui .table-wrap th{font-size:14px}
+html.simple-ui .checks label{min-height:78px}html.simple-ui .checks label small{font-size:13px}
+html.simple-ui .step-head>span{width:44px;height:44px;font-size:22px}
+html.simple-ui .stage{grid-template-columns:1fr;gap:10px}
+html.simple-ui .stage span,html.simple-ui .stage strong{min-height:52px;font-size:15px}
+html.simple-ui .detail-grid{grid-template-columns:1fr}
+html.simple-ui .alert-tile strong{font-size:32px}html.simple-ui .alert-tile span{font-size:13px}
+html.simple-ui .login-intro{display:none}
+html.simple-ui .login-shell{grid-template-columns:1fr;max-width:520px}
+html.simple-ui .login form label{font-size:16px}
+html.simple-ui .login form input{min-height:54px;font-size:18px}
+html.simple-ui .login-submit{min-height:56px;font-size:18px}
+html.simple-ui .menu-more{font-size:15px}
+html.simple-ui details summary{font-size:16px}
+.receipt-help-short{display:none}
+html.simple-ui .receipt-help-short{display:block}
+html.simple-ui .receipt-help-long{display:none}

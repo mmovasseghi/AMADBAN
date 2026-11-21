@@ -1,5 +1,21 @@
 (() => {
     'use strict';
+    const simpleKey = 'amadban-simple';
+    const simpleOn = () => localStorage.getItem(simpleKey) !== '0';
+    const syncSimpleToggle = () => {
+        const btn = document.querySelector('[data-simple-toggle]');
+        if (!btn) return;
+        const on = simpleOn();
+        document.documentElement.classList.toggle('simple-ui', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.textContent = on ? 'حالت ساده: روشن' : 'حالت ساده: خاموش';
+    };
+    syncSimpleToggle();
+    document.querySelector('[data-simple-toggle]')?.addEventListener('click', () => {
+        localStorage.setItem(simpleKey, simpleOn() ? '0' : '1');
+        syncSimpleToggle();
+    });
+
     const printButton = document.querySelector('[data-print]');
     if (printButton) printButton.addEventListener('click', () => {
         const copiesInput = document.querySelector('[data-print-copies]');

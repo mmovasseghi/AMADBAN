@@ -8,6 +8,8 @@ using System.Threading.RateLimiting;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+if (OperatingSystem.IsWindows())
+    builder.Host.UseWindowsService(options => options.ServiceName = "Amadban");
 var connection = builder.Configuration.GetConnectionString("Amadban");
 if (string.IsNullOrWhiteSpace(connection))
 {

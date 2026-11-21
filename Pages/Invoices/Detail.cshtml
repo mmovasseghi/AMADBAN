@@ -49,13 +49,13 @@
         <form method="post" asp-page-handler="RequestSigner" class="filters" id="request-signer-form" data-invoice-id="@row.Id"
               data-selected-department="@Model.RequestSigner.DepartmentId" data-selected-expert="@Model.RequestSigner.ExpertId">
             <label>بخش درخواست‌کننده<select name="department" data-request-department><option value="0">انتخاب نشده</option>
-                @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(Model.RequestSigner.DepartmentId==department.Id)">@department.Name</option> }
+                @foreach (var department in Model.Departments) { <option value="@department.Id" @(Model.RequestSigner.DepartmentId==department.Id ? "selected" : null)>@department.Name</option> }
             </select></label>
             <label>کارشناس / رئیس قسمت<select name="expert" data-request-expert required><option value="0">ابتدا بخش را انتخاب کنید</option></select></label><button type="submit" class="button">ثبت نام روی سند</button>
         </form>
         @if (Model.Entry.Meeting) { <form method="post" asp-page-handler="MeetingExtra" class="filters">
             <label>امضاکننده اضافه صورت‌جلسه<select name="person"><option value="0">بدون نفر اضافه</option>
-                @foreach (var person in Model.People) { <option value="@person.Id" selected="@(Model.MeetingExtra.Id==person.Id)">@person.Rank @person.Name · @person.Position</option> }
+                @foreach (var person in Model.People) { <option value="@person.Id" @(Model.MeetingExtra.Id==person.Id ? "selected" : null)>@person.Rank @person.Name · @person.Position</option> }
             </select></label><button class="button" type="submit">ثبت روی صورت‌جلسه</button>
         </form> }
     </section>

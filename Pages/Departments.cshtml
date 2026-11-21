@@ -52,7 +52,7 @@ else if (missingRecipients.Count > 0)
                     <label>نام<input name="name" value="@person.Name" required maxlength="120"></label>
                     <label>درجه<input name="rank" value="@person.Rank" maxlength="80"></label>
                     <label>سمت<input name="position" value="@person.Position" maxlength="120"></label>
-                    <label>بخش<select name="department">@foreach (var d in Model.Departments) { <option value="@d.Id" selected="@(person.DepartmentId == d.Id)">@d.Name</option> }</select></label>
+                    <label>بخش<select name="department">@foreach (var d in Model.Departments) { <option value="@d.Id" @(person.DepartmentId == d.Id ? "selected" : null)>@d.Name</option> }</select></label>
                     <button class="button" type="submit">ذخیره</button>
                 </form>
             }

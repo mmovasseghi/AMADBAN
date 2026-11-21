@@ -10,7 +10,7 @@
     <h2>@(company is null ? "تعریف فروشنده" : company.Name)</h2>
     <form method="post" class="fields">
         <label>نام فروشنده<input name="name" value="@company?.Name" required maxlength="180" readonly="@(company is not null)"></label>
-        <label>نوع<select name="kind"><option value="company">حقوقی</option><option value="person" selected="@(company?.Kind == "person")">حقیقی</option></select></label>
+        <label>نوع<select name="kind"><option value="company">حقوقی</option><option value="person" @(company?.Kind == "person" ? "selected" : null)>حقیقی</option></select></label>
         <label>شناسه یا کد ملی<input name="national" value="@company?.National" maxlength="30"></label>
         <label>کد اقتصادی<input name="economic" value="@company?.Economic" maxlength="40"></label>
         <label>شماره تماس<input name="phone" value="@company?.Phone" maxlength="40"></label>

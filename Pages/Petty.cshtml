@@ -63,7 +63,7 @@
     <form method="get" class="filters">
         @if (Model.IsChief)
         {
-            <label>افسرعامل<select name="Recipient"><option value="0">همه</option>@foreach (var agent in Model.Agents) { <option value="@agent.Id" selected="@(agent.Id == Model.Recipient)">@agent.Name</option> }</select></label>
+            <label>افسرعامل<select name="Recipient"><option value="0">همه</option>@foreach (var agent in Model.Agents) { <option value="@agent.Id" @(agent.Id == Model.Recipient ? "selected" : null)>@agent.Name</option> }</select></label>
         }
         <label>از تاریخ<input name="From" value="@Model.From" placeholder="۱۴۰۵/۰۱/۰۱" dir="ltr"></label>
         <label>تا تاریخ<input name="To" value="@Model.To" placeholder="۱۴۰۵/۱۲/۲۹" dir="ltr"></label>

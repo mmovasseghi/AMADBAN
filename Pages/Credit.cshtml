@@ -19,7 +19,7 @@
         {
             <form method="post" asp-page-handler="Action" class="filters">
                 <input type="hidden" name="number" value="@payment.Number"><input type="hidden" name="invoice" value="@payment.Invoice">
-                <label>کد صحیح<select name="code">@foreach (var c in Model.Codes) { <option value="@c.Id" selected="@(c.Id == payment.CodeId)">@c.Code · @c.Title</option> }</select></label>
+                <label>کد صحیح<select name="code">@foreach (var c in Model.Codes) { <option value="@c.Id" @(c.Id == payment.CodeId ? "selected" : null)>@c.Code · @c.Title</option> }</select></label>
                 <button class="button" name="action" value="code">اصلاح کد</button>
             </form>
             @if (Model.IsAgent && payment.State == "reserved")
@@ -57,7 +57,7 @@ else if (Model.IsAgent)
                         <label>شماره پیش‌فاکتور<input name="proforma" value="@Model.Pending?.Proforma" maxlength="80" required></label>
                         <label>فروشنده<input name="vendor" value="@Model.Pending?.Vendor" maxlength="180" required></label>
                     }
-                    <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" selected="@(Model.Pending?.Code == c.Id)">@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
+                    <label>کد اعتباری<select name="code" required><option value="">انتخاب کنید</option>@foreach (var c in Model.Codes) { <option value="@c.Id" @(Model.Pending?.Code == c.Id ? "selected" : null)>@c.Code · @c.Title · @Persian.Money(c.Available) ریال مانده</option> }</select></label>
                     <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
                 </div>
             </div>

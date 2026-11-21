@@ -50,7 +50,7 @@
         <a asp-page="/Suppliers" asp-page-handler="Document" asp-route-id="@supplier.Id" asp-route-kind="account" asp-route-preview="true" target="_blank" rel="noopener">باز کردن تأییدیه حساب برای چاپ</a>
     }
     <form method="get"><label>قالب <select name="template">@foreach (var (key, title) in Amadban.Pages.PrintSettingsModel.Prepayments)
-    { <option value="@key" selected="@(key==template)">@title</option> }</select></label><button type="submit">انتخاب</button></form>
+    { <option value="@key" @(key==template ? "selected" : null)>@title</option> }</select></label><button type="submit">انتخاب</button></form>
     <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="prepayment"><input type="hidden" name="id" value="@number">
         <input type="hidden" name="template" value="@template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
 </nav>

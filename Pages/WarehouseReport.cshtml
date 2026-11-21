@@ -10,7 +10,7 @@
         <label>از تاریخ شمسی<input name="From" value="@Model.From" dir="ltr" maxlength="10" required></label>
         <label>تا تاریخ شمسی<input name="To" value="@Model.To" dir="ltr" maxlength="10" required></label>
         <label>بخش مقصد<select name="Department"><option value="0">همه بخش‌ها</option>
-            @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(Model.Department==department.Id)">@department.Name</option> }
+            @foreach (var department in Model.Departments) { <option value="@department.Id" @(Model.Department==department.Id ? "selected" : null)>@department.Name</option> }
         </select></label>
         <label>نام یا کد کالا<input name="Search" value="@Model.Search" maxlength="100" placeholder="در صورت نیاز"></label>
         <button class="button primary" type="submit">نمایش گزارش</button>

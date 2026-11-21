@@ -55,7 +55,7 @@
             <label>در وجه<input name="recipient" value="@c.Recipient" required maxlength="150"></label>
             <label>کد ملی / شناسه ملی<input name="recipientIdentity" value="@c.RecipientIdentity" maxlength="30" dir="ltr"></label>
             <label>پیش‌پرداخت<select name="prepayment"><option value="0">بدون پیوند</option>
-                @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" selected="@(c.Prepayment==item.Number)">@item.Number · @item.Vendor</option> }
+                @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" @(c.Prepayment==item.Number ? "selected" : null)>@item.Number · @item.Vendor</option> }
             </select></label><button class="button" type="submit">ذخیره اصلاح</button>
         </form></details> }
     </details>

@@ -67,7 +67,7 @@
         @if (Model.Report)
         {
             <label>موضوع<input name="Subject" value="@Model.Subject" maxlength="100"></label>
-            <label>نوع خرید<select name="Kind"><option value="">همه</option><option value="cash" selected="@(Model.Kind=="cash")">نقدی</option><option value="credit" selected="@(Model.Kind=="credit")">چکی</option></select></label>
+            <label>نوع خرید<select name="Kind"><option value="">همه</option><option value="cash" @(Model.Kind=="cash" ? "selected" : null)>نقدی</option><option value="credit" @(Model.Kind=="credit" ? "selected" : null)>چکی</option></select></label>
             <label>کد اعتباری<input name="Credit" value="@Model.Credit" maxlength="40"></label>
         }
         <button type="submit" class="button"><svg aria-hidden="true"><use href="/icons.svg#search"></use></svg> نمایش</button>

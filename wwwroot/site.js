@@ -98,7 +98,10 @@
     const paymentKind = document.getElementById('Kind');
     if (paymentKind) {
         const cashCode = document.querySelector('[data-cash-code]');
-        const updateCashCode = () => { cashCode.hidden = paymentKind.value !== 'cash'; };
+        const updateCashCode = () => {
+            if (!cashCode) return;
+            cashCode.hidden = paymentKind.value !== 'cash';
+        };
         paymentKind.addEventListener('change', updateCashCode);
         updateCashCode();
     }
@@ -292,9 +295,10 @@
     }
 
     const lines = document.querySelector('[data-lines]');
-    if (!lines) return;
     const template = document.querySelector('[data-line-template]');
     const total = document.querySelector('[data-total]');
+    const addLineBtn = document.querySelector('[data-add-line]');
+    if (!lines || !template || !total || !addLineBtn) return;
     const currency = new Intl.NumberFormat('fa-IR');
     const normalize = text => text.replace(/[۰-۹٠-٩]/g, char =>
         String(char.charCodeAt(0) - (char >= '۰' ? 1776 : 1632)))
@@ -307,7 +311,7 @@
             const quantity = Number(normalize(row.querySelector('[data-field="Quantity"]').value));
             if (Number.isFinite(price) && Number.isFinite(quantity)) amount += Math.round(price * quantity);
         }
-        total.textContent = currency.format(amount);
+        if (total) total.textContent = currency.format(amount);
     };
 
     const reindex = () => {
@@ -329,7 +333,7 @@
         lines.lastElementChild.querySelector('input').focus();
     };
 
-    document.querySelector('[data-add-line]').addEventListener('click', addLine);
+    addLineBtn.addEventListener('click', addLine);
     lines.addEventListener('click', event => {
         const remove = event.target.closest('[data-remove]');
         if (!remove) return;

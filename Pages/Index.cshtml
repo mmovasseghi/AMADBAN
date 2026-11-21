@@ -51,8 +51,7 @@
     <div class="tabs" aria-label="وضعیت پرونده">
         @foreach (var (code, label, icon) in tabs)
         {
-            var extra = code is "paid" or "tax-pending" or "delivered" or "closed" or "kardex";
-            <a class="tab @(Model.Status == code ? "selected" : "") @(extra ? "tab-extra" : "")" asp-page="/Index" asp-route-Status="@code"
+            <a class="tab @(Model.Status == code ? "selected" : "")" asp-page="/Index" asp-route-Status="@code"
                asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">
                 <svg aria-hidden="true"><use href="/icons.svg#@icon"></use></svg> @label
             </a>
@@ -95,7 +94,7 @@
                         <td class="numbers">@Persian.Date(row.Date)</td>
                         <td class="numbers">@Persian.Money(row.Total)</td>
                         <td><span class="badge @row.Delivery">@(Model.Status == "ready" ? "آماده تحویل" : Amadban.Pages.IndexModel.Badge(row))</span></td>
-                        <td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id" class="button quiet">مشاهده</a></td>
+                        <td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id" class="button">باز کردن پرونده</a></td>
                     </tr>
                 }
                 @if (Model.Rows.Count == 0) { <tr><td colspan="6" class="empty">پرونده‌ای برای نمایش نیست.</td></tr> }

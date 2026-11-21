@@ -203,7 +203,6 @@ html.simple-ui input,html.simple-ui select{min-height:52px;font-size:17px;paddin
 html.simple-ui .button,html.simple-ui .primary{min-height:52px;font-size:16px;padding:10px 20px}
 html.simple-ui .sidebar nav a{min-height:50px;font-size:15px;padding:8px 10px}
 html.simple-ui .tab{font-size:15px;min-height:42px;padding:8px 14px}
-html.simple-ui .tab.tab-extra{display:none}
 html.simple-ui .tabs-more-link{font-size:14px;color:#3d6860}
 html.simple-ui table{font-size:16px}html.simple-ui .table-wrap th{font-size:14px}
 html.simple-ui .checks label{min-height:78px}html.simple-ui .checks label small{font-size:13px}

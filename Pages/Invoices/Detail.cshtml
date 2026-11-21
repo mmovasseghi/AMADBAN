@@ -21,13 +21,14 @@
                 <a class="button" asp-page="/Credit">پیش‌پرداخت (پیش‌فاکتور)</a>
             }
         }
-        <details class="hero-more">
-            <summary>کارهای دیگر</summary>
-            <div class="actions">
-                @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }
-                @if (Model.HandlesFinance && Model.Editable) { <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a> }
-            </div>
-        </details>
+        @if (row.Document is not null && Model.Entry.Meeting)
+        {
+            <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a>
+        }
+        @if (Model.HandlesFinance && Model.Editable)
+        {
+            <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a>
+        }
     </div>
 </header>
 <partial name="_EasyNextStep" model="missing" />

@@ -10,7 +10,7 @@ public sealed class PrintFormsModel(Store store) : PageModel
 {
     public string Kind { get; private set; } = "";
     public InvoiceDetail? Invoice { get; private set; }
-    public List<Prepayment> Payments { get; private set; } = [];
+    public List<ProxyPrintRow> Payments { get; private set; } = [];
     public string Title => Kind switch { "meeting" => "صورت‌جلسه انجام کار یا مصرف اقلام خریداری شده", _ => "فرم نیابتی" };
     public async Task<IActionResult> OnGetAsync(string? kind, long id, long[]? ids)
     {
@@ -21,9 +21,8 @@ public sealed class PrintFormsModel(Store store) : PageModel
                 Invoice = await store.DetailAsync(id);
                 return Invoice?.Summary.Document is null ? NotFound() : Page();
             case "proxy" when User.IsInRole("agent") || User.IsInRole("chief"):
-                if (ids is not { Length: > 0 and <= 25 }) return RedirectToPage("/Bank");
-                var available = await store.RecentBankPrepaymentsAsync();
-                Payments = available.Where(p => ids.Contains(p.Number)).ToList();
+                if (ids is not { Length: > 0 and <= 16 }) return RedirectToPage("/Bank");
+                Payments = await store.ProxyPrintRowsAsync(ids.Distinct().ToArray());
                 return Payments.Count == 0 ? NotFound() : Page();
             case "petty": return RedirectToPage("/Petty");
             default:

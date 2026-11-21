@@ -21,7 +21,7 @@
     <form method="post" asp-page="/PrintSettings"><input type="hidden" name="form" value="document"><input type="hidden" name="id" value="@row.Id">
         <input type="hidden" name="template" value="@Model.Template"><button type="submit">تنظیم به‌عنوان پیش‌فرض</button></form>
 </nav>
-<div class="document-print-page"><article class="official-document official-paper document-sheet">
+<div class="document-print-page"><article class="official-document official-paper document-sheet @(displayRows>12?"od-dense":"")">
     <section class="od-heading od-frame"><strong>درخواست خرید، گزارش دریافت، سند هزینه فرعی خرید کالا و خدمات</strong>
         <span>شماره درخواست: <b>@row.Document</b></span><span>تاریخ درخواست: <bdi>@Persian.Date(requestDate)</bdi></span></section>
     <section class="od-requests od-frame">

@@ -67,6 +67,8 @@
 .od-bottom h2{font-size:10px;margin:0;border-bottom:1px solid #111;min-height:5mm}
 .od-bottom p{font-size:9px;text-align:justify}.od-bottom b{font-size:9px}.od-bottom strong{font-size:10px}.od-bottom span{align-self:center}
 .od-bottom small{font-size:8px;border-top:1px solid #111}
+.official-document.od-dense .od-lines th,.official-document.od-dense .od-lines td{font-size:8px;padding:.2mm}
+.official-payment.op-excel-old .op-header{grid-template-columns:15mm 1fr}.official-payment.op-excel-old{font-size:10px}
 .official-meeting{width:190mm;max-width:none;margin:0 auto 12px;padding:0;font-size:11px;min-height:267mm}
 .official-meeting .om-header{border:0;text-align:center;padding:0;margin:18mm 0 5mm}
 .om-header h1{font-size:13px}.om-header p{font-size:11px}

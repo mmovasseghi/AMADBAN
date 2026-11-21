@@ -1,0 +1,5 @@
+.official-proxy{width:277mm;min-height:190mm;margin:auto;padding:5mm 7mm;background:#fff;color:#000;font-family:Vazirmatn,Tahoma,sans-serif}
+.official-proxy header{text-align:center;border:0}.official-proxy h1{font-size:18px}.official-proxy table{table-layout:fixed;margin-top:4mm}
+.official-proxy th,.official-proxy td{border:1px solid #111;text-align:center;padding:1mm;font-size:10px;height:7mm}.official-proxy th:first-child{width:5%}.official-proxy th:nth-child(2){width:19%}.official-proxy th:nth-child(3){width:11%}.official-proxy th:nth-child(4){width:14%}.official-proxy th:nth-child(5){width:18%}.official-proxy th:nth-child(6){width:24%}
+.official-proxy tfoot th,.official-proxy tfoot td{font-weight:800}.proxy-signatures{display:grid;grid-template-columns:1fr 1fr;margin-top:6mm}.proxy-signatures div{text-align:center;min-height:19mm;padding:3mm}
+@page{size:A4 landscape;margin:9mm}@media print{.official-proxy{width:277mm;min-height:0;margin:0;padding:3mm 6mm}}

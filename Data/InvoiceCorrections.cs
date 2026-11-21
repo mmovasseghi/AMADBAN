@@ -4,6 +4,7 @@ public sealed partial class Store
 {
     public async Task<string?> CorrectInvoiceAsync(long id, InvoiceEntry entry, long actor)
     {
+        if (entry.Lines.Count is < 1 or > 20) return "هر فاکتور باید بین یک تا ۲۰ قلم داشته باشد.";
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
         await LockCredit(conn, tx);

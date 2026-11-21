@@ -1,49 +1,16 @@
 @page
 @model Amadban.Pages.PrintBankModel
-@{
-    Layout = null;
-    var title = Model.Slip ? "فیش بانکی" : "فرم درخواست عملیات چک در سامانه صیاد";
-}
-<!doctype html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="utf-8">
-    <title>@title · آمادبان</title>
-    <link rel="stylesheet" href="~/print.css" asp-append-version="true">
-    @if (Model.Slip) { <link rel="stylesheet" href="~/a5.css" asp-append-version="true"> }
-    <script src="~/site.js" asp-append-version="true" defer></script>
-</head>
-<body>
-<nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="1" min="1" max="12"></label><button type="button" data-print>چاپ @(Model.Slip ? "A5" : "A4")</button><a asp-page="/Bank">بازگشت</a></nav>
-<article>
-    <header><h1>@title</h1><p>بیمارستان امام سجاد (ع) فراجا</p></header>
-    @if (Model.Slip)
-    {
-        var c = Model.Checks[0];
-        <table><tbody>
-            <tr><th>بانک و شعبه</th><td>@c.Bank · @c.Branch</td></tr>
-            <tr><th>نام ذی‌نفع</th><td>@c.Recipient</td></tr>
-            <tr><th>شماره حساب</th><td><bdi>@c.Account</bdi></td></tr>
-            <tr><th>شناسه صیاد</th><td><bdi>@c.Sayad</bdi></td></tr>
-            <tr><th>تاریخ</th><td>@Persian.Date(c.Date)</td></tr>
-            <tr><th>مبلغ</th><td>@Persian.Money(c.Amount) ریال · @PersianWords.Number(c.Amount) ریال</td></tr>
-        </tbody></table>
-    }
-    else
-    {
-        <p>@(Model.Checks.Select(c => c.Bank).Distinct().Count() == 1 ? "شعبه محترم بانک " + Model.Checks[0].Bank : "شعب محترم بانک‌های مربوط") ـ تاریخ @Persian.Date(Persian.Today)</p>
-        <p>با احترام، بیمارستان امام سجاد (ع) فراجا درخواست ثبت @Model.Checks.Count فقره چک با مشخصات زیر در سامانه صیاد را دارد.</p>
-        <table>
-            <thead><tr><th>ردیف</th><th>شناسه صیاد</th><th>شماره حساب</th><th>بانک و شعبه</th><th>تاریخ</th><th>مبلغ ریالی</th><th>در وجه</th></tr></thead>
-            <tbody>@for (var i = 0; i < Model.Checks.Count; i++)
-            {
-                var c = Model.Checks[i];
-                <tr><td>@(i + 1)</td><td>@c.Sayad</td><td>@c.Account</td><td>@c.Bank · @c.Branch</td>
-                    <td>@Persian.Date(c.Date)</td><td>@Persian.Money(c.Amount)</td><td>@c.Recipient</td></tr>
-            }</tbody>
-        </table>
-    }
-    <section class="signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section>
-</article>
-</body>
-</html>
+@{ Layout=null; var first=Model.Checks[0]; }
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فرم درخواست عملیات چک در سامانه صیاد · آمادبان</title>
+<link rel="stylesheet" href="~/print.css" asp-append-version="true"><link rel="stylesheet" href="~/bank-print.css" asp-append-version="true"><script src="~/site.js" asp-append-version="true" defer></script></head><body>
+<nav class="print-controls"><label>تعداد نسخه <input data-print-copies type="number" value="1" min="1" max="12"></label><button type="button" data-print>چاپ فرم A4</button><a asp-page="/Bank">بازگشت</a></nav>
+<article class="official-sayad-form"><h1>فرم درخواست عملیات چک در سامانه صیاد</h1>
+<p class="sayad-branch">شعبه محترم: <b>@(Model.Checks.Select(x=>x.Branch).Distinct().Count()==1?first.Branch:"شعب مربوط")</b> &nbsp;&nbsp; شاخص: ...................</p>
+<p>تاریخ: <bdi>@Persian.Date(Persian.Today)</bdi></p><p>با احترام</p>
+<p class="sayad-text">اینجانب / اینجانبان / شرکت <b>بیمارستان امام سجاد (ع) فراجا</b> با عنوان صاحب / صاحبان حساب / وکیل صاحب حساب / ذی‌نفع چک / وکیل ذی‌نفع چک، با شماره / شناسه ملی <bdi>۱۴۰۰۳۶۰۲۱۵۰</bdi> و با قبول تمام مسئولیت‌های مترتب، تقاضای انجام عملیات زیر را دارم:</p>
+<div class="sayad-operations">@foreach(var op in new[]{"ثبت","تأیید","انتقال","ابطال","لغو ثبت","رفع انسداد"}){<span class="@(op==Model.Operation?"selected":"")">@(op==Model.Operation?"☑":"□") @op</span>}</div>
+<p class="sayad-text">در خصوص <b>@Model.Checks.Count</b> فقره چک با مشخصات جدول زیر، خواهشمند است دستور فرمایید اقدام مقتضی معمول نمایند. ضمن عقد خارج لازم، قبول و تعهد می‌نمایم عملیات مذکور به نیابت و با رضایت اینجانب / این شرکت بوده و حق هرگونه ادعا و اعتراض را از خود سلب و ساقط می‌نمایم.</p>
+<table class="sayad-table"><thead><tr><th>ردیف</th><th>شناسه صیاد</th><th>شماره حساب</th><th>نام بانک و شعبه</th><th>تاریخ</th><th>مبلغ (ریال)</th><th>در وجه (نام ذی‌نفع)</th><th>کد ملی / شناسه ملی</th></tr></thead><tbody>
+@for(var i=0;i<11;i++){var c=i<Model.Checks.Count?Model.Checks[i]:null;<tr><td>@(i+1)</td><td><bdi>@c?.Sayad</bdi></td><td><bdi>@c?.Account</bdi></td><td>@(c is null?"":c.Bank+" · "+c.Branch)</td><td>@(c is null?"":Persian.Date(c.Date))</td><td>@(c is null?"":Persian.Money(c.Amount))</td><td>@c?.Recipient</td><td><bdi>@c?.RecipientIdentity</bdi></td></tr>}
+</tbody></table><section class="sayad-signatures"><div>مهر و امضای مشتری</div><div>مهر و امضای شعبه</div></section></article>
+</body></html>

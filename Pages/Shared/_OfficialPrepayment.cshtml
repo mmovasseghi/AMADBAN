@@ -4,7 +4,7 @@
     string FullSigner(string role) => string.Join(" ", new[]{Signer(role).Rank,Signer(role).Name}.Where(x => !string.IsNullOrWhiteSpace(x)));
     var account = Model.Sheba.StartsWith("IR", StringComparison.OrdinalIgnoreCase) ? Model.Sheba[2..] : Model.Sheba;
 }
-<article class="official-payment official-paper">
+<article class="official-payment official-paper @(Model.Template=="excel-old"?"op-excel-old":"")">
     <section class="op-header op-frame">
         <div class="op-side op-kinds"><span>@(Model.Petty ? "☑" : "□") تنخواه</span><span>@(Model.Petty ? "□" : "☑") پیش‌پرداخت</span><span>□ علی‌الحساب</span></div>
         <div class="op-header-main">

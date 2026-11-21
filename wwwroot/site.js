@@ -255,9 +255,14 @@
                 input.name = 'Lines[' + index + '].' + input.dataset.field;
             });
         });
+        const addButton = document.querySelector('[data-add-line]');
+        const limit = document.querySelector('[data-line-limit]');
+        const full = lines.rows.length >= 20;
+        addButton.disabled = full;
+        if (limit) limit.textContent = full ? '۲۰ قلم ثبت شده؛ امکان افزودن بیشتر وجود ندارد.' : 'حداکثر ۲۰ قلم';
     };
     const addLine = () => {
-        if (lines.rows.length >= 100) return;
+        if (lines.rows.length >= 20) return;
         lines.appendChild(template.content.cloneNode(true));
         reindex();
         lines.lastElementChild.querySelector('input').focus();
@@ -290,5 +295,6 @@
         if (next) next.focus();
         else addLine();
     });
+    reindex();
     updateTotal();
 })();

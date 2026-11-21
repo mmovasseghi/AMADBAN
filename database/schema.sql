@@ -331,6 +331,7 @@ CREATE TABLE IF NOT EXISTS bank_checks (
     created_by bigint NOT NULL REFERENCES staff(id)
 );
 ALTER TABLE bank_checks ADD COLUMN IF NOT EXISTS prepayment_number bigint REFERENCES prepayments(number);
+ALTER TABLE bank_checks ADD COLUMN IF NOT EXISTS recipient_identity text NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS bank_checks_prepayment ON bank_checks(prepayment_number) WHERE prepayment_number IS NOT NULL;
 CREATE INDEX IF NOT EXISTS bank_checks_recent ON bank_checks(check_date DESC,id DESC);
 

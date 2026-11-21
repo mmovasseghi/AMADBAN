@@ -9,7 +9,7 @@ public sealed class PrintModel(Store store) : PageModel
 {
     public InvoiceDetail Entry { get; private set; } = null!;
     public string Template { get; private set; } = "readable";
-    public int Rows => Template switch { "rows7" => 7, "rows9" => 9, "rows12" => 12, _ => 0 };
+    public int Rows => Template switch { "rows7" => 7, "rows9" => 9, "rows12" => 12, "rows20" => 20, "excel11" => 11, _ => 0 };
     public async Task<IActionResult> OnGetAsync(long id, string? template)
     {
         var invoice = await store.DetailAsync(id);

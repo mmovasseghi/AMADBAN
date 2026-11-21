@@ -120,12 +120,15 @@
                 <label>تاریخ شمسی گردش<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
                 @if (Model.Entry.WarehouseReceiptDate is null)
                 {
-                    <p>نام هر قلم روی فاکتور و چاپ عوض نمی‌شود؛ فقط <strong>موجودی انبار</strong> به کالای انتخاب‌شده اضافه می‌شود. مثال: اگر روی فاکتور «سیب درجه یک»، «سیب عالی» و «سیب ممتاز» نوشته شده و در انبار فقط یک کالا به نام <strong>سیب</strong> دارید، در هر ردیف <strong>کد همان «سیب»</strong> را بزنید (یا از پیشنهاد انتخاب کنید) — هر سه ردیف به یک موجودی «سیب» شارژ می‌شوند. اولین بار که این نام فاکتور را به «سیب» وصل کنید، آمادبان برای همین فروشنده به خاطر می‌سپارد و دفعه بعد پیشنهاد می‌دهد. اگر کد را خالی بگذارید، یک کالای <em>جدید</em> با همان نام فاکتور ساخته می‌شود (برای مثال سه سیب جدا).</p>
+                    <p>نام هر قلم روی فاکتور و چاپ عوض نمی‌شود؛ فقط <strong>موجودی انبار</strong> به کالای انتخاب‌شده اضافه می‌شود. اگر نام فاکتور با نام کالای انبار <strong>شروع شود</strong> (مثلاً فاکتور «سیب درجه یک» و کالای «سیب»)، کد همان کالا از قبل پر می‌شود — قبل از ثبت بررسی کنید. <strong>بدون کد و بدون تیک «کالای جدید»</strong> ورود ثبت نمی‌شود تا اشتباهاً سیبِ جدا ساخته نشود. فقط وقتی واقعاً قلم تازه در انبار ندارید، تیک «کالای جدید» را بزنید.</p>
                     <datalist id="receipt-products"></datalist>
-                    <div class="table-wrap"><table><thead><tr><th>نام عین فاکتور</th><th>تعداد و واحد</th><th>کالای متناظر در انبار</th></tr></thead><tbody>
+                    <div class="table-wrap"><table><thead><tr><th>نام عین فاکتور</th><th>تعداد و واحد</th><th>کد کالا در انبار</th><th>کالای جدید</th></tr></thead><tbody>
                     @foreach (var item in Model.ReceiptMatches) { <tr><td>@item.Title</td><td>@item.Quantity.ToString("0.###") @item.Unit</td>
                         <td><input name="productCodes[@(item.Position-1)]" value="@item.Code" list="receipt-products" data-receipt-product
-                                   placeholder="خالی = کالای جدید" aria-label="کد انبار برای @item.Title"><small>@(item.Product ?? "کالای جدید ساخته می‌شود")</small></td></tr> }
+                                   data-invoice-title="@item.Title" placeholder="کد کالا" required aria-label="کد انبار برای @item.Title">
+                            <small>@(item.Product is null ? "کد را انتخاب کنید یا تیک کالای جدید" : item.PrefixSuggested ? "پیشنهاد: " + item.Product : item.Product)</small></td>
+                        <td><label class="inline"><input type="hidden" name="createNew[@(item.Position-1)]" value="false">
+                            <input name="createNew[@(item.Position-1)]" value="true" type="checkbox" @(item.Code is null ? "" : "disabled")><span>ساخت قلم جدید</span></label></td></tr> }
                     </tbody></table></div>
                     <button class="button primary" name="operation" value="receive" type="submit">ثبت ورود همه اقلام فاکتور</button>
                 }
@@ -135,7 +138,7 @@
                 }
             </form>
         }
-        <p>برای کالای جدید، شناسه انبار خودکار ساخته می‌شود. شرح اصلی فاکتور و گزارش دریافت تغییر نمی‌کند.</p>
+        <p>با تیک «کالای جدید»، شناسه انبار خودکار ساخته می‌شود و نام قلم همان متن فاکتور می‌ماند.</p>
     </section>
 }
 <section class="card">

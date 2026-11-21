@@ -1,34 +1,65 @@
 namespace Amadban.Data;
 
-public sealed record ReceiptMatch(int Position, string Title, string Unit, decimal Quantity, string? Code, string? Product);
+public sealed record ReceiptMatch(int Position, string Title, string Unit, decimal Quantity, string? Code, string? Product, bool PrefixSuggested);
 
 public sealed partial class Store
 {
+    const string ReceiptProductId = """
+        coalesce(m.product_id,a.product_id,old_alias.product_id,
+            (SELECT exact.id FROM products exact WHERE lower(trim(exact.name))=lower(trim(l.title))
+             AND exact.unit=l.unit ORDER BY exact.id LIMIT 1),
+            (SELECT prefix.id FROM products prefix
+             WHERE prefix.unit=l.unit AND length(trim(prefix.name))>=2
+               AND lower(trim(l.title)) LIKE lower(trim(prefix.name)) || '%'
+             ORDER BY length(trim(prefix.name)) DESC, prefix.id LIMIT 1))
+        """;
+
+    async Task<long?> ResolveReceiptProductIdAsync(NpgsqlConnection conn, NpgsqlTransaction tx, string title, string unit,
+        string vendor, string selectedCode)
+    {
+        if (selectedCode.Length > 0)
+            return await Scalar(conn, tx, "SELECT id FROM products WHERE code=$1 AND unit=$2 FOR UPDATE", selectedCode, unit) as long?;
+        return await Scalar(conn, tx, $"""
+            SELECT p.id FROM products p
+            LEFT JOIN product_aliases a ON a.product_id=p.id AND a.invoice_title=$1 AND a.invoice_unit=$2
+                AND a.vendor IN ($3,'')
+            WHERE p.unit=$2 AND length(trim(p.name))>=2 AND (
+                a.product_id IS NOT NULL
+                OR lower(trim(p.name))=lower(trim($1))
+                OR lower(trim($1)) LIKE lower(trim(p.name)) || '%')
+            ORDER BY (a.vendor=$3) DESC NULLS LAST,(a.product_id IS NOT NULL) DESC,
+                CASE WHEN lower(trim(p.name))=lower(trim($1)) THEN 2
+                     WHEN lower(trim($1)) LIKE lower(trim(p.name)) || '%' THEN 1 ELSE 0 END DESC,
+                length(trim(p.name)) DESC,p.id LIMIT 1 FOR UPDATE OF p
+            """, title, unit, vendor) as long?;
+    }
+
     public async Task<List<ReceiptMatch>> ReceiptMatchesAsync(long invoice)
     {
         await using var conn = await source.OpenConnectionAsync();
-        await using var cmd = Command(conn, null, """
-            SELECT l.position,l.title,l.unit,l.quantity,p.code,p.name
+        await using var cmd = Command(conn, null, $"""
+            SELECT l.position,l.title,l.unit,l.quantity,p.code,p.name,
+                p.id IS NOT NULL AND lower(trim(l.title))<>lower(trim(p.name))
+                    AND lower(trim(l.title)) LIKE lower(trim(p.name)) || '%'
             FROM invoice_lines l JOIN invoices i ON i.id=l.invoice_id
             LEFT JOIN invoice_product_matches m
                 ON m.invoice_id=l.invoice_id AND m.position=l.position
             LEFT JOIN product_aliases a ON a.invoice_title=l.title AND a.invoice_unit=l.unit AND a.vendor=i.vendor
             LEFT JOIN product_aliases old_alias ON old_alias.invoice_title=l.title
                 AND old_alias.invoice_unit=l.unit AND old_alias.vendor=''
-            LEFT JOIN products p ON p.id=coalesce(m.product_id,a.product_id,old_alias.product_id,
-                (SELECT exact.id FROM products exact WHERE lower(exact.name)=lower(l.title)
-                 AND exact.unit=l.unit ORDER BY exact.id LIMIT 1))
+            LEFT JOIN products p ON p.id={ReceiptProductId}
             WHERE l.invoice_id=$1 ORDER BY l.position
             """, invoice);
         await using var reader = await cmd.ExecuteReaderAsync();
         var result = new List<ReceiptMatch>();
         while (await reader.ReadAsync()) result.Add(new(reader.GetInt32(0),reader.GetString(1),
             reader.GetString(2),reader.GetDecimal(3),reader.IsDBNull(4)?null:reader.GetString(4),
-            reader.IsDBNull(5)?null:reader.GetString(5)));
+            reader.IsDBNull(5)?null:reader.GetString(5),!reader.IsDBNull(6) && reader.GetBoolean(6)));
         return result;
     }
 
-    public async Task<string> ReceiveInvoiceAsync(long invoice, DateOnly day, IReadOnlyList<string?> codes, long actor)
+    public async Task<string> ReceiveInvoiceAsync(long invoice, DateOnly day, IReadOnlyList<string?> codes,
+        IReadOnlyList<bool> createNew, long actor)
     {
         await using var conn = await source.OpenConnectionAsync();
         await using var tx = await conn.BeginTransactionAsync();
@@ -58,23 +89,15 @@ public sealed partial class Store
         foreach (var line in lines)
         {
             var selectedCode = line.Position-1 < codes.Count ? (codes[line.Position-1] ?? "").Trim() : "";
-            long? productId;
-            if (selectedCode.Length > 0)
-            {
-                productId = await Scalar(conn, tx,
-                    "SELECT id FROM products WHERE code=$1 AND unit=$2 FOR UPDATE",selectedCode,line.Unit) as long?;
-                if (productId is null) return $"کد انبار «{selectedCode}» برای قلم «{line.Title}» با همین واحد پیدا نشد.";
-            }
-            else productId = await Scalar(conn, tx, """
-                SELECT p.id FROM products p LEFT JOIN product_aliases a
-                    ON a.product_id=p.id AND a.invoice_title=$1 AND a.invoice_unit=$2
-                       AND a.vendor IN ($3,'')
-                WHERE p.unit=$2 AND (a.product_id IS NOT NULL OR lower(p.name)=lower($1))
-                ORDER BY (a.vendor=$3) DESC NULLS LAST,(a.product_id IS NOT NULL) DESC,p.id LIMIT 1 FOR UPDATE OF p
-                """, line.Title, line.Unit, vendor) as long?;
+            var allowNew = line.Position - 1 < createNew.Count && createNew[line.Position - 1];
+            long? productId = allowNew ? null : await ResolveReceiptProductIdAsync(conn, tx, line.Title, line.Unit, vendor, selectedCode);
+            if (!allowNew && selectedCode.Length > 0 && productId is null)
+                return $"کد انبار «{selectedCode}» برای قلم «{line.Title}» با همین واحد پیدا نشد.";
             decimal before;
             if (productId is null)
             {
+                if (!allowNew)
+                    return $"برای قلم «{line.Title}» کالای انبار مشخص نشد. کد کالای موجود (مثلاً سیب) را وارد کنید، یا در صورت نیاز به تعریف قلم جدید، تیک «کالای جدید» را بزنید.";
                 var number = (long)(await Scalar(conn, tx,
                     "UPDATE counters SET last_value=last_value+1 WHERE name='warehouse-product' RETURNING last_value"))!;
                 productId = (long)(await Scalar(conn, tx, """

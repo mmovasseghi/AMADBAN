@@ -285,26 +285,50 @@
     const receiptInputs = document.querySelectorAll('[data-receipt-product]');
     if (receiptInputs.length) {
         const suggestions = document.getElementById('receipt-products');
+        const loadReceiptSuggestions = async (input, term) => {
+            if (term.length < 1 || term.length > 80) return;
+            try {
+                const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
+                if (!response.ok) return;
+                const products = await response.json();
+                suggestions.textContent = '';
+                products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.code;
+                    option.label = product.name + ' · ' + product.unit + ' · مانده ' + product.stock;
+                    suggestions.appendChild(option);
+                });
+            } catch (_) { /* Typing a known code remains available. */ }
+        };
         let receiptTimer;
-        receiptInputs.forEach(input => input.addEventListener('input', () => {
-            clearTimeout(receiptTimer);
-            const term = input.value.trim();
-            if (term.length < 2 || term.length > 80) return;
-            receiptTimer = setTimeout(async () => {
-                try {
-                    const response = await fetch('/Dispatch?handler=Products&search=' + encodeURIComponent(term));
-                    if (!response.ok || input.value.trim() !== term) return;
-                    const products = await response.json();
-                    suggestions.textContent = '';
-                    products.forEach(product => {
-                        const option = document.createElement('option');
-                        option.value = product.code;
-                        option.label = product.name + ' · ' + product.unit + ' · مانده ' + product.stock;
-                        suggestions.appendChild(option);
-                    });
-                } catch (_) { /* Typing a known code remains available. */ }
-            }, 220);
-        }));
+        receiptInputs.forEach(input => {
+            const row = input.closest('tr');
+            const createNew = row?.querySelector('input[type=checkbox][name^="createNew"]');
+            const syncCreateNew = () => {
+                if (!createNew) return;
+                const hasCode = input.value.trim().length > 0;
+                createNew.disabled = hasCode;
+                if (hasCode) createNew.checked = false;
+            };
+            input.addEventListener('input', () => {
+                syncCreateNew();
+                clearTimeout(receiptTimer);
+                const term = input.value.trim();
+                if (term.length < 2) return;
+                receiptTimer = setTimeout(() => loadReceiptSuggestions(input, term), 220);
+            });
+            input.addEventListener('focus', () => {
+                if (input.value.trim().length > 0) return;
+                const title = input.getAttribute('data-invoice-title') || '';
+                const term = title.trim().slice(0, 40);
+                if (term.length >= 1) loadReceiptSuggestions(input, term);
+            });
+            createNew?.addEventListener('change', () => {
+                if (createNew.checked) input.removeAttribute('required');
+                else if (!input.value.trim()) input.setAttribute('required', '');
+            });
+            syncCreateNew();
+        });
     }
 
     const lines = document.querySelector('[data-lines]');

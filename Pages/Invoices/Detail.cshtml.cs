@@ -139,13 +139,14 @@ public sealed class DetailModel(Store store) : PageModel
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostReceiptAsync(long id, string? date, string? operation, List<string?>? productCodes)
+    public async Task<IActionResult> OnPostReceiptAsync(long id, string? date, string? operation, List<string?>? productCodes,
+        List<bool>? createNew)
     {
         if (!CanReceive) return Forbid();
         var day = Persian.ParseDate(date);
         Message = day is null ? "تاریخ شمسی ورود یا اصلاح انبار را بررسی کنید." : operation switch
         {
-            "receive" => await store.ReceiveInvoiceAsync(id, day.Value, productCodes ?? [], Actor),
+            "receive" => await store.ReceiveInvoiceAsync(id, day.Value, productCodes ?? [], createNew ?? [], Actor),
             "void" => await store.VoidInvoiceReceiptAsync(id, day.Value, Actor),
             _ => "اقدام انبار معتبر نیست."
         };

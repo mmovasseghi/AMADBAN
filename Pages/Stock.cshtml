@@ -3,7 +3,10 @@
 @{
     ViewData["Title"] = "موجودی انبار";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>موجودی و گردش انبار</h1><p>ماندهٔ کالا را ببینید. <strong>افزودن موجودی</strong> از صفحهٔ فاکتور انجام می‌شود.</p></div></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>موجودی و گردش انبار</h1>
+        <p>@(Model.CanEditStock
+            ? "ورود عادی از فاکتور است. برای تغییر دستی (مثلاً موجودی سیب): کالا را جست‌وجو کنید و «گردش و ویرایش» را بزنید."
+            : "ماندهٔ کالا را ببینید. افزودن موجودی از صفحهٔ فاکتور انجام می‌شود.")</p></div></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (!Model.CanEditStock)
 {
@@ -15,34 +18,38 @@
         <h2>@product.Name · @product.Stock.ToString("0.###") @product.Unit</h2>
         @if (Model.CanEditStock)
         {
-        <details><summary>اصلاح مشخصات این کالا</summary><form method="post" asp-page-handler="CorrectProduct" class="filters">
-            <input type="hidden" name="id" value="@product.Id">
-            <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
-            <label>نام کالا<input name="name" value="@product.Name" required maxlength="150"></label>
-            <label>واحد<input name="unit" value="@product.Unit" required maxlength="30"></label>
-            <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
-            <button type="submit" class="button">ذخیره مشخصات</button>
-        </form></details>
-        <details class="work-advanced">
-            <summary>ورود یا خروج دستی (فقط رئیس آماد)</summary>
+        <div class="stock-chief-panel" id="edit-stock">
+            <h3>ویرایش دستی موجودی — @product.Name</h3>
+            <p class="form-note">ماندهٔ الان: <strong>@product.Stock.ToString("0.###") @product.Unit</strong>. برای اضافه یا کم کردن بدون فاکتور، نوع و مقدار را بنویسید و ثبت کنید.</p>
             <form method="post" asp-page-handler="Move" class="filters">
                 <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
-                <label>نوع<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>
-                <label>مقدار<input name="quantity" inputmode="decimal" required></label>
+                <label>نوع<select name="kind"><option value="in">ورود (افزایش)</option><option value="out">خروج (کاهش)</option><option value="opening">شروع اولیه (فقط اگر هنوز گردشی نداشته)</option></select></label>
+                <label>مقدار<input name="quantity" inputmode="decimal" required placeholder="مثلاً ۱۰"></label>
                 <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
-                <label>بخش<input name="department" maxlength="120"></label>
-                <button class="button primary" type="submit">ثبت</button>
+                <label>توضیح / بخش (اختیاری)<input name="department" maxlength="120" placeholder="دلیل یا نام بخش"></label>
+                <button class="button primary" type="submit">اعمال روی موجودی</button>
+            </form>
+        </div>
+        <details>
+            <summary>انبارگردانی — مانده را برابر شمارش واقعی کنید</summary>
+            <p>اگر در انبار شمردید و عدد با سیستم فرق دارد، موجودی واقعی را بنویسید.</p>
+            <form method="post" asp-page-handler="Count" class="filters">
+                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
+                <label>موجودی واقعی شمارش‌شده<input name="counted" inputmode="decimal" required></label>
+                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+                <label>یادداشت<input name="note" maxlength="120"></label>
+                <button class="button" type="submit">ثبت شمارش</button>
             </form>
         </details>
         <details>
-            <summary>ثبت شمارش واقعی و مغایرت انبارگردانی</summary>
-            <p>موجودی فعلی @product.Stock.ToString("0.###") @product.Unit است. مقدار واقعی شمارش‌شده را وارد کنید؛ اختلاف در سابقه کالا ثبت می‌شود.</p>
-            <form method="post" asp-page-handler="Count" class="filters">
-                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
-                <label>موجودی واقعی<input name="counted" inputmode="decimal" required></label>
-                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
-                <label>یادداشت مغایرت، در صورت نیاز<input name="note" maxlength="120"></label>
-                <button class="button primary" type="submit">ثبت شمارش</button>
+            <summary>اصلاح نام، کد یا واحد کالا</summary>
+            <form method="post" asp-page-handler="CorrectProduct" class="filters">
+                <input type="hidden" name="id" value="@product.Id">
+                <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
+                <label>نام کالا<input name="name" value="@product.Name" required maxlength="150"></label>
+                <label>واحد<input name="unit" value="@product.Unit" required maxlength="30"></label>
+                <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
+                <button type="submit" class="button">ذخیره مشخصات</button>
             </form>
         </details>
         }
@@ -72,7 +79,7 @@
     <div class="table-wrap"><table><thead><tr><th>شناسه کالا</th><th>نام</th><th>موجودی</th><th>حداقل</th><th>گردش</th></tr></thead><tbody>
       @foreach (var item in Model.Products.Take(25))
       {
-          <tr><td>@item.Code</td><td>@item.Name</td><td>@item.Stock.ToString("0.###") @item.Unit</td><td>@item.Minimum.ToString("0.###")</td><td><a class="button quiet" asp-route-ProductId="@item.Id">گردش</a></td></tr>
+          <tr><td>@item.Code</td><td>@item.Name</td><td>@item.Stock.ToString("0.###") @item.Unit</td><td>@item.Minimum.ToString("0.###")</td><td><a class="button quiet" asp-route-ProductId="@item.Id" asp-route-Search="@Model.Search" asp-route-Low="@Model.Low">@(Model.CanEditStock ? "گردش و ویرایش" : "گردش")</a></td></tr>
       }
     </tbody></table></div>
     <nav class="pagination" aria-label="صفحه کالا">

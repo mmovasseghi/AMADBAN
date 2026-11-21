@@ -188,6 +188,8 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .sidebar-display-toggle:hover,.sidebar-display-toggle:focus{background:#eaf5ef;border-color:#9dc5b2}
 .sidebar-display-toggle[aria-pressed=true]{border-style:solid;background:#e3f4ea;color:#0e5a42}
 .login-display-toggle{margin-top:12px;max-width:100%}
+.stock-chief-panel{padding:14px;border:1px solid #c8e4d5;border-radius:14px;background:linear-gradient(145deg,#f0faf5,#fff)}
+.stock-chief-panel h3{margin:0 0 8px;font-size:17px;color:#0f5a45}
 .login-help{font-size:16px;line-height:1.8;color:#3d625c}
 
 html.simple-ui{font-size:17px}

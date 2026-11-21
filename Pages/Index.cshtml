@@ -17,6 +17,19 @@
         <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
     }
 </header>
+@if (Model.Setup is { } setup && (setup.Departments == 0 || setup.Suppliers == 0 || setup.DepartmentsWithoutRecipients > 0))
+{
+    <section class="card" aria-label="راه‌اندازی اولیه">
+        <h2>تکمیل پایه‌دهی سامانه</h2>
+        <p>برای اینکه انبار و اسناد خرید بدون گیر کار کنند، موارد زیر را یک‌بار تنظیم کنید.</p>
+        <ul class="missing">
+            @if (setup.Departments == 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — هنوز بخشی ثبت نشده</li> }
+            else if (setup.DepartmentsWithoutRecipients > 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — @setup.DepartmentsWithoutRecipients بخش بدون تحویل‌گیرنده</li> }
+            @if (setup.Suppliers == 0) { <li><a asp-page="/Suppliers">فروشندگان</a> — پرونده فروشنده ثبت نشده</li> }
+            @if (User.IsInRole("chief") && setup.Departments > 0 && setup.Recipients == 0) { <li>حداقل یک تحویل‌گیرنده برای بخش‌ها لازم است</li> }
+        </ul>
+    </section>
+}
 @if (Model.Alerts is { } alerts)
 {
     <section class="alert-grid" aria-label="کارهای نیازمند پیگیری">

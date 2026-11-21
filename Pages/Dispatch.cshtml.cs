@@ -45,24 +45,6 @@ public sealed class DispatchModel(Store store) : PageModel
         return new JsonResult(products.Select(p => new { code = p.Code, name = p.Name, stock = p.Stock, unit = p.Unit }));
     }
 
-    public async Task<IActionResult> OnPostDepartmentAsync(string? name)
-    {
-        name = name?.Trim() ?? "";
-        Message = name.Length is < 2 or > 120 ? "نام بخش را بررسی کنید." : await store.AddDepartmentAsync(name, Actor);
-        return RedirectToPage();
-    }
-
-    public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank, long department)
-    {
-        name = name?.Trim() ?? "";
-        position = position?.Trim() ?? "";
-        rank = rank?.Trim() ?? "";
-        Message = name.Length is < 2 or > 120 || position.Length > 120 || rank.Length > 80 || department < 1
-            ? "بخش، نام و سمت تحویل‌گیرنده را بررسی کنید."
-            : await store.AddPersonAsync(name, position, rank, department, Actor);
-        return RedirectToPage();
-    }
-
     public async Task<IActionResult> OnPostIssueAsync(Guid submission, long department, long recipient,
         long warehouse, string? date, string? note, List<LineInput>? lines)
     {

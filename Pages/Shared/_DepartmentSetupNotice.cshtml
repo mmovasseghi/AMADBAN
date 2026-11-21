@@ -1,0 +1,22 @@
+@model (IReadOnlyList<Amadban.Data.DepartmentRoster> Roster, int DepartmentCount, bool Compact)
+@{
+    var missing = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
+}
+@if (Model.DepartmentCount == 0)
+{
+    <p class="notice" role="status">برای انتخاب بخش مقصد، ابتدا در <a asp-page="/Departments">بخش‌های بیمارستان</a> حداقل یک بخش و تحویل‌گیرنده ثبت کنید.</p>
+}
+else if (missing.Count > 0)
+{
+    <p class="notice" role="status">@missing.Count بخش بدون تحویل‌گیرنده دارند. <a asp-page="/Departments">تکمیل در بخش‌های بیمارستان</a></p>
+}
+@if (!Model.Compact && Model.Roster.Count > 0)
+{
+    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>تحویل‌گیرنده</th></tr></thead><tbody>
+    @foreach (var row in Model.Roster.Take(8))
+    {
+        <tr><td>@row.Name</td><td>@(row.Recipients.Count == 0 ? "—" : string.Join("، ", row.Recipients.Select(p => p.Name)))</td></tr>
+    }
+    </tbody></table></div>
+}
+<a class="button" asp-page="/Departments">مدیریت بخش‌ها و تحویل‌گیرندگان</a>

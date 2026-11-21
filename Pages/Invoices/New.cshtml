@@ -5,6 +5,10 @@
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/file-text.webp" width="82" height="82" alt=""></span>
     <div><div class="eyebrow">خرید و فاکتورها</div><h1>@ViewData["Title"]</h1><p>اطلاعات را به ترتیب پایین وارد کنید. تا زمان تحویل به مالی، اصلاح فاکتور ممکن است.</p></div></div><a asp-page="/Index" class="button">بازگشت به کارتابل</a></header>
+@if (Model.SupplierCount == 0)
+{
+    <p class="notice" role="status">هنوز فروشنده‌ای ثبت نشده. نام را دستی وارد کنید یا ابتدا در <a asp-page="/Suppliers">فروشندگان</a> پرونده بسازید تا در فاکتورهای بعدی پیشنهاد شود.</p>
+}
 <form method="post" class="card invoice-form">
     <input type="hidden" asp-for="Submission">
     <input type="hidden" asp-for="Id">

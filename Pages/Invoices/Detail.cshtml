@@ -36,6 +36,10 @@
 {
     <section class="card"><h2>بخش درخواست‌کننده و کارشناس امضاکننده</h2>
         <p>کارشناس این سند از بخش درخواست‌کننده انتخاب می‌شود. تحویل‌گیرنده کالا از انبار جداگانه در حواله خروج ثبت می‌شود.</p>
+        @if (Model.Departments.Count == 0)
+        {
+            <p class="notice" role="status">لیست بخش‌ها خالی است. از منوی <a asp-page="/Departments">بخش‌های بیمارستان</a> بخش و تحویل‌گیرنده را ثبت کنید، سپس اینجا بخش درخواست‌کننده را انتخاب کنید.</p>
+        }
         <form method="post" asp-page-handler="RequestSigner" class="filters" id="request-signer-form" data-invoice-id="@row.Id"
               data-selected-department="@Model.RequestSigner.DepartmentId" data-selected-expert="@Model.RequestSigner.ExpertId">
             <label>بخش درخواست‌کننده<select name="department" data-request-department><option value="0">انتخاب نشده</option>

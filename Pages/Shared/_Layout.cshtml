@@ -40,6 +40,11 @@
                 { <a class="@(activePage == "/KardexQueue" ? "active" : "")" asp-page="/KardexQueue"><img class="menu-icon" src="/icon3d/notebook.webp" width="30" height="30" alt=""> ثبت سریع کارتکس</a> }
                 else
                 { <a asp-page="/Index" asp-route-Status="kardex"><img class="menu-icon" src="/icon3d/notebook.webp" width="30" height="30" alt=""> پیگیری کارتکس</a> }
+                @if (User.IsInRole("chief") || User.IsInRole("agent") || User.IsInRole("warehouse"))
+                {
+                    <span class="menu-caption">پایه‌دهی</span>
+                    <a class="@(activePage == "/Departments" ? "active" : "")" asp-page="/Departments"><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> بخش‌های بیمارستان</a>
+                }
                 <span class="menu-caption">پیگیری و گزارش</span>
                 <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>
                 <a class="@(activePage == "/Analytics" ? "active" : "")" asp-page="/Analytics"><img class="menu-icon" src="/icon3d/calculator.webp" width="30" height="30" alt=""> تحلیل خریدها</a>

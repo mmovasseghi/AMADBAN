@@ -1,0 +1,37 @@
+@page
+@model Amadban.Pages.DepartmentsModel
+@{
+    ViewData["Title"] = "بخش‌های بیمارستان";
+    var missingRecipients = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
+}
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div>
+    <div class="eyebrow">پایه‌دهی مشترک</div><h1>بخش‌های بیمارستان و تحویل‌گیرندگان</h1>
+    <p>اینجا واحدهای بالینی (اورژانس، اتاق عمل، …) و مسئول دریافت کالا از انبار برای هر بخش ثبت می‌شود. همین لیست در <strong>خروج کالا از انبار</strong> و در <strong>بخش درخواست‌کننده روی سند خرید</strong> استفاده می‌شود.</p></div></div>
+    <div class="actions">@if (User.IsInRole("warehouse") || User.IsInRole("chief")) { <a class="button primary" asp-page="/Dispatch">رفتن به خروج کالا</a> }</div></header>
+@if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+@if (Model.Departments.Count == 0)
+{
+    <p class="notice" role="status"><strong>هنوز بخشی ثبت نشده است.</strong> قبل از خروج کالا یا انتخاب «بخش درخواست‌کننده» روی سند، حداقل یک بخش و یک تحویل‌گیرنده برای آن تعریف کنید.</p>
+}
+else if (missingRecipients.Count > 0)
+{
+    <p class="notice" role="status">برای @missingRecipients.Count بخش هنوز تحویل‌گیرنده ندارید (@string.Join("، ", missingRecipients.Select(r => r.Name))).</p>
+}
+<section class="card">
+    <h2>ثبت بخش و تحویل‌گیرنده</h2>
+    <div class="detail-grid">
+        <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش<input name="name" maxlength="120" required placeholder="مثلاً اورژانس"></label><button class="button primary" type="submit">ثبت بخش</button></form>
+        <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
+            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>درجه<input name="rank" maxlength="80"></label><label>سمت<input name="position" maxlength="120" placeholder="مسئول بخش"></label>
+            <button class="button primary" type="submit">ثبت تحویل‌گیرنده</button></form>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>تحویل‌گیرندگان</th></tr></thead><tbody>
+    @foreach (var row in Model.Roster)
+    {
+        <tr><td>@row.Name</td><td>@if (row.Recipients.Count == 0) { <span class="badge returned">بدون تحویل‌گیرنده</span> }
+            else { @string.Join(" · ", row.Recipients.Select(p => $"{p.Rank} {p.Name}".Trim() + (p.Position.Length > 0 ? " · " + p.Position : ""))) }</td></tr>
+    }
+    @if (Model.Roster.Count == 0) { <tr><td colspan="2" class="empty">بخشی ثبت نشده است.</td></tr> }
+    </tbody></table></div>
+    <p class="form-note">صفحه <a asp-page="/Organization">نشان و امضا</a> فقط برای نام‌های چاپی اسناد مالی است؛ برای انبار حتماً همین‌جا بخش را به شخص وصل کنید.</p>
+</section>

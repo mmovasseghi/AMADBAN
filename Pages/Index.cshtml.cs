@@ -22,6 +22,7 @@ public sealed class IndexModel(Store store) : PageModel
     public long Total { get; private set; }
     public OperationalAlerts? Alerts { get; private set; }
     public List<ActivityItem> Activity { get; private set; } = [];
+    public SetupHints? Setup { get; private set; }
 
     public async Task OnGetAsync()
     {
@@ -46,6 +47,8 @@ public sealed class IndexModel(Store store) : PageModel
         }
         var roles = User.IsInRole("warehouse") ? "document" : User.IsInRole("kardex") ? "kardex" : "";
         if (!Request.Query.ContainsKey(nameof(Status)) && !Report) Status = roles;
+        if (!Report && (User.IsInRole("chief") || User.IsInRole("agent")))
+            Setup = await store.SetupHintsAsync();
         var results = await store.ListAsync(Status, Search, Subject, Kind, Credit, from ?? new DateOnly(1900, 1, 1),
             to ?? new DateOnly(2200, 12, 31), P, Report);
         HasNext = results.Rows.Count > 25;

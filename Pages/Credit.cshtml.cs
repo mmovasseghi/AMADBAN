@@ -46,8 +46,13 @@ public sealed class CreditModel(Store store) : PageModel
         {
             Invoice = await store.DetailAsync(invoice);
             Payment = await store.ReadPrepaymentAsync(invoice, true);
-            if (Payment is null && Invoice is not null && await store.SupplierByNameAsync(Invoice.Summary.Vendor) is { } supplier)
-                Accounts = await store.SupplierAccountsAsync(supplier.Id);
+            if (Payment is null && Invoice is not null)
+            {
+                if (await store.SupplierByNameAsync(Invoice.Summary.Vendor) is { } supplier)
+                    Accounts = await store.SupplierAccountsAsync(supplier.Id);
+                var open = await store.OpenProformasAsync();
+                Proformas = open.Where(p => string.Equals(p.Vendor, Invoice.Summary.Vendor, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
         }
         else if (number > 0)
         {

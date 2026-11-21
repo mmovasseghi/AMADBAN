@@ -113,16 +113,21 @@
         }
     </section>
 }
-@if (Model.ShowInvoiceForm && Model.Invoice is { } linkInv)
+@if (Model.ShowInvoiceForm && Model.Invoice is { } linkInv && Model.Proformas.Count > 0)
 {
     <section class="card">
-        <h2>فقط اگر قبلاً روی پیش‌فاکتور پیش‌پرداخت زده‌اید</h2>
-        <p>اگر <strong>قبل از صدور سند</strong> برگهٔ پیش‌پرداخت گرفته‌اید (شمارهٔ آن را دارید) و نمی‌خواهید دوباره پیش‌پرداخت بزنید، همان شماره را به این سند وصل کنید. در غیر این صورت از فرم بالا «ثبت و چاپ» را بزنید.</p>
-        <form method="post" asp-page-handler="Link" class="filters">
-            <input type="hidden" name="invoice" value="@linkInv.Summary.Id">
-            <label>شمارهٔ برگهٔ پیش‌پرداخت قبلی<input name="number" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۱۲"></label>
-            <button class="button" type="submit">اتصال به این سند (بدون پیش‌پرداخت جدید)</button>
-        </form>
+        <h2>برگهٔ پیش‌فاکتور قبلی دارید؟ (نیازی به تایپ شماره نیست)</h2>
+        <p>این <strong>جای</strong> دکمهٔ «ثبت و چاپ» نیست. فقط اگر <strong>قبل از سند</strong> برای همین فروشنده پیش‌پرداخت گرفته‌اید، یکی را بزنید تا به این سند بچسبد؛ وگرنه همان بالا ثبت و چاپ کنید.</p>
+        <div class="actions">
+            @foreach (var p in Model.Proformas)
+            {
+                <form method="post" asp-page-handler="Link">
+                    <input type="hidden" name="invoice" value="@linkInv.Summary.Id">
+                    <input type="hidden" name="number" value="@p.Number">
+                    <button class="button" type="submit">اتصال برگه @p.Number · @Persian.Money(p.Amount) ریال</button>
+                </form>
+            }
+        </div>
     </section>
 }
 @if (Model.Payment is null)

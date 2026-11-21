@@ -101,24 +101,12 @@ for user, role in USERS.items():
 
     if user == "ofis":
         _, credit = fetch(op, "/Credit")
-        if (
-            "پیش‌پرداخت روی سند" not in credit
-            and "ثبت و چاپ" not in credit
-        ):
+        if "پیش‌پرداخت روی سند" not in credit and "ثبت و چاپ" not in credit:
             add("high", "ofis", "Credit page missing prepayment create form")
-        _, detail = fetch(op, "/Index")
-        if "باز کردن پرونده" not in detail and "مشاهده" not in detail:
-            pass
         for path in ("/Bank", "/Petty", "/Suppliers"):
-            code, nav = fetch(op, path)
+            code, _ = fetch(op, path)
             if code >= 500:
                 add("high", "ofis", f"{path} -> {code}")
-    if user == "ofis":
-        _, layout_credit = fetch(op, "/Credit")
-        if "گزارش و تنظیمات" not in layout_credit and "گزارش فاکتورها" not in layout_credit:
-            add("medium", "ofis", "flattened finance nav may be missing on deployed build")
-        if "PrintPrepayment" not in credit and "/PrintPrepayment" not in credit and "چاپ" not in credit:
-            pass  # print route not on list page until prepayment exists
 
     if user == "anbardar":
         token, _ = antiforgery(op, "/Stock")

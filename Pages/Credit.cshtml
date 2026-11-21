@@ -4,14 +4,10 @@
     ViewData["Title"] = Model.Invoice is not null || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار و پیش‌پرداخت";
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1>
-        <p>دو مسیر: <strong>پیش‌فاکتور</strong> (بدون سند) یا <strong>پیش‌پرداخت همان سند</strong> از پروندهٔ چکی بعد از صدور شماره سند.</p></div></div>
+        <p>پیش‌پرداخت روی <strong>همان سند</strong> از پروندهٔ چکی (بعد از صدور شماره سند) → ثبت → چاپ A4.</p></div></div>
         @if (Model.Payment is { } pmt)
         {
             <a class="button primary" asp-page="/PrintPrepayment" asp-route-number="@pmt.Number">چاپ پیش‌پرداخت</a>
-        }
-        else if (Model.Proformas.Count > 0)
-        {
-            <a class="button" href="#open-prepayments">پیش‌پرداخت‌های منتظر اتصال</a>
         }
 </header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
@@ -41,14 +37,6 @@
                     <button class="button" name="action" value="void">ابطال و آزادکردن اعتبار</button>
                 </form>
             }
-            @if (Model.CanPrepay && payment.Invoice is null)
-            {
-                <form method="post" asp-page-handler="Link" class="filters">
-                    <input type="hidden" name="number" value="@payment.Number">
-                    <label>شناسه پرونده خرید<input type="number" name="invoice" min="1" required></label>
-                    <button class="button" type="submit">اتصال به پرونده</button>
-                </form>
-            }
         }
     </section>
 }
@@ -60,12 +48,11 @@
 @if (Model.ShowProformaForm)
 {
     <section class="card">
-        <h2>انتخاب نوع پیش‌پرداخت</h2>
-        <p><strong>پیش‌فاکتور:</strong> هنوز سند ندارید → فرم «پیش‌فاکتور» در همین صفحه (پایین).</p>
-        <p><strong>سند صادرشده:</strong> پروندهٔ چکی در کارتابل → دکمهٔ سبز <strong>پیش‌پرداخت این سند</strong>، یا شناسهٔ پرونده:</p>
+        <h2>پیش‌پرداخت روی سند</h2>
+        <p>از <strong>کارتابل</strong> پروندهٔ چکی را باز کنید → <strong>پیش‌پرداخت این سند</strong>. یا شناسهٔ پرونده را اینجا بزنید:</p>
         <form method="get" class="filters">
-            <label>شناسهٔ پرونده (از کارتابل روی سطر کلیک کنید؛ در آدرس مرورگر <code>Detail/123</code> عدد ۱۲۳ است)<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
-            <button class="button primary" type="submit">پیش‌پرداخت این سند</button>
+            <label>شناسهٔ پرونده (در آدرس مرورگر <code>Detail/123</code> عدد ۱۲۳ است)<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
+            <button class="button primary" type="submit">باز کردن پیش‌پرداخت این سند</button>
         </form>
     </section>
 }
@@ -113,23 +100,6 @@
         }
     </section>
 }
-@if (Model.ShowInvoiceForm && Model.Invoice is { } linkInv && Model.Proformas.Count > 0)
-{
-    <section class="card">
-        <h2>برگهٔ پیش‌فاکتور قبلی دارید؟ (نیازی به تایپ شماره نیست)</h2>
-        <p>این <strong>جای</strong> دکمهٔ «ثبت و چاپ» نیست. فقط اگر <strong>قبل از سند</strong> برای همین فروشنده پیش‌پرداخت گرفته‌اید، یکی را بزنید تا به این سند بچسبد؛ وگرنه همان بالا ثبت و چاپ کنید.</p>
-        <div class="actions">
-            @foreach (var p in Model.Proformas)
-            {
-                <form method="post" asp-page-handler="Link">
-                    <input type="hidden" name="invoice" value="@linkInv.Summary.Id">
-                    <input type="hidden" name="number" value="@p.Number">
-                    <button class="button" type="submit">اتصال برگه @p.Number · @Persian.Money(p.Amount) ریال</button>
-                </form>
-            }
-        </div>
-    </section>
-}
 @if (Model.Payment is null)
 {
     @if (Model.Notices.Count > 0)
@@ -157,7 +127,7 @@
     </section>
     @if (Model.Proformas.Count > 0)
     {
-        <section class="card" id="open-prepayments"><h2>پیش‌پرداخت‌های منتظر اتصال به سند</h2>
+        <section class="card" id="open-prepayments"><h2>پیش‌پرداخت‌های بدون پرونده (چاپ مجدد)</h2>
             <div class="table-wrap"><table><thead><tr><th>شماره</th><th>فروشنده</th><th>مبلغ</th><th>اقدام</th></tr></thead><tbody>
             @foreach (var p in Model.Proformas)
             {

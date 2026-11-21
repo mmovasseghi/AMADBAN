@@ -46,13 +46,8 @@ public sealed class CreditModel(Store store) : PageModel
         {
             Invoice = await store.DetailAsync(invoice);
             Payment = await store.ReadPrepaymentAsync(invoice, true);
-            if (Payment is null && Invoice is not null)
-            {
-                if (await store.SupplierByNameAsync(Invoice.Summary.Vendor) is { } supplier)
-                    Accounts = await store.SupplierAccountsAsync(supplier.Id);
-                var open = await store.OpenProformasAsync();
-                Proformas = open.Where(p => string.Equals(p.Vendor, Invoice.Summary.Vendor, StringComparison.OrdinalIgnoreCase)).ToList();
-            }
+            if (Payment is null && Invoice is not null && await store.SupplierByNameAsync(Invoice.Summary.Vendor) is { } supplier)
+                Accounts = await store.SupplierAccountsAsync(supplier.Id);
         }
         else if (number > 0)
         {
@@ -125,15 +120,6 @@ public sealed class CreditModel(Store store) : PageModel
         return RedirectToPage(new { invoice, number });
     }
 
-    public async Task<IActionResult> OnPostLinkAsync(long number, long invoice)
-    {
-        if (!CanPrepay) return Forbid();
-        var linkResult = await store.LinkProformaAsync(number, invoice, Actor);
-        Message = linkResult;
-        if (linkResult == "پیش‌پرداخت به سند متصل شد.")
-            return RedirectToPage("/PrintPrepayment", new { number });
-        return RedirectToPage(new { invoice });
-    }
 
     private static long? ParseAmount(string? amount) =>
         long.TryParse(Persian.Latin(amount).Replace(",", "").Replace("٬", ""), out var value) &&

@@ -16,10 +16,6 @@
             {
                 <a class="button primary" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت این سند</a>
             }
-            else if (row.Document is null)
-            {
-                <a class="button" asp-page="/Credit">پیش‌پرداخت (پیش‌فاکتور)</a>
-            }
         }
         @if (row.Document is not null && Model.Entry.Meeting)
         {

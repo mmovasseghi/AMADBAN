@@ -1,47 +1,150 @@
 @{
     var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    string icon, eyebrow;
+    if (User.IsInRole("warehouse") && !User.IsInRole("chief")) { icon = "bag"; eyebrow = "انباردار"; }
+    else if (User.IsInRole("kardex") && !User.IsInRole("chief")) { icon = "notebook"; eyebrow = "کارتکس"; }
+    else if (User.IsInRole("agent") && !User.IsInRole("chief")) { icon = "file-text"; eyebrow = "مأمور خرید"; }
+    else { icon = "cube"; eyebrow = "رئیس آماد"; }
 }
 <section class="easy-guide card" aria-label="راهنمای کار">
-    <h2>امروز چه کار کنم؟</h2>
-    @if (User.IsInRole("warehouse"))
-    {
-        <ol class="easy-steps">
-            <li><strong>فاکتور آماده انبار</strong> — از <a asp-page="/Index" asp-route-Status="document">کارتابل</a> پرونده‌ای که «سند دارد» را باز کنید.</li>
-            <li><strong>افزودن به موجودی</strong> — داخل پرونده دکمهٔ سبز <strong>«ثبت ورود همه اقلام فاکتور»</strong> را بزنید (کد کالا معمولاً خودش پر می‌شود).</li>
-            <li><strong>دادن کالا به بخش</strong> — از منو <a asp-page="/Dispatch">«ارسال کالا به بخش»</a> حواله بسازید.</li>
-            <li><strong>دیدن مانده</strong> — از <a asp-page="/Stock">«موجودی انبار»</a> نام کالا را جست‌وجو کنید.</li>
-        </ol>
-    }
-    else if (User.IsInRole("agent") && !User.IsInRole("chief"))
-    {
-        <ol class="easy-steps">
-            <li><strong>ثبت فاکتور جدید</strong> — <a asp-page="/Invoices/New">اینجا بزنید</a>؛ شماره، تاریخ و فروشنده را مثل برگه بنویسید.</li>
-            <li>اگر جنس به انبار می‌رود، تیک <strong>«ورود به انبار»</strong> را بزنید.</li>
-            <li><strong>پیگیری</strong> — همان <a asp-page="/Index">کارتابل</a>; روی هر سطر کلیک کنید تا وضعیت را ببینید.</li>
-        </ol>
-    }
-    else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
-    {
-        <ol class="easy-steps">
-            <li><strong>ثبت کارتکس</strong> — منوی <a asp-page="/KardexQueue">«ثبت سریع کارتکس»</a>؛ شماره پرونده را وارد کنید و ثبت کنید.</li>
-            <li>اگر پرونده در لیست نبود، از <a asp-page="/Index">کارتابل</a> آن را پیدا کنید و باز کنید.</li>
-        </ol>
-    }
-    else if (User.IsInRole("chief"))
-    {
-        <ol class="easy-steps">
-            <li><strong>کارهای معطل</strong> — کارت‌های رنگی بالای همین صفحه (کارتکس، پرداخت، برگشتی).</li>
-            <li><strong>فاکتور</strong> — <a asp-page="/Invoices/New">ثبت</a> یا از کارتابل باز کنید؛ داخل پرونده مراحل به ترتیب نشان داده می‌شود.</li>
-            <li><strong>انبار و بخش‌ها</strong> — <a asp-page="/Departments">بخش‌ها</a>، <a asp-page="/Stock">موجودی</a>، <a asp-page="/Dispatch">ارسال به بخش</a>.</li>
-            <li>گزارش‌ها و تنظیمات در منوی پایین: <strong>«گزارش‌ها و کارهای دیگر»</strong>.</li>
-        </ol>
-    }
-    else
-    {
-        <p>از <a asp-page="/Index">کارتابل</a> پروندهٔ خود را پیدا کنید و روی آن کلیک کنید.</p>
-    }
+    <header class="easy-guide-head">
+        <span class="easy-guide-icon" aria-hidden="true"><img src="/icon3d/@(icon).webp" width="56" height="56" alt=""></span>
+        <div>
+            <p class="eyebrow">@eyebrow · @Persian.Date(Persian.Today)</p>
+            <h2>امروز چه کار کنم؟</h2>
+            <p class="easy-guide-lead">فقط از <strong>بالا به پایین</strong> بروید؛ هر قدم را که تمام شد، بروید سراغ بعدی.</p>
+        </div>
+    </header>
+    <ol class="easy-step-grid">
+        @if (User.IsInRole("warehouse") && !User.IsInRole("chief"))
+        {
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۱</span>
+                <div class="easy-step-body">
+                    <h3>فاکتور آمادهٔ انبار را باز کنید</h3>
+                    <p>در کارتابل، پرونده‌ای که سند دارد را پیدا کنید و روی آن کلیک کنید.</p>
+                    <a class="button primary" asp-page="/Index" asp-route-Status="document">رفتن به کارتابل</a>
+                </div>
+            </li>
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۲</span>
+                <div class="easy-step-body">
+                    <h3>اقلام را به موجودی اضافه کنید</h3>
+                    <p>داخل پرونده، دکمهٔ سبز <strong>ثبت ورود همه اقلام فاکتور</strong> را بزنید. کد کالا اغلب خودش پر است.</p>
+                </div>
+            </li>
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۳</span>
+                <div class="easy-step-body">
+                    <h3>کالا را به بخش بدهید</h3>
+                    <p>بخش و شخص را انتخاب کنید، کالا و تعداد را بنویسید، چاپ برگه.</p>
+                    <a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a>
+                </div>
+            </li>
+            <li class="easy-step-card easy-step-card-muted">
+                <span class="easy-step-num" aria-hidden="true">۴</span>
+                <div class="easy-step-body">
+                    <h3>ماندهٔ انبار را ببینید</h3>
+                    <p>نام کالا را جست‌وجو کنید.</p>
+                    <a class="button" asp-page="/Stock">موجودی انبار</a>
+                </div>
+            </li>
+        }
+        else if (User.IsInRole("agent") && !User.IsInRole("chief"))
+        {
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۱</span>
+                <div class="easy-step-body">
+                    <h3>فاکتور جدید ثبت کنید</h3>
+                    <p>شماره، تاریخ و نام فروشنده را عین برگه بنویسید.</p>
+                    <a class="button primary" asp-page="/Invoices/New">ثبت فاکتور</a>
+                </div>
+            </li>
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۲</span>
+                <div class="easy-step-body">
+                    <h3>اگر کالا به انبار می‌رود</h3>
+                    <p>هنگام ثبت، تیک <strong>ورود به انبار</strong> را بزنید.</p>
+                </div>
+            </li>
+            <li class="easy-step-card easy-step-card-muted">
+                <span class="easy-step-num" aria-hidden="true">۳</span>
+                <div class="easy-step-body">
+                    <h3>پیگیری پرونده</h3>
+                    <p>در کارتابل روی هر سطر کلیک کنید تا ببینید چه کار مانده است.</p>
+                    <a class="button" asp-page="/Index">صفحهٔ اصلی</a>
+                </div>
+            </li>
+        }
+        else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
+        {
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۱</span>
+                <div class="easy-step-body">
+                    <h3>شمارهٔ کارتکس را ثبت کنید</h3>
+                    <p>بعد از سامانهٔ فراجا، همان شماره را در جدول بنویسید و دکمهٔ سبز را بزنید.</p>
+                    <a class="button primary" asp-page="/KardexQueue">ثبت کارتکس</a>
+                </div>
+            </li>
+            <li class="easy-step-card easy-step-card-muted">
+                <span class="easy-step-num" aria-hidden="true">۲</span>
+                <div class="easy-step-body">
+                    <h3>پرونده را پیدا کنید</h3>
+                    <p>اگر در لیست نبود، از صفحهٔ اصلی جست‌وجو کنید.</p>
+                    <a class="button" asp-page="/Index">صفحهٔ اصلی</a>
+                </div>
+            </li>
+        }
+        else if (User.IsInRole("chief"))
+        {
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۱</span>
+                <div class="easy-step-body">
+                    <h3>کارهای معطل امروز</h3>
+                    <p>کارت‌های رنگی همین پایین صفحه — کارتکس، پرداخت، برگشتی.</p>
+                </div>
+            </li>
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۲</span>
+                <div class="easy-step-body">
+                    <h3>فاکتور</h3>
+                    <p>ثبت جدید یا باز کردن از کارتابل؛ داخل پرونده «قدم بعدی» را ببینید.</p>
+                    <a class="button primary" asp-page="/Invoices/New">ثبت فاکتور</a>
+                </div>
+            </li>
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۳</span>
+                <div class="easy-step-body">
+                    <h3>انبار و بخش‌ها</h3>
+                    <div class="easy-step-links">
+                        <a class="button" asp-page="/Departments">بخش‌ها</a>
+                        <a class="button" asp-page="/Stock">موجودی</a>
+                        <a class="button" asp-page="/Dispatch">ارسال به بخش</a>
+                    </div>
+                </div>
+            </li>
+            <li class="easy-step-card easy-step-card-muted">
+                <span class="easy-step-num" aria-hidden="true">۴</span>
+                <div class="easy-step-body">
+                    <h3>گزارش و تنظیمات</h3>
+                    <p>از منوی کنار: <strong>گزارش‌ها و کارهای دیگر</strong></p>
+                </div>
+            </li>
+        }
+        else
+        {
+            <li class="easy-step-card">
+                <span class="easy-step-num" aria-hidden="true">۱</span>
+                <div class="easy-step-body">
+                    <h3>پروندهٔ خود را باز کنید</h3>
+                    <p>در صفحهٔ اصلی روی سطر کلیک کنید.</p>
+                    <a class="button primary" asp-page="/Index">صفحهٔ اصلی</a>
+                </div>
+            </li>
+        }
+    </ol>
     @if (page != "/Index")
     {
-        <p class="easy-guide-foot"><a asp-page="/Index">بازگشت به صفحهٔ اصلی (کارتابل)</a></p>
+        <p class="easy-guide-foot"><a asp-page="/Index">بازگشت به صفحهٔ اصلی</a></p>
     }
 </section>

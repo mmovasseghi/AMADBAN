@@ -1,4 +1,4 @@
-@model (IReadOnlyList<Amadban.Data.DepartmentRoster> Roster, int DepartmentCount, bool Compact)
+@model Amadban.Pages.DepartmentSetupNoticeModel
 @{
     var missing = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
 }

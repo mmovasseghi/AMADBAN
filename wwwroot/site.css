@@ -196,7 +196,7 @@ html.simple-ui input,html.simple-ui select{min-height:52px;font-size:17px;paddin
 html.simple-ui .button,html.simple-ui .primary{min-height:52px;font-size:16px;padding:10px 20px}
 html.simple-ui .sidebar nav a{min-height:50px;font-size:15px;padding:8px 10px}
 html.simple-ui .tab{font-size:15px;min-height:42px;padding:8px 14px}
-html.simple-ui .tab[data-tab-extra]{display:none}
+html.simple-ui .tab.tab-extra{display:none}
 html.simple-ui .tabs-more-link{font-size:14px;color:#3d6860}
 html.simple-ui table{font-size:16px}html.simple-ui .table-wrap th{font-size:14px}
 html.simple-ui .checks label{min-height:78px}html.simple-ui .checks label small{font-size:13px}
@@ -225,7 +225,7 @@ html.compact-ui body{font-size:15px;line-height:1.65}
 html.compact-ui h1{font-size:28px}html.compact-ui h2{font-size:18px}
 html.compact-ui input,html.compact-ui select{min-height:44px;font-size:15px}
 html.compact-ui .button,html.compact-ui .primary{min-height:43px;font-size:13px}
-html.compact-ui .tab[data-tab-extra]{display:inline-flex}
+html.compact-ui .tab.tab-extra{display:inline-flex}
 html.compact-ui .sidebar nav a{min-height:42px;font-size:13px}
 html.compact-ui .easy-guide h2{font-size:18px}
 html.compact-ui .easy-steps{font-size:14px}

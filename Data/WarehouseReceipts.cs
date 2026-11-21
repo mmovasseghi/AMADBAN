@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace Amadban.Data;
 
 public sealed record ReceiptMatch(int Position, string Title, string Unit, decimal Quantity, string? Code, string? Product, bool PrefixSuggested);

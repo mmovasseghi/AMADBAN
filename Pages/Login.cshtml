@@ -14,7 +14,11 @@
     <section class="login card">
         <div class="login-welcome"><img src="/icon3d/key.webp" width="64" height="64" alt=""><div><p class="eyebrow">خوش آمدید</p><h2>ورود به حساب کاربری</h2></div></div>
         <p>نام کاربری و رمزی را که رئیس آماد برای شما ثبت کرده وارد کنید.</p>
-        <form method="post">
+        @if (!string.IsNullOrEmpty(Model.Banner))
+        {
+            <p class="validation" role="alert">@Model.Banner</p>
+        }
+        <form method="post" asp-page="/Login">
             <div asp-validation-summary="All" class="validation"></div>
             <label>نام کاربری<input asp-for="Username" autocomplete="username" maxlength="100" required autofocus placeholder="نام کاربری شما"></label>
             <label>رمز ورود<input asp-for="Password" type="password" autocomplete="current-password" maxlength="256" required placeholder="رمز ورود شما"></label>

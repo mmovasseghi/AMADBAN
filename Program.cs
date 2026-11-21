@@ -32,7 +32,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.AccessDeniedPath = "/Denied";
-        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SameSite = SameSiteMode.Lax;
         options.Events.OnValidatePrincipal = async context =>
         {
             var idText = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -46,9 +46,29 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.Name = "Amadban.Antiforgery";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
 builder.Services.AddRateLimiter(options =>
 {
-    options.RejectionStatusCode = 429;
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, _) =>
+    {
+        var http = context.HttpContext;
+        if (HttpMethods.IsPost(http.Request.Method) &&
+            http.Request.Path.StartsWithSegments("/Login", StringComparison.OrdinalIgnoreCase))
+        {
+            http.Response.Clear();
+            http.Response.Redirect("/Login?busy=1");
+            return;
+        }
+        http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        http.Response.ContentType = "text/plain; charset=utf-8";
+        await http.Response.WriteAsync("تعداد درخواست بیش از حد مجاز است؛ چند لحظه بعد دوباره تلاش کنید.");
+    };
     options.AddPolicy("login", context => !HttpMethods.IsPost(context.Request.Method)
         ? RateLimitPartition.GetNoLimiter("login-page")
         : RateLimitPartition.GetFixedWindowLimiter(
@@ -89,6 +109,17 @@ app.UseRouting();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    await next();
+    if (context.Response.HasStarted) return;
+    if (context.Response.StatusCode != StatusCodes.Status400BadRequest) return;
+    if (!HttpMethods.IsPost(context.Request.Method)) return;
+    if (!context.Request.Path.StartsWithSegments("/Login", StringComparison.OrdinalIgnoreCase)) return;
+    if (context.Response.ContentLength is > 0) return;
+    context.Response.Clear();
+    context.Response.Redirect("/Login?stale=1");
+});
 app.MapRazorPages();
 await app.Services.GetRequiredService<Store>().InitializeAsync(
     app.Environment.ContentRootPath, builder.Configuration["AMADBAN_ADMIN_PASSWORD"]);

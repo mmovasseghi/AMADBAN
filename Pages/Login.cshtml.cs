@@ -15,6 +15,15 @@ public sealed class LoginModel(Store store) : PageModel
 {
     [BindProperty] public string Username { get; set; } = "";
     [BindProperty] public string Password { get; set; } = "";
+    public string? Banner { get; private set; }
+
+    public void OnGet()
+    {
+        if (Request.Query.ContainsKey("stale"))
+            Banner = "نشست فرم منقضی شده یا کوکی امنیتی مرورگر ارسال نشد. صفحه را یک‌بار تازه (F5) کنید و دوباره وارد شوید.";
+        else if (Request.Query.ContainsKey("busy"))
+            Banner = "تعداد تلاش ورود بیش از حد بود؛ حدود یک دقیقه صبر کنید و دوباره تلاش کنید.";
+    }
 
     public async Task<IActionResult> OnPostAsync()
     {

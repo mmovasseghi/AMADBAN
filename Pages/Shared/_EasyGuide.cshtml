@@ -4,55 +4,48 @@
     var steps = new List<(string Bold, string Text, string? Page, string? Link)>();
     if (User.IsInRole("warehouse") && !User.IsInRole("chief"))
     {
-        title = "امروز چه کار کنم؟"; tag = "انباردار";
+        title = "راهنمای کوتاه"; tag = "انباردار";
         steps.Add(("پرونده با سند", "کارتابل → باز کردن پرونده", "/Index", "کارتابل"));
         steps.Add(("ورود موجودی", "در پرونده: ثبت ورود اقلام فاکتور", null, null));
         steps.Add(("تحویل به بخش", "ارسال کالا به بخش", "/Dispatch", "حواله"));
     }
     else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
     {
-        title = "امروز چه کار کنم؟"; tag = "کارتکس";
+        title = "راهنمای کوتاه"; tag = "کارتکس";
         steps.Add(("ثبت در فراجا", "بعد همان شماره را اینجا بنویسید", "/KardexQueue", "ثبت کارتکس"));
         steps.Add(("پیدا کردن پرونده", "اگر در لیست نبود: صفحهٔ اصلی", "/Index", "صفحهٔ اصلی"));
     }
     else if (User.IsInRole("agent") && !User.IsInRole("chief"))
     {
-        title = "امروز چه کار کنم؟"; tag = "مأمور خرید";
+        title = "راهنمای کوتاه"; tag = "مأمور خرید";
         steps.Add(("ثبت فاکتور", "شماره، تاریخ، فروشنده — تیک انبار در صورت نیاز", "/Invoices/New", "ثبت فاکتور"));
         steps.Add(("پیگیری", "روی سطر پرونده در کارتابل کلیک کنید", "/Index", "کارتابل"));
     }
     else if (User.IsInRole("chief"))
     {
-        title = "امروز چه کار کنم؟"; tag = "رئیس آماد";
+        title = "راهنمای کوتاه"; tag = "رئیس آماد";
         steps.Add(("کارهای معطل", "کارت‌های رنگی پایین همین صفحه", null, null));
         steps.Add(("فاکتور و انبار", "ثبت یا باز کردن پرونده؛ قدم بعدی داخل پرونده", "/Invoices/New", "ثبت فاکتور"));
         steps.Add(("گزارش و تنظیم", "منوی «گزارش‌ها و کارهای دیگر»", null, null));
     }
     else
     {
-        title = "امروز چه کار کنم؟"; tag = "کاربر";
+        title = "راهنمای کوتاه"; tag = "کاربر";
         steps.Add(("پرونده", "صفحهٔ اصلی → کلیک روی سطر", "/Index", "صفحهٔ اصلی"));
     }
 }
-<details class="easy-hint card" open>
-    <summary class="easy-hint-summary">
-        <span class="easy-hint-title">@title</span>
-        <span class="easy-hint-tag">@tag</span>
-    </summary>
-    <ol class="easy-hint-steps">
+<details class="role-guide">
+    <summary><span>@title</span><small>@tag</small></summary>
+    <ol>
         @foreach (var (bold, text, linkPage, linkText) in steps)
         {
             <li>
                 <strong>@bold</strong> — @text
                 @if (linkPage is not null)
                 {
-                    <a class="easy-hint-link" asp-page="@linkPage">@linkText</a>
+                    <a asp-page="@linkPage">@linkText</a>
                 }
             </li>
         }
     </ol>
-    @if (page != "/Index")
-    {
-        <p class="easy-hint-foot"><a asp-page="/Index">صفحهٔ اصلی</a></p>
-    }
 </details>

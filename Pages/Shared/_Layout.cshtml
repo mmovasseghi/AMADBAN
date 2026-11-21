@@ -8,7 +8,6 @@
     <link rel="icon" href="/amadban-mark.svg" type="image/svg+xml">
     <title>@ViewData["Title"] · آمادبان</title>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true">
-    <script>document.documentElement.classList.add('simple-ui');</script>
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -81,10 +80,7 @@
                 <div class="toolbar-actions">
                     @if (User.IsInRole("chief")) { <a class="toolbar-notify" asp-page="/Activity" aria-label="اطلاعیه‌های آماد"><img src="/icon3d/megaphone.webp" width="31" height="31" alt=""><span>اطلاعیه‌ها</span><b data-notification-badge hidden="@(unreadActivity==0)">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</b></a> }
                     <span class="top-user"><img src="/icon3d/boy.webp" width="30" height="30" alt=""> @User.Identity.Name</span>
-                    @if (User.IsInRole("chief"))
-                    {
-                        <button class="button easy-toggle compact-only" type="button" data-compact-toggle aria-pressed="false">نمایش فشرده</button>
-                    }
+                    <button class="button easy-toggle quiet" type="button" data-simple-ui-toggle aria-pressed="false">متن بزرگ‌تر</button>
                     <form method="post" asp-page="/Logout"><button class="button quiet" type="submit">خروج</button></form></div>
             </header>
             <main id="content">

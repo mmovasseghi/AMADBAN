@@ -1,14 +1,5 @@
 @model IReadOnlyList<string>
 @if (Model.Count > 0)
 {
-    <details class="easy-hint easy-next" open>
-        <summary class="easy-hint-summary">
-            <span class="easy-hint-title">قدم بعدی روی این پرونده</span>
-        </summary>
-        <p class="easy-next-now">@Model[0]</p>
-        @if (Model.Count > 1)
-        {
-            <p class="easy-next-more">+ @(Model.Count - 1) کار دیگر بعد از این</p>
-        }
-    </details>
+    <p class="notice work-next" role="status"><strong>قدم بعدی:</strong> @Model[0]@if (Model.Count > 1) { <small> · @(Model.Count - 1) کار دیگر بعد از این</small> }</p>
 }

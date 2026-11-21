@@ -1,20 +1,19 @@
 (() => {
     'use strict';
-    const compactKey = 'amadban-compact';
-    const compactOn = () => localStorage.getItem(compactKey) === '1';
-    const syncCompactToggle = () => {
-        document.documentElement.classList.add('simple-ui');
-        document.documentElement.classList.toggle('compact-ui', compactOn());
-        const btn = document.querySelector('[data-compact-toggle]');
+    const simpleKey = 'amadban-simple-ui';
+    const simpleOn = () => localStorage.getItem(simpleKey) === '1';
+    const syncSimpleToggle = () => {
+        document.documentElement.classList.toggle('simple-ui', simpleOn());
+        const btn = document.querySelector('[data-simple-ui-toggle]');
         if (!btn) return;
-        const on = compactOn();
+        const on = simpleOn();
         btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        btn.textContent = on ? 'نمایش فشرده: روشن' : 'نمایش فشرده: خاموش';
+        btn.textContent = on ? 'متن بزرگ‌تر: روشن' : 'متن بزرگ‌تر';
     };
-    syncCompactToggle();
-    document.querySelector('[data-compact-toggle]')?.addEventListener('click', () => {
-        localStorage.setItem(compactKey, compactOn() ? '0' : '1');
-        syncCompactToggle();
+    syncSimpleToggle();
+    document.querySelector('[data-simple-ui-toggle]')?.addEventListener('click', () => {
+        localStorage.setItem(simpleKey, simpleOn() ? '0' : '1');
+        syncSimpleToggle();
     });
 
     const printButton = document.querySelector('[data-print]');

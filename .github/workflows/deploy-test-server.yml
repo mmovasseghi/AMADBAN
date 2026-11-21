@@ -1,0 +1,27 @@
+name: Deploy test server
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.DEPLOY_HOST != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          script: |
+            export AMADBAN_BRANCH=main
+            if [[ -x /opt/amadban-cursor-test/src/scripts/update-test-server.sh ]]; then
+              bash /opt/amadban-cursor-test/src/scripts/update-test-server.sh
+            else
+              curl -fsSL "https://raw.githubusercontent.com/mmovasseghi/AMADBAN/main/scripts/update-test-server.sh" -o /tmp/amadban-deploy.sh
+              AMADBAN_DEPLOY_ROOT=/opt/amadban-cursor-test bash /tmp/amadban-deploy.sh
+            fi

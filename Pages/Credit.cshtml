@@ -99,11 +99,10 @@
                     <label>شماره شبا (همان مقدار چاپ)<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required inputmode="text" autocomplete="off" placeholder="IR…"></label>
                 </div>
             </div>
-            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>اطلاعات تکمیلی (همه اختیاری)</h2><p>اگر مجوز یا مالیات جدا ندارید، این بخش را خالی بگذارید.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۳</span><div><h2>مجوز خرید (اختیاری)</h2><p>اکثر پیش‌پرداخت‌ها بدون مجوز ثبت می‌شوند. فقط اگر شماره مجوز طرح و برنامه دارید اینجا بزنید؛ وگرنه خالی بگذارید.</p></div></div>
                 <div class="fields">
-                    <label>شماره مجوز (اختیاری)<input name="permit" value="@Model.Pending?.Permit" maxlength="80" placeholder="در صورت نداشتن خالی بگذارید"></label>
-                    <label>تاریخ مجوز (اختیاری)<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10" placeholder="۱۴۰۵/۰۱/۰۱"></label>
-                    <label>مالیات جداگانه (اختیاری)<input name="tax" value="@Model.Pending?.Tax" inputmode="numeric"></label>
+                    <label>شماره مجوز<input name="permit" value="@Model.Pending?.Permit" maxlength="80" placeholder="در صورت نداشتن خالی"></label>
+                    <label>تاریخ مجوز<input name="permitDate" value="@Model.Pending?.PermitDate" dir="ltr" maxlength="10" placeholder="۱۴۰۵/۰۱/۰۱"></label>
                 </div>
             </div>
             <div class="actions between"><p>پس از ثبت، برگه چاپ می‌شود و مبلغ از مانده قابل استفاده این کد رزرو خواهد شد.</p><button class="button primary" type="submit">ثبت و رزرو اعتبار</button></div>

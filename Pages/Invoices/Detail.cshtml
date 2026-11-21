@@ -36,13 +36,12 @@
 {
     <section class="card"><h2>بخش درخواست‌کننده و کارشناس امضاکننده</h2>
         <p>کارشناس این سند از بخش درخواست‌کننده انتخاب می‌شود. تحویل‌گیرنده کالا از انبار جداگانه در حواله خروج ثبت می‌شود.</p>
-        <form method="post" asp-page-handler="RequestSigner" class="filters">
-            <label>بخش درخواست‌کننده<select name="department"><option value="0">انتخاب نشده</option>
+        <form method="post" asp-page-handler="RequestSigner" class="filters" id="request-signer-form" data-invoice-id="@row.Id"
+              data-selected-department="@Model.RequestSigner.DepartmentId" data-selected-expert="@Model.RequestSigner.ExpertId">
+            <label>بخش درخواست‌کننده<select name="department" data-request-department><option value="0">انتخاب نشده</option>
                 @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(Model.RequestSigner.DepartmentId==department.Id)">@department.Name</option> }
             </select></label>
-            <label>کارشناس / رئیس قسمت<select name="expert"><option value="0">انتخاب نشده</option>
-                @foreach (var person in Model.People.Where(p=>p.DepartmentId is not null)) { <option value="@person.Id" selected="@(Model.RequestSigner.ExpertId==person.Id)">@person.Department · @person.Rank @person.Name</option> }
-            </select></label><button type="submit" class="button">ثبت نام روی سند</button>
+            <label>کارشناس / رئیس قسمت<select name="expert" data-request-expert required><option value="0">ابتدا بخش را انتخاب کنید</option></select></label><button type="submit" class="button">ثبت نام روی سند</button>
         </form>
         @if (Model.Entry.Meeting) { <form method="post" asp-page-handler="MeetingExtra" class="filters">
             <label>امضاکننده اضافه صورت‌جلسه<select name="person"><option value="0">بدون نفر اضافه</option>

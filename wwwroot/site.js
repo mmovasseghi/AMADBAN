@@ -28,6 +28,7 @@
         const available = 165 * 96 / 25.4;
         pages.forEach(page => {
             const sheet = page.querySelector('.document-sheet');
+            if (!sheet) return;
             sheet.style.removeProperty('--document-print-scale');
             const height = sheet.scrollHeight;
             sheet.style.setProperty('--document-print-scale', String(Math.min(1, available / Math.max(height, 1))));
@@ -110,6 +111,8 @@
         const form = document.getElementById('dispatch-form');
         const department = form?.querySelector('[name="department"]');
         const recipient = form?.querySelector('[data-dispatch-recipient]');
+        if (!template || !add || !list || !form || !department || !recipient) { /* incomplete dispatch markup */ }
+        else {
         let timer;
         let recipientRequest = 0;
         const reindex = () => Array.from(dispatch.rows).forEach((row, index) =>
@@ -201,8 +204,66 @@
                 recipient.disabled = true;
             }
         };
-        department?.addEventListener('change', loadRecipients);
+        department.addEventListener('change', loadRecipients);
         loadRecipients();
+        }
+    }
+
+    const signerForm = document.getElementById('request-signer-form');
+    if (signerForm) {
+        const invoiceId = signerForm.dataset.invoiceId;
+        const department = signerForm.querySelector('[data-request-department]');
+        const expert = signerForm.querySelector('[data-request-expert]');
+        const selectedDepartment = signerForm.dataset.selectedDepartment || '';
+        const selectedExpert = signerForm.dataset.selectedExpert || '';
+        let expertRequest = 0;
+        const loadExperts = async () => {
+            if (!department || !expert || !invoiceId) return;
+            const departmentId = department.value;
+            expert.textContent = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '0';
+            if (!departmentId || departmentId === '0') {
+                placeholder.textContent = 'ابتدا بخش را انتخاب کنید';
+                expert.appendChild(placeholder);
+                expert.disabled = true;
+                return;
+            }
+            placeholder.textContent = 'در حال بارگذاری…';
+            expert.appendChild(placeholder);
+            expert.disabled = true;
+            const requestId = ++expertRequest;
+            try {
+                const response = await fetch(`/Invoices/Detail/${invoiceId}?handler=Experts&department=${encodeURIComponent(departmentId)}`, { cache: 'no-store' });
+                if (!response.ok || requestId !== expertRequest) return;
+                const people = await response.json();
+                if (requestId !== expertRequest) return;
+                expert.textContent = '';
+                const pick = document.createElement('option');
+                pick.value = '0';
+                pick.textContent = people.length ? 'کارشناس را انتخاب کنید' : 'برای این بخش شخصی ثبت نشده است';
+                expert.appendChild(pick);
+                people.forEach(person => {
+                    const option = document.createElement('option');
+                    option.value = String(person.id);
+                    option.textContent = person.label;
+                    if (selectedExpert && String(person.id) === selectedExpert) option.selected = true;
+                    expert.appendChild(option);
+                });
+                expert.disabled = people.length === 0;
+            } catch (_) {
+                if (requestId !== expertRequest) return;
+                expert.textContent = '';
+                const failed = document.createElement('option');
+                failed.value = '0';
+                failed.textContent = 'بارگذاری کارشناس ممکن نشد';
+                expert.appendChild(failed);
+                expert.disabled = true;
+            }
+        };
+        department?.addEventListener('change', loadExperts);
+        if (selectedDepartment && selectedDepartment !== '0') department.value = selectedDepartment;
+        loadExperts();
     }
 
     const receiptInputs = document.querySelectorAll('[data-receipt-product]');

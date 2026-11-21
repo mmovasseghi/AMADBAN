@@ -15,7 +15,7 @@ public sealed partial class Store
             SELECT id,code,name,unit,stock,minimum FROM products
             WHERE ($1='' OR strpos(lower(name || ' ' || code),lower($1))>0) AND (NOT $2 OR stock<=minimum)
             ORDER BY name,id LIMIT 26 OFFSET $3
-            """, search, low, (page - 1) * 25);
+            """, search.Trim(), low, (page - 1) * 25);
         await using var r = await cmd.ExecuteReaderAsync();
         var result = new List<Product>();
         while (await r.ReadAsync()) result.Add(new(r.GetInt64(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetDecimal(4), r.GetDecimal(5)));

@@ -26,7 +26,7 @@ public sealed class OrganizationModel(Store store) : PageModel
     public async Task OnGetAsync()
     {
         Signers = await store.SignersAsync();
-        People = await store.PeopleAsync();
+        People = await store.MeetingPeopleAsync();
     }
 
     public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank)

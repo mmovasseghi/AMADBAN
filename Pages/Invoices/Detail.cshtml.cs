@@ -33,13 +33,28 @@ public sealed class DetailModel(Store store) : PageModel
     };
     [TempData] public string? Message { get; set; }
 
+    public async Task<IActionResult> OnGetExpertsAsync(long department)
+    {
+        if (department <= 0) return new JsonResult(Array.Empty<object>());
+        var people = await store.RecipientsByDepartmentAsync(department);
+        return new JsonResult(people.Select(p => new
+        {
+            id = p.Id,
+            label = $"{p.Department} · {p.Rank} {p.Name}".Trim(' ', '·')
+        }));
+    }
+
     public async Task<IActionResult> OnGetAsync(long id)
     {
         var entry = await store.DetailAsync(id);
         if (entry is null) return NotFound();
         Entry = entry;
         RequestSigner = await store.RequestSignerAsync(id);
-        if (HandlesFinance) { Departments = await store.DepartmentsAsync(); People = await store.PeopleAsync(); }
+        if (HandlesFinance)
+        {
+            Departments = await store.DepartmentsAsync();
+            if (entry.Meeting) People = await store.MeetingPeopleAsync();
+        }
         if (entry.Summary.Warehouse && CanReceive) ReceiptMatches = await store.ReceiptMatchesAsync(id);
         if (entry.Account && HandlesFinance && await store.SupplierByNameAsync(entry.Summary.Vendor) is { } supplier)
             SupplierAccounts = await store.SupplierAccountsAsync(supplier.Id);

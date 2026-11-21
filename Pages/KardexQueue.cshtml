@@ -2,8 +2,8 @@
 @model Amadban.Pages.KardexQueueModel
 @{ ViewData["Title"]="ثبت سریع کارتکس"; }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/notebook.webp" width="82" height="82" alt=""></span>
-<div><div class="eyebrow">سامانه کارتکس فراجا جداگانه است</div><h1>ثبت سریع کارتکس در آمادبان</h1>
-<p>بعد از ثبت در سامانه فراجا، همان شماره‌ای را که با خودکار روی سند نوشته‌اید همین‌جا وارد کنید. هر ردیف فقط یک ثبت می‌خواهد.</p></div></div></header>
+<div><h1>ثبت شمارهٔ کارتکس</h1>
+<p>بعد از سامانهٔ فراجا، همان شماره را در جدول پایین بنویسید و دکمهٔ سبز را بزنید.</p></div></div></header>
 @if(Model.Message is not null){<p class="notice" role="status">@Model.Message</p>}
 <section class="card"><h2>سندهای منتظر شماره کارتکس</h2>
 <div class="table-wrap"><table><thead><tr><th>سند</th><th>تاریخ فاکتور</th><th>مهلت</th><th>فروشنده و موضوع</th><th>شماره درج‌شده روی سند</th><th>ثبت</th></tr></thead><tbody>

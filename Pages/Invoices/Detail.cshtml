@@ -7,15 +7,20 @@
 }
 <header class="hero">
     <div class="hero-main"><span class="hero-icon"><img src="/icon3d/file-text.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">فاکتور @row.Number @(row.Document is long number ? $" · سند {number}" : "")</div><h1>@row.Subject</h1><p>@row.Vendor · @Persian.Date(row.Date)</p></div></div>
-    <div class="actions">
-        @if (row.Document is not null) { <a class="button primary" asp-page="Print" asp-route-id="@row.Id"><svg aria-hidden="true"><use href="/icons.svg#print"></use></svg> چاپ سند</a> }
-        @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }
-        @if (row.Kind == "credit" && row.Document is not null && Model.HandlesFinance)
-        {
-            <a class="button" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت</a>
-        }
-        @if (Model.HandlesFinance && Model.Editable) { <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a> }
-        <a class="button" asp-page="/Index">بازگشت</a>
+    <div class="actions hero-actions">
+        <a class="button" asp-page="/Index">بازگشت به صفحهٔ اصلی</a>
+        @if (row.Document is not null) { <a class="button primary" asp-page="Print" asp-route-id="@row.Id">چاپ سند</a> }
+        <details class="hero-more">
+            <summary>کارهای دیگر</summary>
+            <div class="actions">
+                @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }
+                @if (row.Kind == "credit" && row.Document is not null && Model.HandlesFinance)
+                {
+                    <a class="button" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت</a>
+                }
+                @if (Model.HandlesFinance && Model.Editable) { <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a> }
+            </div>
+        </details>
     </div>
 </header>
 <partial name="_EasyNextStep" model="missing" />

@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "موجودی انبار";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>موجودی و گردش انبار</h1><p>کالا را پیدا کنید، موجودی واقعی را ببینید و برای تحویل به بخش حواله بسازید. کالاهای مرجع (مثلاً «سیب») را یک‌بار اینجا تعریف کنید تا ورود فاکتورها با نام‌های مختلف همان ردیف را شارژ کند.</p></div></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>موجودی و گردش انبار</h1><p>ماندهٔ کالا را ببینید. <strong>افزودن موجودی</strong> از صفحهٔ فاکتور انجام می‌شود.</p></div></div><a class="button primary" asp-page="/Dispatch">ارسال کالا به بخش</a></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.Selected is { } product)
 {
@@ -17,15 +17,17 @@
             <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
             <button type="submit" class="button">ذخیره مشخصات</button>
         </form></details>
-        <form method="post" asp-page-handler="Move" class="filters">
-            <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
-            <label>نوع گردش<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>
-            <label>مقدار<input name="quantity" inputmode="decimal" required><small>برای افتتاحیه، صفر نیز مجاز است.</small></label>
-            <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
-            <label>بخش دریافت‌کننده<input name="department" maxlength="120"></label>
-            <label>شماره داخلی پرونده، فقط برای ثبت دستی ورود<input name="invoice" type="number" min="1"><small>ورود معمول فاکتور را از صفحه همان پرونده ثبت کنید.</small></label>
-            <button class="button primary" type="submit">ثبت گردش</button>
-        </form>
+        <details class="work-advanced">
+            <summary>ورود یا خروج دستی (کمتر نیاز می‌شود)</summary>
+            <form method="post" asp-page-handler="Move" class="filters">
+                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
+                <label>نوع<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>
+                <label>مقدار<input name="quantity" inputmode="decimal" required></label>
+                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+                <label>بخش<input name="department" maxlength="120"></label>
+                <button class="button primary" type="submit">ثبت</button>
+            </form>
+        </details>
         <details>
             <summary>ثبت شمارش واقعی و مغایرت انبارگردانی</summary>
             <p>موجودی فعلی @product.Stock.ToString("0.###") @product.Unit است. مقدار واقعی شمارش‌شده را وارد کنید؛ اختلاف در سابقه کالا ثبت می‌شود.</p>

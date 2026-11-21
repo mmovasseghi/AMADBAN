@@ -188,7 +188,6 @@ details{border:1px solid #e1ece5;border-radius:13px;padding:10px 13px;background
 .easy-toggle{min-height:42px;font-weight:700}
 .login-help{font-size:16px;line-height:1.8;color:#3d625c}
 
-html:not(.simple-ui) .easy-guide,html:not(.simple-ui) .easy-next{display:none}
 html.simple-ui{font-size:17px}
 html.simple-ui body{font-size:17px;line-height:1.85}
 html.simple-ui h1{font-size:32px}html.simple-ui h2{font-size:21px}
@@ -216,3 +215,18 @@ html.simple-ui details summary{font-size:16px}
 .receipt-help-short{display:none}
 html.simple-ui .receipt-help-short{display:block}
 html.simple-ui .receipt-help-long{display:none}
+.tabs-hint{margin:0 0 8px;font-size:16px;font-weight:700;color:#2a564c}
+.hero-more{border:1px solid #d4e8de;border-radius:12px;padding:6px 10px;background:#f7fbf9}
+.hero-more>summary{cursor:pointer;font-weight:700;color:#1a5c48}
+.work-advanced{margin-top:12px}
+.compact-only{font-size:13px}
+html.compact-ui{font-size:15px}
+html.compact-ui body{font-size:15px;line-height:1.65}
+html.compact-ui h1{font-size:28px}html.compact-ui h2{font-size:18px}
+html.compact-ui input,html.compact-ui select{min-height:44px;font-size:15px}
+html.compact-ui .button,html.compact-ui .primary{min-height:43px;font-size:13px}
+html.compact-ui .tab[data-tab-extra]{display:inline-flex}
+html.compact-ui .sidebar nav a{min-height:42px;font-size:13px}
+html.compact-ui .easy-guide h2{font-size:18px}
+html.compact-ui .easy-steps{font-size:14px}
+html.compact-ui .easy-next-action{font-size:18px}

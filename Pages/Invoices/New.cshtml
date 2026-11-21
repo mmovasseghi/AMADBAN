@@ -24,7 +24,7 @@
             @foreach (var c in Model.Codes) { <option value="@c.Id">@c.Code · @c.Title</option> }
         </select></label>
     </div></section>
-    <section class="form-step"><div class="step-head"><span>۲</span><div><h2>مدارک و مسیر کالا</h2><p>فقط گزینه‌هایی را فعال کنید که برای این فاکتور لازم‌اند. وضعیتشان بعداً در پرونده نشان داده می‌شود.</p></div></div>
+    <section class="form-step"><div class="step-head"><span>۲</span><div><h2>تیک‌های لازم</h2><p>فقط اگر واقعاً لازم است تیک بزنید؛ اگر مطمئن نیستید خالی بگذارید.</p></div></div>
     <div class="checks">
         <label><input asp-for="Warehouse" data-warehouse-flag><span><strong>ورود به انبار</strong><small>اگر جنس فیزیکی است و در انبار نگه می‌دارید، این تیک را بزنید</small></span></label>
         <label><input asp-for="Meeting" id="Meeting"><span><strong>صورت‌جلسه لازم است</strong><small>برای خدمت یا خرید بدون انبار به‌صورت خودکار لازم می‌شود</small></span></label>

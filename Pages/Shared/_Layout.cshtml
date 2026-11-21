@@ -8,14 +8,7 @@
     <link rel="icon" href="/amadban-mark.svg" type="image/svg+xml">
     <title>@ViewData["Title"] · آمادبان</title>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true">
-    <script>
-        (function () {
-            var key = 'amadban-simple';
-            var on = localStorage.getItem(key);
-            if (on === null) localStorage.setItem(key, '1');
-            if (localStorage.getItem(key) !== '0') document.documentElement.classList.add('simple-ui');
-        })();
-    </script>
+    <script>document.documentElement.classList.add('simple-ui');</script>
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -85,10 +78,21 @@
                 <div class="toolbar-actions">
                     @if (User.IsInRole("chief")) { <a class="toolbar-notify" asp-page="/Activity" aria-label="اطلاعیه‌های آماد"><img src="/icon3d/megaphone.webp" width="31" height="31" alt=""><span>اطلاعیه‌ها</span><b data-notification-badge hidden="@(unreadActivity==0)">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</b></a> }
                     <span class="top-user"><img src="/icon3d/boy.webp" width="30" height="30" alt=""> @User.Identity.Name</span>
-                    <button class="button easy-toggle" type="button" data-simple-toggle aria-pressed="true">حالت ساده: روشن</button>
+                    @if (User.IsInRole("chief"))
+                    {
+                        <button class="button easy-toggle compact-only" type="button" data-compact-toggle aria-pressed="false">نمایش فشرده</button>
+                    }
                     <form method="post" asp-page="/Logout"><button class="button quiet" type="submit">خروج</button></form></div>
             </header>
-            <main id="content">@RenderBody()</main>
+            <main id="content">
+                @{
+                    var contentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+                    var isPrint = contentPage.Contains("/Print", StringComparison.OrdinalIgnoreCase)
+                        || contentPage is "/PrintBank" or "/PrintForms" or "/PrintSettings" or "/BrandAsset";
+                }
+                @if (!isPrint && contentPage is not "/Invoices/Detail") { <partial name="_EasyContext" /> }
+                @RenderBody()
+            </main>
         </div>
     </div>
 }

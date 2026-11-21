@@ -11,13 +11,12 @@
 <header class="hero">
     <div class="hero-main"><span class="hero-icon"><img src="/icon3d/@(Model.Report ? "chart" : "file-text").webp" width="82" height="82" alt=""></span>
         <div><div class="eyebrow">آماد و پشتیبانی</div><h1>@ViewData["Title"]</h1>
-        <p>@(Model.Report ? "گزارش را با تاریخ، موضوع و وضعیت دلخواه ببینید." : "کارهای مهم امروز و مسیر هر پرونده را از اینجا دنبال کنید.")</p></div></div>
+        <p>@(Model.Report ? "تاریخ را بنویسید و دکمهٔ نمایش را بزنید." : "روی هر سطر کلیک کنید تا همان پرونده باز شود.")</p></div></div>
     @if (User.IsInRole("agent") || User.IsInRole("chief"))
     {
         <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
     }
 </header>
-<partial name="_EasyGuide" />
 @if (Model.Setup is { } setup && (setup.Departments == 0 || setup.Suppliers == 0 || setup.DepartmentsWithoutRecipients > 0))
 {
     <section class="card" aria-label="راه‌اندازی اولیه">
@@ -49,6 +48,7 @@
     </section>
 }
 <section class="card">
+    <p class="tabs-hint">برای دیدن پرونده‌ها یکی از دکمه‌های زیر را بزنید:</p>
     <div class="tabs" aria-label="وضعیت پرونده">
         @foreach (var (code, label, icon) in tabs)
         {

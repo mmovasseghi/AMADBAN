@@ -3,8 +3,7 @@
 @{
     ViewData["Title"] = "ارسال کالا به بخش";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>بخش مقصد و تحویل‌گیرنده از فهرست مشترک <strong>بخش‌ها و مسئولین</strong> انتخاب می‌شود (همان فهرستِ بخش درخواست‌کننده روی سند خرید). اقلام را وارد کنید و برگه تحویل را چاپ کنید.</p></div></div>
-    <div class="actions"><a class="button" asp-page="/Departments">بخش‌ها و مسئولین</a><a class="button" asp-page="/WarehouseReport">گزارش تحویل</a><a class="button" asp-page="/Stock">موجودی</a></div></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>بخش و تحویل‌گیرنده را انتخاب کنید؛ کالا و تعداد را بنویسید؛ دکمهٔ سبز پایین صفحه.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 @if (Model.WarehouseStaff.Count == 0)
 {

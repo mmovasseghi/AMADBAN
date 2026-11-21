@@ -6,28 +6,8 @@
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div>
     <div class="eyebrow">فهرست مشترک</div><h1>بخش‌ها و مسئولین بخش</h1>
-    <p>هر <strong>بخش بالینی</strong> (اورژانس، اتاق عمل، …) و <strong>اشخاص همان بخش</strong> یک‌بار اینجا ثبت می‌شوند. همان فهرست هم در <strong>سند خرید</strong> (بخش درخواست‌کننده و کارشناس امضا) و هم در <strong>حواله انبار</strong> (بخش مقصد و تحویل‌گیرنده کالا) به‌کار می‌رود.</p></div></div>
-    <div class="actions">
-        @if (User.IsInRole("agent") || User.IsInRole("chief")) { <a class="button" asp-page="/Index">کارتابل خرید</a> }
-        @if (User.IsInRole("warehouse") || User.IsInRole("chief")) { <a class="button" asp-page="/Dispatch">حواله به بخش</a> }
-    </div></header>
+    <p>نام بخش و نام مسئول را یک‌بار ثبت کنید؛ در فاکتور و انبار از لیست انتخاب می‌شوند.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
-<section class="card">
-    <h2>کاربرد این فهرست</h2>
-    <div class="alert-grid">
-        <div class="alert-tile">
-            <img src="/icon3d/file-text.webp" width="48" height="48" alt="">
-            <strong>سند خرید</strong>
-            <span>بخش درخواست‌کننده · کارشناس / رئیس قسمت روی پرونده و چاپ سند</span>
-        </div>
-        <div class="alert-tile">
-            <img src="/icon3d/folder.webp" width="48" height="48" alt="">
-            <strong>انبار</strong>
-            <span>بخش مقصد · شخص تحویل‌گیرنده کالا روی برگه خروج</span>
-        </div>
-    </div>
-    <p class="form-note">صفحه <a asp-page="/Organization">نشان و امضا</a> فقط برای نام‌های ثابت چاپ فراجا است؛ اشخاص بخش برای کار روزانه همین‌جا تعریف می‌شوند.</p>
-</section>
 @if (Model.Departments.Count == 0)
 {
     <p class="notice" role="status"><strong>هنوز بخشی ثبت نشده است.</strong> قبل از ثبت نام روی سند یا ثبت حواله انبار، حداقل یک بخش و یک مسئول برای آن بخش تعریف کنید.</p>

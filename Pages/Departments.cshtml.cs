@@ -34,6 +34,17 @@ public sealed class DepartmentsModel(Store store) : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostCorrectPersonAsync(long id, string? name, string? position, string? rank, long department)
+    {
+        name = name?.Trim() ?? "";
+        position = position?.Trim() ?? "";
+        rank = rank?.Trim() ?? "";
+        Message = id <= 0 || name.Length is < 2 or > 120 || position.Length > 120 || rank.Length > 80 || department < 1
+            ? "بخش، نام و سمت تحویل‌گیرنده را بررسی کنید."
+            : await store.CorrectPersonAsync(id, name, position, rank, department, Actor);
+        return RedirectToPage();
+    }
+
     private async Task LoadAsync()
     {
         Departments = await store.DepartmentsAsync();

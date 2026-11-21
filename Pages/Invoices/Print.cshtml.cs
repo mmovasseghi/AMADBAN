@@ -12,8 +12,11 @@ public sealed class PrintModel(Store store) : PageModel
     public int Rows => Template switch { "rows7" => 7, "rows9" => 9, "rows12" => 12, "rows20" => 20, "excel11" => 11, _ => 0 };
     public async Task<IActionResult> OnGetAsync(long id, string? template)
     {
+        var role = User.FindFirstValue(ClaimTypes.Role)!;
+        if (!InvoiceAccess.CanUseWorkflow(role)) return Forbid();
         var invoice = await store.DetailAsync(id);
         if (invoice?.Summary.Document is null) return NotFound();
+        if (!InvoiceAccess.CanViewDetail(role, invoice.Summary)) return Forbid();
         Entry = invoice;
         template ??= await store.PrintPreferenceAsync(long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!), "document");
         if (template is not null && Amadban.Pages.PrintSettingsModel.Documents.ContainsKey(template))

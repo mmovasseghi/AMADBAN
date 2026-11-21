@@ -21,7 +21,7 @@ public sealed class DetailModel(Store store) : PageModel
     public bool HandlesFinance => Role is "chief" or "agent";
     public bool CanIssue => Entry.Summary.Document is null && (Entry.Summary.Kind == "cash"
         ? Role == "agent" : Role is "agent" or "warehouse" or "chief");
-    public bool CanKardex => Entry.Summary.Warehouse && Role == "kardex";
+    public bool CanKardex => Entry.Summary.Warehouse && Role is "kardex" or "chief";
     public bool CanAttach => Role is "agent" or "chief" or "warehouse";
     public bool CanReceive => Role is "warehouse" or "chief";
     public bool Editable => Entry.Summary.Delivery is "open" or "returned";
@@ -48,6 +48,7 @@ public sealed class DetailModel(Store store) : PageModel
     {
         var entry = await store.DetailAsync(id);
         if (entry is null) return NotFound();
+        if (!InvoiceAccess.CanViewDetail(Role, entry.Summary)) return Forbid();
         Entry = entry;
         RequestSigner = await store.RequestSignerAsync(id);
         if (HandlesFinance)
@@ -64,13 +65,17 @@ public sealed class DetailModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostIssueAsync(long id)
     {
+        var entry = await store.DetailAsync(id);
+        if (entry is null) return NotFound();
+        Entry = entry;
+        if (!CanIssue) return Forbid();
         Message = await store.IssueDocumentAsync(id, Actor, Role) ? "سند صادر شد." : "صدور سند برای این پرونده ممکن نیست.";
         return RedirectToPage(new { id });
     }
 
     public async Task<IActionResult> OnPostKardexAsync(long id, string? number, string? date)
     {
-        if (Role != "kardex") return Forbid();
+        if (Role is not ("kardex" or "chief")) return Forbid();
         var parsed = Persian.ParseDate(date);
         number = Persian.Latin(number);
         if (parsed is null || number.Length is < 1 or > 80)
@@ -105,6 +110,9 @@ public sealed class DetailModel(Store store) : PageModel
 
     public async Task<IActionResult> OnGetAttachmentAsync(long id, long attachment, bool preview)
     {
+        if (!InvoiceAccess.CanUseWorkflow(Role)) return Forbid();
+        var entry = await store.DetailAsync(id);
+        if (entry is null || !InvoiceAccess.CanViewDetail(Role, entry.Summary)) return NotFound();
         var file = await store.ReadAttachmentAsync(id, attachment);
         if (file is not { } found) return NotFound();
         return preview ? File(found.Content, found.Type) : File(found.Content, found.Type, found.Name);

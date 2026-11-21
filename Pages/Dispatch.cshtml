@@ -6,6 +6,10 @@
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>بخش مقصد و تحویل‌گیرنده را انتخاب کنید، اقلام را وارد کنید و برگه تحویل را چاپ کنید. تعریف بخش‌ها از منوی <strong>بخش‌های بیمارستان</strong> انجام می‌شود.</p></div></div>
     <div class="actions"><a class="button" asp-page="/Departments">بخش‌های بیمارستان</a><a class="button" asp-page="/WarehouseReport">گزارش تحویل</a><a class="button" asp-page="/Stock">موجودی</a></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+@if (Model.WarehouseStaff.Count == 0)
+{
+    <p class="notice" role="status">هیچ کاربر با نقش <strong>انباردار</strong> فعال نیست. رئیس آماد از <a asp-page="/Staff">کاربران</a> یک حساب انباردار بسازد تا نام روی برگه خروج انتخاب شود.</p>
+}
 <section class="card">
     <partial name="_DepartmentSetupNotice" model="(Model.Roster, Model.Departments.Count, true)" />
 </section>
@@ -35,7 +39,7 @@
             <td><input data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد"></td>
             <td><button class="button quiet" type="button" data-dispatch-remove" aria-label="حذف">×</button></td></tr></template>
         <div class="actions between"><button class="button" type="button" data-dispatch-add>افزودن قلم</button>
-            <button class="button primary" type="submit" @(Model.Departments.Count == 0 ? "disabled" : null)>ثبت خروج و چاپ برگه</button></div>
+            <button class="button primary" type="submit" @(Model.Departments.Count == 0 || Model.WarehouseStaff.Count == 0 ? "disabled" : null)>ثبت خروج و چاپ برگه</button></div>
     </form>
 </section>
 <section class="card"><h2>برگه‌های خروج اخیر</h2>

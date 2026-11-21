@@ -62,6 +62,8 @@
     const supplier = document.querySelector('[data-supplier]');
     if (supplier) {
         const suggestions = document.getElementById(supplier.getAttribute('list'));
+        if (!suggestions) { /* manual vendor entry only */ }
+        else {
         let timer;
         supplier.addEventListener('input', () => {
             clearTimeout(timer);
@@ -84,6 +86,17 @@
                 }
             }, 220);
         });
+        }
+    }
+
+    const warehouseMeeting = document.querySelector('[data-warehouse-flag]');
+    const meetingCheckbox = document.getElementById('Meeting');
+    if (warehouseMeeting && meetingCheckbox) {
+        const syncMeeting = () => {
+            if (!warehouseMeeting.checked) meetingCheckbox.checked = true;
+        };
+        warehouseMeeting.addEventListener('change', syncMeeting);
+        syncMeeting();
     }
 
     const account = document.querySelector('[data-account]');

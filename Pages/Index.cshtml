@@ -26,7 +26,7 @@
             @if (setup.Departments == 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — هنوز بخشی ثبت نشده</li> }
             else if (setup.DepartmentsWithoutRecipients > 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — @setup.DepartmentsWithoutRecipients بخش بدون تحویل‌گیرنده</li> }
             @if (setup.Suppliers == 0) { <li><a asp-page="/Suppliers">فروشندگان</a> — پرونده فروشنده ثبت نشده</li> }
-            @if (User.IsInRole("chief") && setup.Departments > 0 && setup.Recipients == 0) { <li>حداقل یک تحویل‌گیرنده برای بخش‌ها لازم است</li> }
+            @if (setup.Departments > 0 && setup.Recipients == 0) { <li><a asp-page="/Departments">بخش‌های بیمارستان</a> — حداقل یک تحویل‌گیرنده ثبت کنید</li> }
         </ul>
     </section>
 }

@@ -177,9 +177,9 @@ public sealed partial class Store
             if (p.Invoice is long id)
             {
                 if (await Exec(conn, tx, """
-                    UPDATE invoices SET paid_at=now(),proxy_required=$2
+                    UPDATE invoices SET paid_at=now(),paid_by=$3,proxy_required=$2
                     WHERE id=$1 AND paid_at IS NULL AND delivery_state IN ('open','returned')
-                    """, id, proxy) != 1) return "سند برای ثبت پرداخت آماده نیست.";
+                    """, id, proxy, actor) != 1) return "سند برای ثبت پرداخت آماده نیست.";
                 await Event(conn, tx, id, actor, "ثبت پرداخت اعتباری");
             }
             else if (proxy) return "نوع پرداخت گروهی پس از اتصال به سند ثبت می‌شود.";
@@ -223,7 +223,7 @@ public sealed partial class Store
             """, invoice, pre.Amount, pre.Vendor) is null || await FindPrepayment(conn, tx, invoice, true) is not null)
             return "فروشنده، مبلغ یا وضعیت سند با پیش‌پرداخت هم‌خوانی ندارد.";
         await Exec(conn, tx, "UPDATE prepayments SET invoice_id=$2 WHERE number=$1", number, invoice);
-        if (pre.State == "paid") await Exec(conn, tx, "UPDATE invoices SET paid_at=now() WHERE id=$1", invoice);
+        if (pre.State == "paid") await Exec(conn, tx, "UPDATE invoices SET paid_at=now(),paid_by=$2 WHERE id=$1", invoice, actor);
         await Event(conn, tx, invoice, actor, $"اتصال پیش‌پرداخت {number} به سند");
         await tx.CommitAsync();
         return "پیش‌پرداخت به سند متصل شد.";

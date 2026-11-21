@@ -318,6 +318,9 @@ CREATE TABLE IF NOT EXISTS petty_advances (
 ALTER TABLE petty_advances ADD COLUMN IF NOT EXISTS state text NOT NULL DEFAULT 'active';
 ALTER TABLE petty_receipts ADD COLUMN IF NOT EXISTS advance_number bigint UNIQUE REFERENCES petty_advances(number);
 INSERT INTO counters(name) VALUES ('petty-invoice') ON CONFLICT DO NOTHING;
+INSERT INTO counters(name) VALUES ('petty-advance') ON CONFLICT DO NOTHING;
+UPDATE counters SET last_value = GREATEST(last_value, COALESCE((SELECT max(number) FROM petty_advances), 0))
+    WHERE name = 'petty-advance';
 
 CREATE TABLE IF NOT EXISTS bank_checks (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

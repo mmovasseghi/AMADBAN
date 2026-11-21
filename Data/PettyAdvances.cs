@@ -28,7 +28,7 @@ public sealed partial class Store
             await Exec(conn,tx,"UPDATE counters SET last_value=$1-1 WHERE name='petty-invoice'",start);
         }
         var invoiceNumber=(long)(await Scalar(conn,tx,"UPDATE counters SET last_value=last_value+1 WHERE name='petty-invoice' RETURNING last_value"))!;
-        var number=(long)(await Scalar(conn,tx,"UPDATE counters SET last_value=last_value+1 WHERE name='prepayment' RETURNING last_value"))!;
+        var number=(long)(await Scalar(conn,tx,"UPDATE counters SET last_value=last_value+1 WHERE name='petty-advance' RETURNING last_value"))!;
         await Exec(conn,tx,"""
             INSERT INTO petty_advances(number,submission_id,manual_invoice_number,advance_date,amount,owner,bank,sheba,description,created_by)
             VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)

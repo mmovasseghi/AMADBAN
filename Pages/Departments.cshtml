@@ -33,5 +33,22 @@ else if (missingRecipients.Count > 0)
     }
     @if (Model.Roster.Count == 0) { <tr><td colspan="2" class="empty">بخشی ثبت نشده است.</td></tr> }
     </tbody></table></div>
+    <details><summary>اصلاح نام یا بخش تحویل‌گیرنده</summary>
+        @foreach (var row in Model.Roster)
+        {
+            foreach (var person in row.Recipients)
+            {
+                <form method="post" asp-page-handler="CorrectPerson" class="filters">
+                    <input type="hidden" name="id" value="@person.Id">
+                    <strong>@row.Name</strong>
+                    <label>نام<input name="name" value="@person.Name" required maxlength="120"></label>
+                    <label>درجه<input name="rank" value="@person.Rank" maxlength="80"></label>
+                    <label>سمت<input name="position" value="@person.Position" maxlength="120"></label>
+                    <label>بخش<select name="department">@foreach (var d in Model.Departments) { <option value="@d.Id" selected="@(person.DepartmentId == d.Id)">@d.Name</option> }</select></label>
+                    <button class="button" type="submit">ذخیره</button>
+                </form>
+            }
+        }
+    </details>
     <p class="form-note">صفحه <a asp-page="/Organization">نشان و امضا</a> فقط برای نام‌های چاپی اسناد مالی است؛ برای انبار حتماً همین‌جا بخش را به شخص وصل کنید.</p>
 </section>

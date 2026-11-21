@@ -26,8 +26,8 @@
     </div></section>
     <section class="form-step"><div class="step-head"><span>۲</span><div><h2>مدارک و مسیر کالا</h2><p>فقط گزینه‌هایی را فعال کنید که برای این فاکتور لازم‌اند. وضعیتشان بعداً در پرونده نشان داده می‌شود.</p></div></div>
     <div class="checks">
-        <label><input asp-for="Warehouse"><span><strong>ورود به انبار</strong><small>کالا در موجودی ثبت می‌شود</small></span></label>
-        <label><input asp-for="Meeting"><span><strong>صورت‌جلسه لازم است</strong><small>برای خدمت یا شرایط خاص</small></span></label>
+        <label><input asp-for="Warehouse" data-warehouse-flag><span><strong>ورود به انبار</strong><small>کالا در موجودی ثبت می‌شود</small></span></label>
+        <label><input asp-for="Meeting" id="Meeting"><span><strong>صورت‌جلسه لازم است</strong><small>برای خدمت یا خرید بدون انبار به‌صورت خودکار لازم می‌شود</small></span></label>
         <label><input asp-for="Account"><span><strong>تأییدیه حساب لازم است</strong><small>مدرک حساب فروشنده</small></span></label>
         <label><input asp-for="Tax"><span><strong>برگه مؤدیان لازم است</strong><small>مالیات یا ارزش افزوده فاکتور</small></span></label>
     </div>

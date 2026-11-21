@@ -8,7 +8,7 @@ public sealed partial class Store
     {
         await using var conn = await source.OpenConnectionAsync();
         return await Scalar(conn, null,
-            "SELECT 1 FROM staff WHERE id=$1 AND active AND security_stamp=$2", id, stamp) is int;
+            "SELECT 1 FROM staff WHERE id=$1 AND active AND security_stamp=$2", id, stamp) is not null;
     }
 
     public async Task<string> ResetStaffPasswordAsync(long id, string password, long actor)
@@ -40,9 +40,15 @@ public sealed partial class Store
         }
         if (role is null) return "حساب پیدا نشد.";
         if (previous == active) return "وضعیت حساب از قبل همین است.";
-        if (!active && role == "chief" &&
-            await Scalar(conn, tx, "SELECT count(*) FROM staff WHERE role='chief' AND active") is 1L)
-            return "دست‌کم یک حساب فعال رئیس آماد باید باقی بماند.";
+        if (!active && role == "chief")
+        {
+            var activeChiefs = new List<long>();
+            await using (var chiefCmd = Command(conn, tx, "SELECT id FROM staff WHERE role='chief' AND active FOR UPDATE"))
+            await using (var chiefReader = await chiefCmd.ExecuteReaderAsync())
+                while (await chiefReader.ReadAsync()) activeChiefs.Add(chiefReader.GetInt64(0));
+            if (activeChiefs.Count <= 1 && activeChiefs.Contains(id))
+                return "دست‌کم یک حساب فعال رئیس آماد باید باقی بماند.";
+        }
         await Exec(conn, tx, "UPDATE staff SET active=$2,security_stamp=gen_random_uuid() WHERE id=$1", id, active);
         await Exec(conn, tx, "INSERT INTO staff_events(actor_id,target_id,action) VALUES($1,$2,$3)",
             actor, id, active ? "activate" : "deactivate");

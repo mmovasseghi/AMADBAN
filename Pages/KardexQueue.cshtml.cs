@@ -23,7 +23,7 @@ public sealed class KardexQueueModel(Store store):PageModel
     }
     public async Task<IActionResult> OnPostAsync(long id,string? number,string? date)
     {
-        if(!User.IsInRole("kardex"))return Forbid();
+        if (!User.IsInRole("kardex") && !User.IsInRole("chief")) return Forbid();
         number=Persian.Latin(number);
         Message=number.Length is <1 or >80 || Persian.ParseDate(date) is not DateOnly day
             ? "شماره‌ای را که روی سند نوشته‌اید و تاریخ ثبت شمسی را وارد کنید."

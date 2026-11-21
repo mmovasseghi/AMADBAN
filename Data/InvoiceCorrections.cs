@@ -52,13 +52,15 @@ public sealed partial class Store
             return "نوع پرداخت پرونده دارای پیش‌پرداخت یا پرداخت ثابت است.";
         if (entry.CashCredit > 0 && await Available(conn, tx, entry.CashCredit) is null)
             return "کد اعتباری انتخاب‌شده پیدا نشد.";
+        var meetingRequired = entry.Meeting || !entry.Warehouse;
+        var accountRequired = entry.Account && entry.Kind == "credit";
         await Exec(conn, tx, """
             UPDATE invoices SET number=$2,vendor=$3,subject=$4,invoice_date=$5,kind=$6,
                 warehouse_required=$7,meeting_required=$8,account_required=$9,tax_required=$10,total=$11,
                 cash_credit_code=CASE WHEN $6='cash' THEN NULLIF($12,0) ELSE NULL END
             WHERE id=$1
             """, id, entry.Number, entry.Vendor, entry.Subject, entry.Date, entry.Kind,
-            entry.Warehouse, entry.Meeting, entry.Account, entry.Tax, total, entry.CashCredit);
+            entry.Warehouse, meetingRequired, accountRequired, entry.Tax, total, entry.CashCredit);
         await Exec(conn, tx, "DELETE FROM invoice_lines WHERE invoice_id=$1", id);
         await AddLines(conn, tx, id, entry.Lines);
         foreach (var match in preservedMatches)

@@ -21,6 +21,7 @@ public sealed class StockModel(Store store) : PageModel
     public List<StockLine> History { get; private set; } = [];
     public Guid Submission { get; } = Guid.NewGuid();
     [TempData] public string? Message { get; set; }
+    public bool CanEditStock => User.IsInRole("chief");
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     public async Task OnGetAsync()
@@ -45,6 +46,7 @@ public sealed class StockModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostProductAsync(string? code, string? name, string? unit, string? minimum)
     {
+        if (!CanEditStock) return Forbid();
         code = Persian.Latin(code);
         name = name?.Trim() ?? "";
         unit = unit?.Trim() ?? "";
@@ -56,6 +58,7 @@ public sealed class StockModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostCorrectProductAsync(long id,string? code,string? name,string? unit,string? minimum)
     {
+        if (!CanEditStock) return Forbid();
         code=Persian.Latin(code).Trim();name=name?.Trim()??"";unit=unit?.Trim()??"";
         Message=id<=0 || code.Length is <1 or >40 || name.Length is <1 or >150 || unit.Length is <1 or >30 ||
             Quantity(minimum) is not decimal min
@@ -67,6 +70,7 @@ public sealed class StockModel(Store store) : PageModel
     public async Task<IActionResult> OnPostMoveAsync(long productId, Guid submission, long invoice, string? kind,
         string? quantity, string? department, string? date)
     {
+        if (!CanEditStock) return Forbid();
         department = department?.Trim() ?? "";
         Message = submission == Guid.Empty || productId < 1 || invoice < 0 || kind is not ("opening" or "in" or "out") ||
             Quantity(quantity) is not decimal qty || (kind != "opening" && qty <= 0) || Persian.ParseDate(date) is not DateOnly day ||
@@ -79,6 +83,7 @@ public sealed class StockModel(Store store) : PageModel
     public async Task<IActionResult> OnPostCountAsync(long productId, Guid submission, string? counted,
         string? note, string? date)
     {
+        if (!CanEditStock) return Forbid();
         note = note?.Trim() ?? "";
         Message = submission == Guid.Empty || productId < 1 || Quantity(counted) is not decimal amount ||
             Persian.ParseDate(date) is not DateOnly day || note.Length > 120

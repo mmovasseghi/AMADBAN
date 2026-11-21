@@ -9,6 +9,8 @@
 {
     <section class="card">
         <h2>@product.Name · @product.Stock.ToString("0.###") @product.Unit</h2>
+        @if (Model.CanEditStock)
+        {
         <details><summary>اصلاح مشخصات این کالا</summary><form method="post" asp-page-handler="CorrectProduct" class="filters">
             <input type="hidden" name="id" value="@product.Id">
             <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
@@ -18,7 +20,7 @@
             <button type="submit" class="button">ذخیره مشخصات</button>
         </form></details>
         <details class="work-advanced">
-            <summary>ورود یا خروج دستی (کمتر نیاز می‌شود)</summary>
+            <summary>ورود یا خروج دستی (فقط رئیس آماد)</summary>
             <form method="post" asp-page-handler="Move" class="filters">
                 <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
                 <label>نوع<select name="kind"><option value="in">ورود</option><option value="out">خروج</option><option value="opening">شمارش افتتاحیه</option></select></label>
@@ -39,6 +41,11 @@
                 <button class="button primary" type="submit">ثبت شمارش</button>
             </form>
         </details>
+        }
+        else
+        {
+            <p class="notice">مشاهدهٔ مانده و گردش برای انباردار است؛ <strong>اصلاح، ورود/خروج دستی و انبارگردانی</strong> فقط با حساب <strong>رئیس آماد</strong> انجام می‌شود. افزایش عادی موجودی از پروندهٔ فاکتور است.</p>
+        }
         <form method="get" class="filters">
             <input type="hidden" name="ProductId" value="@product.Id">
             <label>از تاریخ<input name="From" dir="ltr" value="@Model.From" placeholder="۱۴۰۵/۰۱/۰۱"></label>
@@ -72,11 +79,14 @@
         @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P - 1)" asp-route-Search="@Model.Search" asp-route-Low="@Model.Low">قبلی</a> }
         @if (Model.Products.Count > 25) { <a class="button" asp-route-P="@(Model.P + 1)" asp-route-Search="@Model.Search" asp-route-Low="@Model.Low">بعدی</a> }
     </nav>
-    <form method="post" asp-page-handler="Product" class="filters">
-        <label>کد کالای جدید<input name="code" required maxlength="40"></label>
-        <label>نام<input name="name" required maxlength="150"></label>
-        <label>واحد<input name="unit" value="عدد" required maxlength="30"></label>
-        <label>حداقل موجودی<input name="minimum" value="0" required inputmode="decimal"></label>
-        <button class="button primary" type="submit">تعریف کالا</button>
-    </form>
+    @if (Model.CanEditStock)
+    {
+        <form method="post" asp-page-handler="Product" class="filters">
+            <label>کد کالای جدید<input name="code" required maxlength="40"></label>
+            <label>نام<input name="name" required maxlength="150"></label>
+            <label>واحد<input name="unit" value="عدد" required maxlength="30"></label>
+            <label>حداقل موجودی<input name="minimum" value="0" required inputmode="decimal"></label>
+            <button class="button primary" type="submit">تعریف کالا</button>
+        </form>
+    }
 </section>

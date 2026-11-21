@@ -116,14 +116,26 @@
         syncMeeting();
     }
 
-    const account = document.querySelector('[data-account]');
-    if (account) account.addEventListener('change', () => {
-        const selected = account.options[account.selectedIndex];
-        if (!selected.value) return;
+    const fillAccountFromSelect = (select) => {
+        if (!select?.form) return;
+        const selected = select.options[select.selectedIndex];
+        if (!selected?.value) return;
         ['owner', 'bank', 'sheba'].forEach(field => {
-            account.form.elements.namedItem(field).value = selected.dataset[field];
+            const input = select.form.querySelector(`[name="${field}"]`);
+            if (input && selected.dataset[field] != null) input.value = selected.dataset[field];
         });
-    });
+    };
+    const account = document.querySelector('[data-account]');
+    if (account) {
+        account.addEventListener('change', () => fillAccountFromSelect(account));
+        const real = [...account.options].filter(o => o.value);
+        if (real.length === 1) {
+            account.value = real[0].value;
+            fillAccountFromSelect(account);
+        } else if (account.selectedIndex > 0) {
+            fillAccountFromSelect(account);
+        }
+    }
 
     const paymentKind = document.getElementById('Kind');
     if (paymentKind) {

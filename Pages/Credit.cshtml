@@ -88,15 +88,15 @@
                     <label>مبلغ (ریال)<input name="amount" dir="ltr" inputmode="numeric" value="@(Model.Pending?.Amount ?? Model.Invoice?.Summary.Total.ToString())" required></label>
                 </div>
             </div>
-            <div class="form-step"><div class="step-head"><span>۲</span><div><h2>حساب دریافت‌کننده</h2><p>اگر حساب فروشنده از قبل ثبت شده، آن را انتخاب کنید تا اطلاعات پر شود.</p></div></div>
+            <div class="form-step"><div class="step-head"><span>۲</span><div><h2>حساب دریافت‌کننده</h2><p>فقط <strong>یک شماره شبا</strong> برای چاپ لازم است. اگر حساب فروشنده از قبل ثبت شده، از لیست انتخاب کنید؛ نام، بانک و شبا پایین پر می‌شود. اگر حساب ندارید، سه فیلد را دستی بنویسید.</p></div></div>
                 <div class="fields">
                     @if (Model.Accounts.Count > 0)
                     {
-                        <label>حساب ثبت‌شده فروشنده<select data-account><option value="">انتخاب حساب</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Sheba</option> }</select></label>
+                        <label>انتخاب حساب ذخیره‌شده (اختیاری)<select data-account><option value="">حساب جدید / دستی</option>@foreach (var a in Model.Accounts) { <option value="@a.Id" data-owner="@a.Owner" data-bank="@a.Bank" data-sheba="@a.Sheba">@a.Bank · @a.Owner</option> }</select></label>
                     }
-                    <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required></label>
-                    <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required></label>
-                    <label>شماره شبا<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required></label>
+                    <label>نام صاحب حساب<input name="owner" value="@Model.Pending?.Owner" maxlength="140" required autocomplete="off"></label>
+                    <label>بانک<input name="bank" value="@Model.Pending?.Bank" maxlength="100" required autocomplete="off"></label>
+                    <label>شماره شبا (همان مقدار چاپ)<input name="sheba" value="@Model.Pending?.Sheba" dir="ltr" maxlength="32" required inputmode="text" autocomplete="off" placeholder="IR…"></label>
                 </div>
             </div>
             <div class="form-step"><div class="step-head"><span>۳</span><div><h2>اطلاعات تکمیلی (همه اختیاری)</h2><p>اگر مجوز یا مالیات جدا ندارید، این بخش را خالی بگذارید.</p></div></div>

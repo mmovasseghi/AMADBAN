@@ -11,7 +11,7 @@
 <header class="hero">
     <div class="hero-main"><span class="hero-icon"><img src="/icon3d/@(Model.Report ? "chart" : "file-text").webp" width="82" height="82" alt=""></span>
         <div><div class="eyebrow">آماد و پشتیبانی</div><h1>@ViewData["Title"]</h1>
-        <p>@(Model.Report ? "تاریخ را بنویسید و دکمهٔ نمایش را بزنید." : "روی هر سطر کلیک کنید تا همان پرونده باز شود.")</p></div></div>
+        <p>@(Model.Report ? "تاریخ را بنویسید و دکمهٔ نمایش را بزنید." : "روی دکمهٔ «باز کردن پرونده» بزنید — یا روی خودِ ردیف جدول.")</p></div></div>
     @if (User.IsInRole("agent") || User.IsInRole("chief"))
     {
         <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
@@ -42,7 +42,7 @@
 }
 @if (User.IsInRole("chief") && Model.Activity.Count > 0)
 {
-    <section class="card activity-preview"><div class="actions between"><h2>تازه‌ترین کارهای آماد</h2><a class="button quiet" asp-page="/Activity">همه اطلاعیه‌ها</a></div>
+    <section class="card activity-preview"><div class="actions between"><h2>تازه‌ترین کارهای آماد</h2><a class="button" asp-page="/Activity">همه اطلاعیه‌ها</a></div>
         @foreach (var item in Model.Activity)
         { <a asp-page="/ActivityDetail" asp-route-id="@item.Id"><img src="/icon3d/@(item.Icon).webp" width="29" height="29" alt=""><strong>@item.Title</strong><span>@item.Summary</span><small>@item.Actor · @Persian.Time(item.At)</small></a> }
     </section>
@@ -51,8 +51,7 @@
     <div class="tabs" aria-label="وضعیت پرونده">
         @foreach (var (code, label, icon) in tabs)
         {
-            var extra = code is "paid" or "tax-pending" or "delivered" or "closed" or "kardex";
-            <a class="tab @(Model.Status == code ? "selected" : "") @(extra ? "tab-extra" : "")" asp-page="/Index" asp-route-Status="@code"
+            <a class="tab @(Model.Status == code ? "selected" : "")" asp-page="/Index" asp-route-Status="@code"
                asp-route-Report="@Model.Report" asp-route-Search="@Model.Search" asp-route-Subject="@Model.Subject" asp-route-Kind="@Model.Kind" asp-route-Credit="@Model.Credit" asp-route-From="@Model.From" asp-route-To="@Model.To">
                 <svg aria-hidden="true"><use href="/icons.svg#@icon"></use></svg> @label
             </a>
@@ -84,7 +83,7 @@
               asp-route-From="@Model.From" asp-route-To="@Model.To">دریافت اکسل CSV از تمام ردیف‌های فیلترشده</a></p>
     }
     <div class="table-wrap">
-        <table>
+        <table data-clickable-rows>
             <thead><tr><th>سند</th><th>فروشنده و موضوع</th><th>تاریخ فاکتور</th><th>مبلغ (ریال)</th><th>وضعیت</th><th>اقدام</th></tr></thead>
             <tbody>
                 @foreach (var row in Model.Rows)
@@ -95,7 +94,7 @@
                         <td class="numbers">@Persian.Date(row.Date)</td>
                         <td class="numbers">@Persian.Money(row.Total)</td>
                         <td><span class="badge @row.Delivery">@(Model.Status == "ready" ? "آماده تحویل" : Amadban.Pages.IndexModel.Badge(row))</span></td>
-                        <td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id" class="button quiet">مشاهده</a></td>
+                        <td><a asp-page="/Invoices/Detail" asp-route-id="@row.Id" class="button">باز کردن پرونده</a></td>
                     </tr>
                 }
                 @if (Model.Rows.Count == 0) { <tr><td colspan="6" class="empty">پرونده‌ای برای نمایش نیست.</td></tr> }

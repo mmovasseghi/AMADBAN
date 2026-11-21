@@ -12,7 +12,6 @@ public sealed class CreditModel(Store store) : PageModel
     public List<CreditBalance> Codes { get; private set; } = [];
     public List<CreditChange> History { get; private set; } = [];
     public List<string> Notices { get; private set; } = [];
-    public List<Prepayment> Proformas { get; private set; } = [];
     public sealed record PendingPayment(string Proforma, string Vendor, long Code, string Owner, string Bank,
         string Sheba, string? Amount, string Permit, string PermitDate, string? Tax);
     public PendingPayment? Pending { get; private set; }
@@ -21,6 +20,22 @@ public sealed class CreditModel(Store store) : PageModel
     public Prepayment? Payment { get; private set; }
     public bool IsAgent => User.IsInRole("agent");
     public bool CanPrepay => User.IsInRole("agent") || User.IsInRole("chief");
+    public string? InvoicePrepayNotice
+    {
+        get
+        {
+            if (Invoice is null || Payment is not null) return null;
+            return Invoice.Summary.Kind != "credit" ? "این پرونده نقدی است. پیش‌پرداخت اعتباری فقط برای فاکتور چکی است."
+                : Invoice.Summary.Document is null ? "برای پیش‌پرداخت روی سند، ابتدا در همان پرونده شماره سند صادر شود."
+                : Invoice.Summary.Paid ? "این سند قبلاً پرداخت‌شده است."
+                : null;
+        }
+    }
+    /// <summary>صفحهٔ /Credit بدون پرونده — فقط راهنما برای باز کردن پیش‌پرداخت سند.</summary>
+    public bool ShowDocumentEntry => CanPrepay && Invoice is null && Payment is null;
+    public bool ShowInvoiceForm => CanPrepay && Invoice is not null && Payment is null && InvoicePrepayNotice is null;
+    /// <summary>صفحهٔ مدیریت کدهای اعتباری — نه هنگام فرم پیش‌پرداخت روی پرونده.</summary>
+    public bool ShowCreditHub => Payment is null && Invoice is null;
     public Guid Submission { get; } = Guid.NewGuid();
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string Role => User.FindFirstValue(ClaimTypes.Role)!;
@@ -43,7 +58,6 @@ public sealed class CreditModel(Store store) : PageModel
         else
         {
             History = await store.CreditHistoryAsync();
-            Proformas = await store.OpenProformasAsync();
             if (!IsAgent) Notices = await store.NoticesAsync();
         }
     }
@@ -71,13 +85,18 @@ public sealed class CreditModel(Store store) : PageModel
         long code, string? owner, string? bank, string? sheba, string? amount, string? permit, string? permitDate, string? tax)
     {
         if (!CanPrepay) return Forbid();
+        if (invoice <= 0)
+        {
+            Message = "پیش‌پرداخت فقط روی پروندهٔ چکی با شماره سند است: کارتابل → پرونده → پیش‌پرداخت این سند.";
+            return RedirectToPage();
+        }
         proforma = Persian.Latin(proforma);
         vendor = vendor?.Trim() ?? "";
         owner = owner?.Trim() ?? "";
         bank = bank?.Trim() ?? "";
         sheba = Persian.Latin(sheba).Replace(" ", "", StringComparison.Ordinal).ToUpperInvariant();
-        permit = Persian.Latin(permit);
-        permitDate = Persian.Latin(permitDate);
+        permit = Persian.Latin(permit)?.Trim() ?? "";
+        permitDate = Persian.Latin(permitDate)?.Trim() ?? "";
         var taxAmount = string.IsNullOrWhiteSpace(tax) ? 0 : ParseAmount(tax) ?? -1;
         if (!sheba.StartsWith("IR", StringComparison.Ordinal)) sheba = "IR" + sheba;
         if (submission == Guid.Empty || invoice < 0 || (invoice == 0 && (proforma.Length is < 1 or > 80 || vendor.Length is < 1 or > 180)) ||
@@ -107,12 +126,6 @@ public sealed class CreditModel(Store store) : PageModel
         return RedirectToPage(new { invoice, number });
     }
 
-    public async Task<IActionResult> OnPostLinkAsync(long number, long invoice)
-    {
-        if (!CanPrepay) return Forbid();
-        Message = await store.LinkProformaAsync(number, invoice, Actor);
-        return RedirectToPage(new { number });
-    }
 
     private static long? ParseAmount(string? amount) =>
         long.TryParse(Persian.Latin(amount).Replace(",", "").Replace("٬", ""), out var value) &&

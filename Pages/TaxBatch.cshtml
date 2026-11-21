@@ -4,28 +4,35 @@
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span>
     <div><div class="eyebrow">مدارک مالیاتی</div><h1>ثبت مالیات چند سند</h1><p>اگر یک برگه ثبت مالیات برای چند فاکتور دارید، یک‌بار بارگذاری و سندهای مربوط را انتخاب کنید.</p></div></div></header>
 @if(Model.Message is not null){<p class="notice" role="status">@Model.Message</p>}
-<section class="card"><h2>سندهای بدون برگه مالیات</h2>
+<section class="card"><h2>فیلتر بازه</h2>
     <form method="get" class="filters"><label>از تاریخ فاکتور<input name="From" value="@Model.From" dir="ltr" placeholder="۱۴۰۵/۰۱/۰۱"></label>
         <label>تا تاریخ فاکتور<input name="To" value="@Model.To" dir="ltr" placeholder="۱۴۰۵/۱۲/۲۹"></label>
         <button class="button" type="submit">نمایش سندها</button></form>
     <div asp-validation-summary="All" class="validation"></div>
-    @if(ViewData.ModelState.IsValid)
-    { <form method="post" enctype="multipart/form-data">
-        <input type="hidden" name="submission" value="@Model.Submission"><input type="hidden" name="From" value="@Model.From"><input type="hidden" name="To" value="@Model.To">
-        <div class="table-wrap"><table><thead><tr><th><label class="inline"><input type="checkbox" data-tax-select-all> انتخاب همه</label></th><th>سند</th><th>شماره فاکتور</th><th>فروشنده</th><th>تاریخ</th><th>مبلغ ریال</th></tr></thead><tbody>
-        @foreach(var item in Model.Pending)
-        { <tr><td><input type="checkbox" name="ids" value="@item.Id" data-tax-select aria-label="انتخاب سند @item.Document"></td>
-            <td><a asp-page="/Invoices/Detail" asp-route-id="@item.Id">@item.Document</a></td><td>@item.Number</td>
-            <td>@item.Vendor</td><td>@Persian.Date(item.Date)</td><td>@Persian.Money(item.Total)</td></tr> }
-        @if(Model.Pending.Count==0){<tr><td colspan="6" class="empty">در این بازه سند منتظر برگه مالیات وجود ندارد.</td></tr>}
-        </tbody></table></div>
-        @if(Model.Pending.Count==50){<p>فقط ۵۰ سند تازه نمایش داده شده‌اند؛ برای سندهای قدیمی‌تر بازه تاریخ را محدود کنید.</p>}
-        <div class="filters"><label>تاریخ ثبت مالیات<input name="date" value="@Persian.Date(Persian.Today)" dir="ltr" required></label>
-            <label>شماره یا شرح برگه (اختیاری)<input name="reference" maxlength="100"></label>
-            <label>تصویر یا PDF برگه<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required><small>حداکثر ۵ مگابایت؛ یک نسخه برای همه سندهای انتخاب‌شده نگهداری می‌شود.</small></label>
-            <button class="button primary" type="submit">ثبت برگه برای سندهای انتخابی</button></div>
-    </form> }
 </section>
+@if (ViewData.ModelState.IsValid)
+{
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="submission" value="@Model.Submission"><input type="hidden" name="From" value="@Model.From"><input type="hidden" name="To" value="@Model.To">
+        <section class="card"><h2>انتخاب سندها برای یک برگه</h2>
+            <div class="table-wrap"><table><thead><tr><th><label class="inline"><input type="checkbox" data-tax-select-all> انتخاب همه</label></th><th>سند</th><th>شماره فاکتور</th><th>فروشنده</th><th>تاریخ</th><th>مبلغ ریال</th></tr></thead><tbody>
+            @foreach(var item in Model.Pending)
+            { <tr><td><input type="checkbox" name="ids" value="@item.Id" data-tax-select aria-label="انتخاب سند @item.Document"></td>
+                <td><a asp-page="/Invoices/Detail" asp-route-id="@item.Id">@item.Document</a></td><td>@item.Number</td>
+                <td>@item.Vendor</td><td>@Persian.Date(item.Date)</td><td>@Persian.Money(item.Total)</td></tr> }
+            @if(Model.Pending.Count==0){<tr><td colspan="6" class="empty">در این بازه سند منتظر برگه مالیات وجود ندارد.</td></tr>}
+            </tbody></table></div>
+            @if(Model.Pending.Count==50){<p>فقط ۵۰ سند تازه نمایش داده شده‌اند؛ برای سندهای قدیمی‌تر بازه تاریخ را محدود کنید.</p>}
+        </section>
+        <section class="card"><h2>بارگذاری برگه مالیات</h2>
+            <p>بعد از انتخاب سندها در جدول بالا، فایل برگه را اینجا بارگذاری کنید.</p>
+            <div class="filters"><label>تاریخ ثبت مالیات<input name="date" value="@Persian.Date(Persian.Today)" dir="ltr" required></label>
+                <label>شماره یا شرح برگه (اختیاری)<input name="reference" maxlength="100"></label>
+                <label>تصویر یا PDF برگه<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required><small>حداکثر ۵ مگابایت؛ یک نسخه برای همه سندهای انتخاب‌شده نگهداری می‌شود.</small></label>
+                <button class="button primary" type="submit">ثبت برگه برای سندهای انتخابی</button></div>
+        </section>
+    </form>
+}
 <section class="card"><h2>برگه‌های ثبت‌شده اخیر</h2><div class="table-wrap"><table><thead><tr><th>شناسه</th><th>تاریخ</th><th>شرح</th><th>تعداد سند</th><th>ثبت‌کننده</th><th>برگه</th></tr></thead><tbody>
     @foreach(var item in Model.Recent){<tr><td>@item.Id</td><td>@Persian.Date(item.Date)</td><td>@item.Reference</td><td>@item.Documents</td><td>@item.Actor</td>
         <td><a asp-page-handler="File" asp-route-id="@item.Id" target="_blank" rel="noopener">مشاهده</a></td></tr>}

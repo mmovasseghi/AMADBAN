@@ -3,7 +3,7 @@
 @{
     ViewData["Title"] = "ثبت چک و چاپ بانکی";
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/card.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">مدارک بانکی</div><h1>ثبت چک و فرم صیاد</h1><p>چک‌ها را ثبت کنید و فرم رسمی عملیات چک در سامانه صیاد را روی A4 چاپ کنید.</p></div></div></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/card.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">مدارک بانکی</div><h1>ثبت چک و چاپ فرم بانک</h1><p>اول مشخصات چک را در فرم بالا بنویسید و ثبت کنید. برای چاپ، در جدول تیک بزنید.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
 <section class="card">
     <h2>اطلاعات چک</h2>
@@ -42,9 +42,15 @@
         @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)">قبلی</a> }
         @if (Model.Checks.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)">بعدی</a> }
     </nav>
-    <details><summary>اصلاح مشخصات چک‌های ثبت‌شده</summary>
+</section>
+<section class="card">
+    <h2>اصلاح مشخصات چک</h2>
+    <p>اول در جدول بالا چک را پیدا کنید؛ اینجا فقط اصلاح همان ردیف است.</p>
         @foreach (var c in Model.Checks.Take(25))
-        { <details><summary>صیاد @c.Sayad · @c.Recipient</summary><form method="post" asp-page-handler="Correct" class="fields">
+        {
+            <div class="stock-chief-panel">
+                <h3>صیاد @c.Sayad · @c.Recipient</h3>
+                <form method="post" asp-page-handler="Correct" class="fields">
             <input type="hidden" name="id" value="@c.Id">
             <label>صیاد<input name="sayad" value="@c.Sayad" required maxlength="16"></label>
             <label>حساب<input name="account" value="@c.Account" required maxlength="50"></label>
@@ -57,8 +63,9 @@
             <label>پیش‌پرداخت<select name="prepayment"><option value="0">بدون پیوند</option>
                 @foreach (var item in Model.BankPrepayments) { <option value="@item.Number" @(c.Prepayment==item.Number ? "selected" : null)>@item.Number · @item.Vendor</option> }
             </select></label><button class="button" type="submit">ذخیره اصلاح</button>
-        </form></details> }
-    </details>
+        </form>
+            </div>
+        }
 </section>
 
 @if (Model.BankPrepayments.Count > 0)

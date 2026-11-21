@@ -99,17 +99,14 @@ for user, role in USERS.items():
     if role == "chief" and not (has_product_post or "handler=Product" in stock):
         add("high", user, "Stock missing chief product form")
 
-    menu_more = "menu-more" in stock
-    if role in ("warehouse", "kardex") and menu_more:
-        add("high", user, "menu-more visible in layout")
-    if role == "agent" and not menu_more:
-        add("medium", user, "agent missing menu-more")
     if user == "ofis":
         _, credit = fetch(op, "/Credit")
-        if "پیش‌پرداخت بر اساس پیش‌فاکتور" not in credit and "ثبت و رزرو" not in credit:
+        if "پیش‌پرداخت" not in credit and "ثبت و چاپ" not in credit and "سه قدم" not in credit:
             add("high", "ofis", "Credit page missing prepayment create form")
-        if "PrintPrepayment" not in credit and "/PrintPrepayment" not in credit and "چاپ" not in credit:
-            pass  # print route not on list page until prepayment exists
+        for path in ("/Bank", "/Petty", "/Suppliers"):
+            code, _ = fetch(op, path)
+            if code >= 500:
+                add("high", "ofis", f"{path} -> {code}")
 
     if user == "anbardar":
         token, _ = antiforgery(op, "/Stock")

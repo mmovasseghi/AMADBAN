@@ -41,7 +41,7 @@ else if (missingRecipients.Count > 0)
     </tbody></table></div>
     @if (User.IsInRole("chief") || User.IsInRole("agent"))
     {
-    <details><summary>اصلاح نام، سمت یا بخش شخص</summary>
+    <h2>اصلاح نام، سمت یا بخش شخص</h2>
         @foreach (var row in Model.Roster)
         {
             foreach (var person in row.Recipients)
@@ -57,6 +57,5 @@ else if (missingRecipients.Count > 0)
                 </form>
             }
         }
-    </details>
     }
 </section>

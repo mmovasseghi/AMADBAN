@@ -21,7 +21,14 @@ if (string.IsNullOrWhiteSpace(connection))
         Password = builder.Configuration["AMADBAN_DB_PASSWORD"]
     }.ConnectionString;
 }
-builder.Services.AddSingleton(NpgsqlDataSource.Create(connection));
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(new NpgsqlConnectionStringBuilder(connection)
+{
+    Timeout = 15,
+    CommandTimeout = 45,
+    MaxPoolSize = 40,
+    ConnectionIdleLifetime = 120
+}.ConnectionString);
+builder.Services.AddSingleton(dataSourceBuilder.Build());
 builder.Services.AddSingleton<Store>();
 var protection = builder.Services.AddDataProtection().SetApplicationName("Amadban");
 if (builder.Configuration["AMADBAN_KEYS"] is { Length: > 0 } keyPath)

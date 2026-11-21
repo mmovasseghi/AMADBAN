@@ -29,21 +29,22 @@
         </select></label>
         <button type="submit" class="button primary">قرار دادن در برگه‌های چاپی</button>
     </form>
-    <details><summary>ثبت مستقیم نام چاپی، در صورت نیاز</summary>
+    <h2>ثبت مستقیم نام چاپی</h2>
     <form method="post" asp-page-handler="Signer" class="filters">
         <label>جایگاه<select name="role">@foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles) { <option value="@role">@label</option> }</select></label>
         <label>نام و سمت<input name="name" maxlength="120"></label>
         <button type="submit" class="button primary">ذخیره نام</button>
     </form>
-    </details>
     <div class="table-wrap"><table><thead><tr><th>جایگاه</th><th>نام چاپی</th></tr></thead><tbody>
     @foreach (var (role,label) in Amadban.Pages.OrganizationModel.Roles)
     { <tr><td>@label</td><td>@(Model.Signers.GetValueOrDefault(role) ?? "—")</td></tr> }
     </tbody></table></div>
-    <details><summary>اصلاح نام، درجه یا سمت اشخاص</summary>
+    <h2>اصلاح نام، درجه یا سمت اشخاص</h2>
         <p>اصلاح هر شخص در چاپ‌های بعدی همه فرم‌هایی که او در آن‌ها انتخاب شده اعمال می‌شود.</p>
         @foreach (var person in Model.People)
-        { <details><summary>@person.Rank @person.Name · @person.Position</summary>
+        {
+            <div class="stock-chief-panel">
+                <h3>@person.Rank @person.Name · @person.Position</h3>
             <form method="post" asp-page-handler="CorrectPerson" class="filters"><input type="hidden" name="id" value="@person.Id">
                 <label>نام<input name="name" value="@person.Name" required maxlength="120"></label>
                 <label>درجه یا رتبه<input name="rank" value="@person.Rank" maxlength="80"></label>
@@ -53,6 +54,7 @@
                     @foreach (var department in Model.Departments) { <option value="@department.Id" @(person.DepartmentId == department.Id ? "selected" : null)>@department.Name</option> }
                 </select></label>
                 <button class="button" type="submit">ذخیره اصلاح</button>
-            </form></details> }
-    </details>
+            </form>
+            </div>
+        }
 </section>

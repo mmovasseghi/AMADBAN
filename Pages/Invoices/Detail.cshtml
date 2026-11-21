@@ -10,17 +10,21 @@
     <div class="actions hero-actions">
         <a class="button" asp-page="/Index">بازگشت به صفحهٔ اصلی</a>
         @if (row.Document is not null) { <a class="button primary" asp-page="Print" asp-route-id="@row.Id">چاپ سند</a> }
-        <details class="hero-more">
-            <summary>کارهای دیگر</summary>
-            <div class="actions">
-                @if (row.Document is not null && Model.Entry.Meeting) { <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a> }
-                @if (row.Kind == "credit" && row.Document is not null && Model.HandlesFinance)
-                {
-                    <a class="button" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت</a>
-                }
-                @if (Model.HandlesFinance && Model.Editable) { <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a> }
-            </div>
-        </details>
+        @if (row.Kind == "credit" && Model.HandlesFinance)
+        {
+            if (row.Document is not null && !row.Paid)
+            {
+                <a class="button primary" asp-page="/Credit" asp-route-invoice="@row.Id">پیش‌پرداخت این سند</a>
+            }
+        }
+        @if (row.Document is not null && Model.Entry.Meeting)
+        {
+            <a class="button" asp-page="/PrintForms" asp-route-kind="meeting" asp-route-id="@row.Id">چاپ صورت‌جلسه</a>
+        }
+        @if (Model.HandlesFinance && Model.Editable)
+        {
+            <a class="button" asp-page="New" asp-route-id="@row.Id">اصلاح فاکتور</a>
+        }
     </div>
 </header>
 <partial name="_EasyNextStep" model="missing" />
@@ -126,8 +130,7 @@
                 <label>تاریخ شمسی گردش<input name="date" dir="ltr" required value="@Persian.Date(Persian.Today)"></label>
                 @if (Model.Entry.WarehouseReceiptDate is null)
                 {
-                    <p class="receipt-help-long">نام هر قلم روی فاکتور و چاپ عوض نمی‌شود؛ فقط <strong>موجودی انبار</strong> به کالای انتخاب‌شده اضافه می‌شود. اگر نام فاکتور با نام کالای انبار <strong>شروع شود</strong> (مثلاً فاکتور «سیب درجه یک» و کالای «سیب»)، کد همان کالا از قبل پر می‌شود — قبل از ثبت بررسی کنید. <strong>بدون کد و بدون تیک «کالای جدید»</strong> ورود ثبت نمی‌شود تا اشتباهاً سیبِ جدا ساخته نشود. فقط وقتی واقعاً قلم تازه در انبار ندارید، تیک «کالای جدید» را بزنید.</p>
-                    <p class="receipt-help-short">اگر جلوی هر ردیف <strong>کد پر شده</strong>، همان را نگه دارید و دکمهٔ سبز پایین را بزنید. اگر خالی بود و کالای جدید می‌خواهید، تیک «ساخت قلم جدید» را بزنید.</p>
+                    <p class="form-note">در هر ردیف <strong>کد کالا</strong> را انتخاب کنید (یا تیک «کالای جدید»). بعد دکمهٔ سبز <strong>ثبت ورود</strong> را بزنید.</p>
                     <datalist id="receipt-products"></datalist>
                     <div class="table-wrap"><table><thead><tr><th>نام عین فاکتور</th><th>تعداد و واحد</th><th>کد کالا در انبار</th><th>کالای جدید</th></tr></thead><tbody>
                     @foreach (var item in Model.ReceiptMatches) { <tr><td>@item.Title</td><td>@item.Quantity.ToString("0.###") @item.Unit</td>
@@ -148,10 +151,10 @@
         <p>با تیک «کالای جدید»، شناسه انبار خودکار ساخته می‌شود و نام قلم همان متن فاکتور می‌ماند.</p>
     </section>
 }
-<section class="card">
-    <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس و تحویل</h2>
-    @if (row.Warehouse)
-    {
+@if (row.Warehouse)
+{
+    <section class="card">
+        <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس</h2>
         <p>مهلت کارتکس: <bdi>@Persian.Date(Persian.MonthEnd(row.Date))</bdi></p>
         @if (row.Kardex is not null) { <p>شماره کارتکس @row.Kardex @if (Model.Entry.KardexDate is DateOnly k && k > Persian.MonthEnd(row.Date)) { <span class="badge returned">ثبت با تأخیر</span> }</p> }
         else if (Persian.Today > Persian.MonthEnd(row.Date)) { <p class="badge returned">کارتکس از موعد گذشته است</p> }
@@ -163,10 +166,53 @@
                 <button class="button primary" type="submit">ثبت کارتکس</button>
             </form>
         }
-    }
-    @if (missing.Count > 0) { <p>مانده تا آماده تحویل</p><ul class="missing">@foreach (var item in missing) { <li>@item</li> }</ul> }
-    @if (Model.HandlesFinance && row.Document is not null)
+        else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
+        {
+            <p><a class="button" asp-page="/KardexQueue">ثبت در صفحهٔ کارتکس</a></p>
+        }
+    </section>
+}
+<section class="card">
+    <h2><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> مدارک پرونده</h2>
+    @if (row.Kind == "cash" && Model.HandlesFinance && Model.Editable)
     {
+        <form method="post" asp-page-handler="Pos" class="actions">
+            <span>پرفراژ کارت‌خوان در همان اسکن فاکتور دیده می‌شود؟</span>
+            <button class="button" name="embedded" value="@(!Model.Entry.PosInInvoice ? "true" : "false")" type="submit">@(Model.Entry.PosInInvoice ? "بله، ثبت شده · تغییر به مدرک جدا" : "بله، داخل اسکن است")</button>
+        </form>
+    }
+    @if (Model.Entry.Attachments.Count == 0) { <p>هنوز مدرکی پیوست نشده است.</p> }
+    @foreach (var file in Model.Entry.Attachments)
+    {
+        <p><a asp-page-handler="Attachment" asp-route-attachment="@file.Id">@Amadban.Pages.Invoices.DetailModel.AttachmentKinds[file.Kind] · @file.Name</a></p>
+    }
+    @if(Model.Entry.TaxBatchId is long batchId)
+    { <p><a asp-page="/TaxBatch" asp-page-handler="File" asp-route-id="@batchId" asp-route-invoice="@row.Id" target="_blank" rel="noopener">برگه مالیات گروهی @batchId</a></p>
+        @if(Model.HandlesFinance && Model.Editable)
+        { <form method="post" asp-page-handler="TaxUnlink"><button class="button" type="submit" data-confirm="پیوند این سند با برگه مالیات گروهی برداشته شود؟">اصلاح پیوند برگه مالیات</button></form> }
+    }
+    @if (Model.HandlesFinance && Model.Editable && row.Kind == "credit")
+    {
+        <form method="post" asp-page-handler="SupplierDocument" class="actions">
+            @if (Model.Entry.Account) { <button class="button" name="kind" value="account">افزودن تأییدیه از پرونده فروشنده</button> }
+            @if (Model.Entry.Tax) { <button class="button" name="kind" value="taxpayer">افزودن مؤدیان از پرونده فروشنده</button> }
+        </form>
+    }
+    @if (Model.CanAttach && Model.Editable)
+    {
+        <form method="post" enctype="multipart/form-data" asp-page-handler="Attach" class="filters">
+            <label>نوع مدرک<select name="kind">@foreach (var (kind, label) in Amadban.Pages.Invoices.DetailModel.AttachmentKinds) { <option value="@kind">@label</option> }</select></label>
+            <label>فایل<input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png"></label>
+            <button class="button" type="submit">پیوست مدرک</button>
+        </form>
+    }
+</section>
+</div>
+@if (Model.HandlesFinance && row.Document is not null)
+{
+    <section class="card">
+        <h2>گردش مالی و تحویل پرونده</h2>
+        @if (missing.Count > 0) { <p>مانده تا آماده تحویل</p><ul class="missing">@foreach (var item in missing) { <li>@item</li> }</ul> }
         <form method="post" asp-page-handler="Finance" class="actions">
             @if (!row.Paid && Model.Editable && row.Kind == "cash" && User.IsInRole("agent")) { <button class="button" name="action" value="pay">ثبت پرداخت</button> }
             @if (row.Delivery is "open" or "returned" && missing.Count == 0) { <button class="button primary" name="action" value="deliver">ثبت تحویل به مالی</button> }
@@ -186,44 +232,8 @@
                 <button class="button primary" name="action" value="close">تأیید نهایی و بستن سند</button>
             }
         </form>
-    }
-</section>
-<section class="card">
-    <h2><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> مدارک پرونده</h2>
-    @if (row.Kind == "cash" && Model.HandlesFinance && Model.Editable)
-    {
-        <form method="post" asp-page-handler="Pos" class="actions">
-            <span>پرفراژ کارت‌خوان در همان اسکن فاکتور دیده می‌شود؟</span>
-            <button class="button" name="embedded" value="@(!Model.Entry.PosInInvoice ? "true" : "false")" type="submit">@(Model.Entry.PosInInvoice ? "بله، ثبت شده · تغییر به مدرک جدا" : "بله، داخل اسکن است")</button>
-        </form>
-    }
-    @if (Model.Entry.Attachments.Count == 0) { <p>هنوز مدرکی پیوست نشده است.</p> }
-    @foreach (var file in Model.Entry.Attachments)
-    {
-        <p><a asp-page-handler="Attachment" asp-route-attachment="@file.Id">@Amadban.Pages.Invoices.DetailModel.AttachmentKinds[file.Kind] · @file.Name</a></p>
-    }
-    @if(Model.Entry.TaxBatchId is long batchId)
-    { <p><a asp-page="/TaxBatch" asp-page-handler="File" asp-route-id="@batchId" asp-route-invoice="@row.Id" target="_blank" rel="noopener">برگه مالیات گروهی @batchId</a></p>
-        @if(Model.HandlesFinance && Model.Editable)
-        { <form method="post" asp-page-handler="TaxUnlink"><button class="button quiet" type="submit" data-confirm="پیوند این سند با برگه مالیات گروهی برداشته شود؟">اصلاح پیوند برگه مالیات</button></form> }
-    }
-    @if (Model.HandlesFinance && Model.Editable && row.Kind == "credit")
-    {
-        <form method="post" asp-page-handler="SupplierDocument" class="actions">
-            @if (Model.Entry.Account) { <button class="button" name="kind" value="account">افزودن تأییدیه از پرونده فروشنده</button> }
-            @if (Model.Entry.Tax) { <button class="button" name="kind" value="taxpayer">افزودن مؤدیان از پرونده فروشنده</button> }
-        </form>
-    }
-    @if (Model.CanAttach && Model.Editable)
-    {
-        <form method="post" enctype="multipart/form-data" asp-page-handler="Attach" class="filters">
-            <label>نوع مدرک<select name="kind">@foreach (var (kind, label) in Amadban.Pages.Invoices.DetailModel.AttachmentKinds) { <option value="@kind">@label</option> }</select></label>
-            <label>فایل<input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png"></label>
-            <button class="button" type="submit">پیوست مدرک</button>
-        </form>
-    }
-</section>
-</div>
+    </section>
+}
 
 <section class="card"><h2>سابقه پرونده</h2>
     <div class="table-wrap"><table><thead><tr><th>زمان</th><th>اقدام</th><th>ثبت‌کننده</th></tr></thead>

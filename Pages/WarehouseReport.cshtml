@@ -37,7 +37,7 @@
         <div class="table-wrap"><table><thead><tr><th>شماره</th><th>تاریخ</th><th>بخش</th><th>تحویل‌گیرنده</th><th>انباردار</th><th>برگه</th></tr></thead><tbody>
         @foreach (var issue in Model.Issues)
         { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td>
-              <td>@issue.Warehouse</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
+              <td>@issue.Warehouse</td><td><a class="button" asp-page="/PrintDispatch" asp-route-number="@issue.Number">بازکردن</a></td></tr> }
         @if (Model.Issues.Count==0) { <tr><td colspan="6" class="empty">برگه‌ای در این بازه نیست.</td></tr> }
         </tbody></table></div>
         <nav class="pagination" aria-label="صفحه گزارش انبار">

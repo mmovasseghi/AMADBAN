@@ -35,7 +35,7 @@
         </div>
     </section>
     @if(Model.Template=="permit" && !Model.Petty) { <div class="op-extra">مجوز: @Model.Permit · تاریخ مجوز: @Model.PermitDate</div> }
-    @if(Model.Template=="tax" && !Model.Petty) { <div class="op-extra">مالیات: @Persian.Money(Model.Tax) ریال</div> }
+    @if(Model.Template=="tax" && !Model.Petty && Model.Tax > 0) { <div class="op-extra">مالیات: @Persian.Money(Model.Tax) ریال</div> }
     <section class="op-amount op-frame"><div class="op-side">به حروف</div><div class="op-amount-words">@PersianWords.Number(Model.Amount) ریال</div><strong>@Persian.Money(Model.Amount)</strong></section>
     <p class="op-credit-note">مبلغ نوشته‌شده بالا از محل اعتبارات مربوطه قابل پرداخت می‌باشد.</p>
     <section class="op-approvals op-frame">

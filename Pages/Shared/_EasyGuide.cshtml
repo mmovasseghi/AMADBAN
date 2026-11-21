@@ -18,16 +18,16 @@
     else if (User.IsInRole("agent") && !User.IsInRole("chief"))
     {
         title = "راهنمای کوتاه"; tag = "مأمور خرید";
-        steps.Add(("ثبت فاکتور", "شماره، تاریخ، فروشنده — تیک انبار در صورت نیاز", "/Invoices/New", "ثبت فاکتور"));
-        steps.Add(("پیش‌پرداخت", "منوی پیش‌پرداخت و اعتبار → ثبت → چاپ برگه", "/Credit", "پیش‌پرداخت"));
-        steps.Add(("پیگیری", "روی سطر پرونده در کارتابل کلیک کنید", "/Index", "کارتابل"));
+        steps.Add(("ثبت فاکتور", "منو: ثبت فاکتور — فرم را پر کنید — دکمهٔ سبز پایین", "/Invoices/New", "ثبت فاکتور"));
+        steps.Add(("پیش‌پرداخت", "صفحهٔ اصلی → باز کردن پرونده → دکمهٔ سبز پیش‌پرداخت → چاپ", "/Index", "صفحهٔ اصلی"));
+        steps.Add(("پیگیری", "صفحهٔ اصلی → دکمه «باز کردن پرونده»", "/Index", "صفحهٔ اصلی"));
     }
     else if (User.IsInRole("chief"))
     {
         title = "راهنمای کوتاه"; tag = "رئیس آماد";
-        steps.Add(("کارهای معطل", "کارت‌های رنگی پایین همین صفحه", null, null));
-        steps.Add(("فاکتور و انبار", "ثبت یا باز کردن پرونده؛ قدم بعدی داخل پرونده", "/Invoices/New", "ثبت فاکتور"));
-        steps.Add(("گزارش و تنظیم", "منوی «گزارش‌ها و کارهای دیگر»", null, null));
+        steps.Add(("کار فوری", "روی کارت‌های رنگی پایین همین صفحه بزنید", null, null));
+        steps.Add(("خرید", "ثبت فاکتور یا باز کردن پرونده از جدول", "/Invoices/New", "ثبت فاکتور"));
+        steps.Add(("تنظیمات", "در منو: بخش‌ها، فروشندگان، کاربران", "/Departments", "بخش‌ها"));
     }
     else
     {
@@ -35,8 +35,8 @@
         steps.Add(("پرونده", "صفحهٔ اصلی → کلیک روی سطر", "/Index", "صفحهٔ اصلی"));
     }
 }
-<details class="role-guide">
-    <summary><span>@title</span><small>@tag</small></summary>
+<section class="role-guide card" aria-label="@title">
+    <div class="role-guide-head"><span>@title</span><small>@tag</small></div>
     <ol>
         @foreach (var (bold, text, linkPage, linkText) in steps)
         {
@@ -49,4 +49,4 @@
             </li>
         }
     </ol>
-</details>
+</section>

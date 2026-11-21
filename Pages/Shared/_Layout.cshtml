@@ -8,6 +8,16 @@
     <link rel="icon" href="/amadban-mark.svg" type="image/svg+xml">
     <title>@ViewData["Title"] · آمادبان</title>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true">
+    <script>
+        (function () {
+            try {
+                var v = localStorage.getItem('amadban-simple-ui');
+                if (v === null || v === '1') document.documentElement.classList.add('simple-ui');
+            } catch (_) {
+                document.documentElement.classList.add('simple-ui');
+            }
+        })();
+    </script>
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -25,11 +35,15 @@
             </a>
             <nav aria-label="منو">
                 <span class="menu-caption">کارهای اصلی</span>
-                <a class="@(activePage == "/Index" && !Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index"><img class="menu-icon" src="/icon3d/cube.webp" width="30" height="30" alt=""> صفحهٔ اصلی</a>
+                <a class="@(activePage == "/Index" && !Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index"><img class="menu-icon" src="/icon3d/cube.webp" width="30" height="30" alt=""> صفحهٔ اصلی (کارتابل)</a>
                 @if (User.IsInRole("agent") || User.IsInRole("chief"))
                 {
                     <a class="@(activePage == "/Invoices/New" ? "active" : "")" asp-page="/Invoices/New"><img class="menu-icon" src="/icon3d/file-text.webp" width="30" height="30" alt=""> ثبت فاکتور</a>
                     <a class="@(activePage == "/Credit" ? "active" : "")" asp-page="/Credit"><img class="menu-icon" src="/icon3d/money-bag.webp" width="30" height="30" alt=""> پیش‌پرداخت و اعتبار</a>
+                    <a class="@(activePage == "/Suppliers" ? "active" : "")" asp-page="/Suppliers"><img class="menu-icon" src="/icon3d/boy.webp" width="30" height="30" alt=""> فروشندگان</a>
+                    <a class="@(activePage == "/Bank" ? "active" : "")" asp-page="/Bank"><img class="menu-icon" src="/icon3d/card.webp" width="30" height="30" alt=""> چک و فرم صیاد</a>
+                    <a class="@(activePage == "/Petty" ? "active" : "")" asp-page="/Petty"><img class="menu-icon" src="/icon3d/wallet.webp" width="30" height="30" alt=""> تنخواه</a>
+                    <a class="@(activePage == "/TaxBatch" ? "active" : "")" asp-page="/TaxBatch"><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> ثبت مالیات چند سند</a>
                 }
                 @if (User.IsInRole("warehouse") || User.IsInRole("chief"))
                 {
@@ -47,28 +61,17 @@
                 }
                 @if (User.IsInRole("chief") || User.IsInRole("agent"))
                 {
-                <details class="menu-more">
-                    <summary><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> گزارش‌ها و کارهای دیگر</summary>
-                    <div class="menu-more-body">
-                        <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>
-                        <a class="@(activePage == "/Analytics" ? "active" : "")" asp-page="/Analytics"><img class="menu-icon" src="/icon3d/calculator.webp" width="30" height="30" alt=""> تحلیل خریدها</a>
-                        @if (User.IsInRole("agent") || User.IsInRole("chief"))
-                        {
-                            <a class="@(activePage == "/Suppliers" ? "active" : "")" asp-page="/Suppliers"><img class="menu-icon" src="/icon3d/boy.webp" width="30" height="30" alt=""> فروشندگان</a>
-                            <a class="@(activePage == "/Bank" ? "active" : "")" asp-page="/Bank"><img class="menu-icon" src="/icon3d/card.webp" width="30" height="30" alt=""> چک و فرم صیاد</a>
-                            <a class="@(activePage == "/TaxBatch" ? "active" : "")" asp-page="/TaxBatch"><img class="menu-icon" src="/icon3d/folder.webp" width="30" height="30" alt=""> ثبت مالیات چند سند</a>
-                            <a class="@(activePage == "/Petty" ? "active" : "")" asp-page="/Petty"><img class="menu-icon" src="/icon3d/wallet.webp" width="30" height="30" alt=""> تنخواه</a>
-                        }
-                        @if (User.IsInRole("chief"))
-                        {
-                            <a class="@(activePage == "/Activity" ? "active" : "")" asp-page="/Activity"><img class="menu-icon" src="/icon3d/megaphone.webp" width="30" height="30" alt=""> اطلاعیه‌های آماد
-                                @if (unreadActivity>0) { <span class="notification-pill">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</span> }
-                            </a>
-                            <a class="@(activePage == "/Organization" ? "active" : "")" asp-page="/Organization"><img class="menu-icon" src="/icon3d/setting.webp" width="30" height="30" alt=""> نشان و امضا</a>
-                            <a class="@(activePage == "/Staff" ? "active" : "")" asp-page="/Staff"><img class="menu-icon" src="/icon3d/key.webp" width="30" height="30" alt=""> کاربران</a>
-                        }
-                    </div>
-                </details>
+                    <span class="menu-caption">گزارش و تنظیمات</span>
+                    <a class="@(activePage == "/Index" && Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index" asp-route-Report="true"><img class="menu-icon" src="/icon3d/chart.webp" width="30" height="30" alt=""> گزارش فاکتورها</a>
+                    <a class="@(activePage == "/Analytics" ? "active" : "")" asp-page="/Analytics"><img class="menu-icon" src="/icon3d/calculator.webp" width="30" height="30" alt=""> تحلیل خریدها</a>
+                    @if (User.IsInRole("chief"))
+                    {
+                        <a class="@(activePage == "/Activity" ? "active" : "")" asp-page="/Activity"><img class="menu-icon" src="/icon3d/megaphone.webp" width="30" height="30" alt=""> اطلاعیه‌های آماد
+                            @if (unreadActivity>0) { <span class="notification-pill">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</span> }
+                        </a>
+                        <a class="@(activePage == "/Organization" ? "active" : "")" asp-page="/Organization"><img class="menu-icon" src="/icon3d/setting.webp" width="30" height="30" alt=""> نشان و امضا</a>
+                        <a class="@(activePage == "/Staff" ? "active" : "")" asp-page="/Staff"><img class="menu-icon" src="/icon3d/key.webp" width="30" height="30" alt=""> کاربران</a>
+                    }
                 }
             </nav>
             <div class="org">سامانه داخلی آماد و پشتیبانی</div>
@@ -80,7 +83,7 @@
                 <div class="toolbar-actions">
                     @if (User.IsInRole("chief")) { <a class="toolbar-notify" asp-page="/Activity" aria-label="اطلاعیه‌های آماد"><img src="/icon3d/megaphone.webp" width="31" height="31" alt=""><span>اطلاعیه‌ها</span><b data-notification-badge hidden="@(unreadActivity==0)">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</b></a> }
                     <span class="top-user"><img src="/icon3d/boy.webp" width="30" height="30" alt=""> @User.Identity.Name</span>
-                    <form method="post" asp-page="/Logout"><button class="button quiet" type="submit">خروج</button></form></div>
+                    <form method="post" asp-page="/Logout"><button class="button" type="submit">خروج</button></form></div>
             </header>
             <main id="content">
                 @{
@@ -88,13 +91,14 @@
                     var isPrint = contentPage.Contains("/Print", StringComparison.OrdinalIgnoreCase)
                         || contentPage is "/PrintBank" or "/PrintForms" or "/PrintSettings" or "/BrandAsset";
                 }
-                @if (!isPrint && contentPage is not "/Invoices/Detail") { <partial name="_EasyContext" /> }
+                @if (!isPrint && contentPage is "/Index") { <partial name="_EasyContext" /> }
+                else if (!isPrint && User.Identity?.IsAuthenticated == true) { <partial name="_EasyPageTip" /> }
                 @RenderBody()
             </main>
             @if (!isPrint)
             {
                 <footer class="workspace-foot" aria-label="تنظیمات نمایش">
-                    <button type="button" class="display-toggle" data-simple-ui-toggle aria-pressed="false">متن بزرگ‌تر برای خواندن راحت‌تر</button>
+                    <button type="button" class="display-toggle" data-simple-ui-toggle aria-pressed="true">حالت خوانایی آسان (روشن)</button>
                 </footer>
             }
         </div>

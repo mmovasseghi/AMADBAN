@@ -15,7 +15,7 @@ public sealed class PrintSettingsModel(Store store) : PageModel
     public static readonly Dictionary<string, string> Prepayments = new()
     {
         ["readable"] = "نمونه رسمی پیش‌پرداخت", ["excel-old"] = "نمونه قدیمی متصل به سند ۷۹۷",
-        ["permit"] = "با فیلد مجوز", ["tax"] = "با فیلد مالیات"
+        ["permit"] = "با فیلد مجوز"
     };
     public async Task<IActionResult> OnPostAsync(string? form, string? template, long id)
     {

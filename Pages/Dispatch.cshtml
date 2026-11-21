@@ -33,17 +33,17 @@
         <div class="table-wrap"><table class="entry-table"><thead><tr><th>کالا</th><th>تعداد</th><th></th></tr></thead>
             <tbody data-dispatch-lines><tr><td><input name="lines[0].code" data-dispatch-field="code" data-product-code list="dispatch-products" required aria-label="کد کالا" placeholder="نام یا کد"></td>
                 <td><input name="lines[0].quantity" data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد"></td>
-                <td><button class="button quiet" type="button" data-dispatch-remove" aria-label="حذف">×</button></td></tr></tbody></table></div>
+                <td><button class="button button-remove" type="button" data-dispatch-remove>حذف</button></td></tr></tbody></table></div>
         <template data-dispatch-template><tr><td><input data-dispatch-field="code" data-product-code list="dispatch-products" required aria-label="کد کالا"></td>
             <td><input data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد"></td>
-            <td><button class="button quiet" type="button" data-dispatch-remove" aria-label="حذف">×</button></td></tr></template>
+            <td><button class="button button-remove" type="button" data-dispatch-remove>حذف</button></td></tr></template>
         <div class="actions between"><button class="button" type="button" data-dispatch-add>افزودن قلم</button>
             <button class="button primary" type="submit" @(Model.Departments.Count == 0 || Model.WarehouseStaff.Count == 0 ? "disabled" : null)>ثبت خروج و چاپ برگه</button></div>
     </form>
 </section>
 <section class="card"><h2>برگه‌های خروج اخیر</h2>
     <div class="table-wrap"><table><thead><tr><th>شماره</th><th>تاریخ</th><th>بخش</th><th>تحویل‌گیرنده</th><th></th></tr></thead><tbody>
-    @foreach (var issue in Model.Recent) { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td><td><a class="button quiet" asp-page="/PrintDispatch" asp-route-number="@issue.Number">چاپ</a></td></tr> }
+    @foreach (var issue in Model.Recent) { <tr><td>@issue.Number</td><td>@Persian.Date(issue.Date)</td><td>@issue.Department</td><td>@issue.Recipient</td><td><a class="button" asp-page="/PrintDispatch" asp-route-number="@issue.Number">چاپ</a></td></tr> }
     @if (Model.Recent.Count == 0) { <tr><td colspan="5" class="empty">هنوز برگه‌ای ثبت نشده است.</td></tr> }
     </tbody></table></div>
 </section>

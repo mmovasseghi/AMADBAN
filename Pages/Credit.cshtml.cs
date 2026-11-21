@@ -59,6 +59,7 @@ public sealed class CreditModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostAllocateAsync(long from, long to, string? amount)
     {
+        if (from == 0 && !User.IsInRole("chief")) return Forbid();
         Message = ParseAmount(amount) is long value && from >= 0 && to > 0
             ? await store.ChangeCreditAsync(from, to, value, Actor, Role)
             : "کد و مبلغ معتبر وارد کنید.";

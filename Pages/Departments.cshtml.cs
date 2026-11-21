@@ -13,11 +13,13 @@ public sealed class DepartmentsModel(Store store) : PageModel
     public List<DepartmentRoster> Roster { get; private set; } = [];
     [TempData] public string? Message { get; set; }
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private bool CanEdit => User.IsInRole("chief") || User.IsInRole("agent");
 
     public async Task OnGetAsync() => await LoadAsync();
 
     public async Task<IActionResult> OnPostDepartmentAsync(string? name)
     {
+        if (!CanEdit) return Forbid();
         name = name?.Trim() ?? "";
         Message = name.Length is < 2 or > 120 ? "نام بخش را بررسی کنید." : await store.AddDepartmentAsync(name, Actor);
         return RedirectToPage();
@@ -25,6 +27,7 @@ public sealed class DepartmentsModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank, long department)
     {
+        if (!CanEdit) return Forbid();
         name = name?.Trim() ?? "";
         position = position?.Trim() ?? "";
         rank = rank?.Trim() ?? "";
@@ -36,6 +39,7 @@ public sealed class DepartmentsModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostCorrectPersonAsync(long id, string? name, string? position, string? rank, long department)
     {
+        if (!CanEdit) return Forbid();
         name = name?.Trim() ?? "";
         position = position?.Trim() ?? "";
         rank = rank?.Trim() ?? "";

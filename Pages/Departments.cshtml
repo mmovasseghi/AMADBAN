@@ -18,12 +18,19 @@ else if (missingRecipients.Count > 0)
 }
 <section class="card">
     <h2>ثبت بخش و شخص</h2>
+    @if (!(User.IsInRole("chief") || User.IsInRole("agent")))
+    {
+        <p class="notice">فقط مأمور خرید یا رئیس آماد می‌تواند بخش یا شخص جدید ثبت کند. شما فهرست را می‌بینید تا در حواله و سند انتخاب کنید.</p>
+    }
+    else
+    {
     <div class="detail-grid">
         <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش<input name="name" maxlength="120" required placeholder="مثلاً اورژانس"></label><button class="button primary" type="submit">ثبت بخش</button></form>
         <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
             <label>نام و نام خانوادگی<input name="name" maxlength="120" required></label><label>درجه<input name="rank" maxlength="80"></label><label>سمت<input name="position" maxlength="120" placeholder="مسئول بخش، رئیس قسمت، …"></label>
             <button class="button primary" type="submit">ثبت شخص برای این بخش</button></form>
     </div>
+    }
     <div class="table-wrap"><table><thead><tr><th>بخش</th><th>اشخاص (سند خرید و حواله انبار)</th></tr></thead><tbody>
     @foreach (var row in Model.Roster)
     {
@@ -32,6 +39,8 @@ else if (missingRecipients.Count > 0)
     }
     @if (Model.Roster.Count == 0) { <tr><td colspan="2" class="empty">بخشی ثبت نشده است.</td></tr> }
     </tbody></table></div>
+    @if (User.IsInRole("chief") || User.IsInRole("agent"))
+    {
     <details><summary>اصلاح نام، سمت یا بخش شخص</summary>
         @foreach (var row in Model.Roster)
         {
@@ -49,4 +58,5 @@ else if (missingRecipients.Count > 0)
             }
         }
     </details>
+    }
 </section>

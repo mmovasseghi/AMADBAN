@@ -33,8 +33,18 @@ public sealed class DetailModel(Store store) : PageModel
     };
     [TempData] public string? Message { get; set; }
 
+    private async Task<IActionResult?> DenyUnlessInvoiceAsync(long id)
+    {
+        var entry = await store.DetailAsync(id);
+        if (entry is null) return NotFound();
+        if (!InvoiceAccess.CanViewDetail(Role, entry.Summary)) return Forbid();
+        Entry = entry;
+        return null;
+    }
+
     public async Task<IActionResult> OnGetExpertsAsync(long department)
     {
+        if (Role is not ("chief" or "agent" or "warehouse")) return Forbid();
         if (department <= 0) return new JsonResult(Array.Empty<object>());
         var people = await store.RecipientsByDepartmentAsync(department);
         return new JsonResult(people.Select(p => new
@@ -65,9 +75,7 @@ public sealed class DetailModel(Store store) : PageModel
 
     public async Task<IActionResult> OnPostIssueAsync(long id)
     {
-        var entry = await store.DetailAsync(id);
-        if (entry is null) return NotFound();
-        Entry = entry;
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         if (!CanIssue) return Forbid();
         Message = await store.IssueDocumentAsync(id, Actor, Role) ? "سند صادر شد." : "صدور سند برای این پرونده ممکن نیست.";
         return RedirectToPage(new { id });
@@ -76,6 +84,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostKardexAsync(long id, string? number, string? date)
     {
         if (Role is not ("kardex" or "chief")) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         var parsed = Persian.ParseDate(date);
         number = Persian.Latin(number);
         if (parsed is null || number.Length is < 1 or > 80)
@@ -88,6 +97,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostAttachAsync(long id, string? kind, IFormFile? file)
     {
         if (!CanAttach) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         var document = await DocumentUpload.ReadAsync(file);
         if (kind is null || !AttachmentKinds.ContainsKey(kind) || document is null)
         {
@@ -102,6 +112,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostSupplierDocumentAsync(long id, string? kind)
     {
         if (!HandlesFinance) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         if (kind is not ("account" or "taxpayer")) return BadRequest();
         Message = await store.CopySupplierDocumentAsync(id, kind, Actor)
             ? "مدرک فروشنده به پرونده اضافه شد." : "مدرک موجود نیست یا پیش‌تر به پرونده اضافه شده است.";
@@ -121,6 +132,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostFinanceAsync(long id, string action)
     {
         if (!HandlesFinance) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         Message = await store.UpdateFinanceAsync(id, Actor, Role, action);
         return RedirectToPage(new { id });
     }
@@ -128,6 +140,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostTaxUnlinkAsync(long id)
     {
         if(!HandlesFinance)return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         Message=await store.UnlinkTaxBatchAsync(id,Actor);
         return RedirectToPage(new{id});
     }
@@ -135,6 +148,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostPosAsync(long id, bool embedded)
     {
         if (!HandlesFinance) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         Message = await store.SetPosInInvoiceAsync(id, embedded, Actor);
         return RedirectToPage(new { id });
     }
@@ -143,6 +157,7 @@ public sealed class DetailModel(Store store) : PageModel
         List<bool>? createNew)
     {
         if (!CanReceive) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         var day = Persian.ParseDate(date);
         Message = day is null ? "تاریخ شمسی ورود یا اصلاح انبار را بررسی کنید." : operation switch
         {
@@ -156,6 +171,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostRequestSignerAsync(long id, long department, long expert)
     {
         if (!HandlesFinance) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         Message = await store.SetRequestSignerAsync(id,department,expert,Actor);
         return RedirectToPage(new { id });
     }
@@ -163,6 +179,7 @@ public sealed class DetailModel(Store store) : PageModel
     public async Task<IActionResult> OnPostMeetingExtraAsync(long id,long person)
     {
         if (!HandlesFinance) return Forbid();
+        if (await DenyUnlessInvoiceAsync(id) is { } deny) return deny;
         Message = await store.SetMeetingExtraAsync(id,person,Actor);
         return RedirectToPage(new { id });
     }

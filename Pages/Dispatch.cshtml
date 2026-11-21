@@ -2,16 +2,43 @@
 @model Amadban.Pages.DispatchModel
 @{
     ViewData["Title"] = "ارسال کالا به بخش";
+    var missingRecipients = Model.Roster.Where(r => r.Recipients.Count == 0).ToList();
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>بخش و تحویل‌گیرنده را انتخاب کنید، اقلام را وارد کنید و برگه تحویل را چاپ کنید.</p></div></div>
-    <div class="actions"><a class="button" asp-page="/WarehouseReport">گزارش تحویل بخش‌ها</a><a class="button" asp-page="/Stock">موجودی کالاها</a></div></header>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/folder.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">انبار بیمارستان</div><h1>ارسال کالا به بخش</h1><p>ابتدا بخش‌های بیمارستان و مسئول تحویل هر بخش را در کارت پایین تعریف کنید؛ سپس در فرم خروج، بخش مقصد و همان تحویل‌گیرنده را انتخاب کنید.</p></div></div>
+    <div class="actions"><a class="button" href="#department-setup">تعریف بخش و تحویل‌گیرنده</a><a class="button" asp-page="/WarehouseReport">گزارش تحویل بخش‌ها</a><a class="button" asp-page="/Stock">موجودی کالاها</a></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
+@if (Model.Departments.Count == 0)
+{
+    <p class="notice" role="status"><strong>هنوز هیچ بخشی ثبت نشده است.</strong> تا وقتی بخش بیمارستان (مثلاً اورژانس یا آی‌سی‌یو) و تحویل‌گیرندهٔ همان بخش را تعریف نکنید، فرم خروج کالا کامل نمی‌شود. از بخش <a href="#department-setup">تعریف بخش و تحویل‌گیرنده</a> شروع کنید.</p>
+}
+else if (missingRecipients.Count > 0)
+{
+    <p class="notice" role="status">برای @missingRecipients.Count بخش هنوز تحویل‌گیرنده ثبت نشده (@string.Join("، ", missingRecipients.Select(r => r.Name))). هر بخش باید حداقل یک شخص تحویل‌گیرنده داشته باشد.</p>
+}
+<section class="card" id="department-setup">
+    <h2>بخش‌های بیمارستان و تحویل‌گیرندگان</h2>
+    <p>هر <strong>بخش</strong> یک واحد بالینی در بیمارستان است (اورژانس، اتاق عمل و …). <strong>تحویل‌گیرنده</strong> مسئول همان بخش است که کالا را از انبار می‌گیرد و روی برگه امضا می‌کند. این اشخاص با «نشان و امضا» (فقط برای چاپ اسناد مالی) فرق دارند.</p>
+    <div class="detail-grid">
+        <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش جدید<input name="name" maxlength="120" required placeholder="مثلاً بخش جراحی عمومی"></label><button class="button primary" type="submit">ثبت بخش</button></form>
+        <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
+            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required placeholder="نام و نام خانوادگی"></label><label>درجه یا رتبه<input name="rank" maxlength="80" placeholder="در صورت وجود"></label><label>سمت<input name="position" maxlength="120" placeholder="مثلاً مسئول بخش"></label>
+            <button class="button primary" type="submit">ثبت تحویل‌گیرنده برای این بخش</button></form>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>بخش</th><th>تحویل‌گیرندگان ثبت‌شده</th></tr></thead><tbody>
+    @foreach (var row in Model.Roster)
+    {
+        <tr><td>@row.Name</td><td>@if (row.Recipients.Count == 0) { <span class="badge returned">تحویل‌گیرنده ثبت نشده</span> }
+            else { @string.Join(" · ", row.Recipients.Select(p => $"{p.Rank} {p.Name}".Trim() + (p.Position.Length > 0 ? " · " + p.Position : ""))) }</td></tr>
+    }
+    @if (Model.Roster.Count == 0) { <tr><td colspan="2" class="empty">بخشی ثبت نشده است.</td></tr> }
+    </tbody></table></div>
+</section>
 <section class="card">
     <div class="steps"><span>۱ · بخش و تحویل‌گیرنده</span><span>۲ · کالا و تعداد</span><span>۳ · چاپ و امضا</span></div>
     <form method="post" asp-page-handler="Issue" class="dispatch-form" id="dispatch-form">
         <input type="hidden" name="submission" value="@Model.Submission">
         <div class="fields">
-            <label>بخش مقصد<select name="department" required><option value="">بخش را انتخاب کنید</option>
+            <label>بخش مقصد<select name="department" required @((Model.Departments.Count == 0) ? "disabled" : null)><option value="">بخش را انتخاب کنید</option>
                 @foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }
             </select></label>
             <label>شخص تحویل‌گیرنده<select name="recipient" required data-dispatch-recipient disabled><option value="">ابتدا بخش مقصد را انتخاب کنید</option></select></label>
@@ -32,7 +59,7 @@
             <td><input data-dispatch-field="quantity" required inputmode="decimal" aria-label="تعداد تحویل" placeholder="تعداد"></td>
             <td><button class="button quiet" type="button" data-dispatch-remove aria-label="حذف ردیف">×</button></td></tr></template>
         <div class="actions between"><button class="button" type="button" data-dispatch-add>افزودن کالای دیگر</button>
-            <button class="button primary" type="submit">ثبت خروج و بازکردن برگه چاپ</button></div>
+            <button class="button primary" type="submit" @(Model.Departments.Count == 0 ? "disabled" : null)>ثبت خروج و بازکردن برگه چاپ</button></div>
     </form>
     <p class="notice">پس از امضای تحویل‌گیرنده و انباردار، حتماً یک نسخه از برگه را در خود انبار نگه دارید. این برگه به اسکن و بارگذاری نیاز ندارد.</p>
 </section>
@@ -42,11 +69,3 @@
     @if (Model.Recent.Count == 0) { <tr><td colspan="5" class="empty">هنوز برگه خروج ثبت نشده است.</td></tr> }
     </tbody></table></div>
 </section>
-<section class="card"><details><summary>تعریف بخش و تحویل‌گیرنده جدید</summary>
-    <div class="detail-grid">
-        <form method="post" asp-page-handler="Department" class="filters"><label>نام بخش جدید<input name="name" maxlength="120" required placeholder="مثلاً بخش جراحی"></label><button class="button" type="submit">ثبت بخش</button></form>
-        <form method="post" asp-page-handler="Person" class="filters"><label>بخش<select name="department" required><option value="">انتخاب کنید</option>@foreach (var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></label>
-            <label>نام تحویل‌گیرنده<input name="name" maxlength="120" required></label><label>درجه یا رتبه<input name="rank" maxlength="80" placeholder="در صورت وجود"></label><label>سمت یا توضیح<input name="position" maxlength="120" placeholder="مثلاً مسئول بخش"></label>
-            <button class="button" type="submit">ثبت شخص</button></form>
-    </div>
-</details></section>

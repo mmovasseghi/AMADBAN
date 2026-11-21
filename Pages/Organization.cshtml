@@ -15,7 +15,7 @@
 </section>
 <section class="card">
     <h2>تعریف شخص برای امضا</h2>
-    <p>نام و سمت هر شخص را یک‌بار ثبت کنید. سپس جایگاه امضا را به او وصل کنید.</p>
+    <p>نام و سمت هر شخص را یک‌بار ثبت کنید. سپس جایگاه امضا را به او وصل کنید. برای <strong>تحویل کالا از انبار</strong>، بخش و تحویل‌گیرنده را در صفحه <a asp-page="/Dispatch">ارسال کالا به بخش</a> تعریف کنید؛ اینجا فقط امضاهای چاپی اسناد مالی است.</p>
     <form method="post" asp-page-handler="Person" class="filters">
         <label>نام و نام خانوادگی<input name="name" maxlength="120" required></label>
         <label>درجه یا رتبه<input name="rank" maxlength="80" placeholder="مثلاً کارمند ۱۷ یا سرهنگ"></label>
@@ -48,7 +48,10 @@
                 <label>نام<input name="name" value="@person.Name" required maxlength="120"></label>
                 <label>درجه یا رتبه<input name="rank" value="@person.Rank" maxlength="80"></label>
                 <label>سمت<input name="position" value="@person.Position" maxlength="120"></label>
-                <input type="hidden" name="department" value="@(person.DepartmentId ?? 0)">
+                <label>بخش (برای تحویل انبار)<select name="department">
+                    <option value="0" selected="@(person.DepartmentId is null or 0)">بدون بخش — فقط امضای چاپی</option>
+                    @foreach (var department in Model.Departments) { <option value="@department.Id" selected="@(person.DepartmentId == department.Id)">@department.Name</option> }
+                </select></label>
                 <button class="button" type="submit">ذخیره اصلاح</button>
             </form></details> }
     </details>

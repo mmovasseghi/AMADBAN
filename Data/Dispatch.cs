@@ -3,6 +3,7 @@ using Npgsql;
 namespace Amadban.Data;
 
 public sealed record Department(long Id, string Name);
+public sealed record DepartmentRoster(long Id, string Name, IReadOnlyList<Person> Recipients);
 public sealed record Person(long Id, string Name, string Position, string Rank, long? DepartmentId, string? Department);
 public sealed record DispatchLineInput(string Code, decimal Quantity);
 public sealed record DispatchLine(string Code, string Name, string Unit, decimal Quantity, decimal Returned=0)
@@ -22,6 +23,36 @@ public sealed partial class Store
         var result = new List<Department>();
         while (await reader.ReadAsync()) result.Add(new(reader.GetInt64(0), reader.GetString(1)));
         return result;
+    }
+
+    public async Task<List<DepartmentRoster>> DepartmentRosterAsync()
+    {
+        await using var conn = await source.OpenConnectionAsync();
+        await using var cmd = Command(conn, null, """
+            SELECT d.id,d.name,p.id,p.name,p.position,p.rank,p.department_id,d.name
+            FROM departments d
+            LEFT JOIN people p ON p.department_id=d.id AND p.active
+            WHERE d.active
+            ORDER BY d.name,p.name NULLS LAST
+            """);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var map = new Dictionary<long, DepartmentRoster>();
+        while (await reader.ReadAsync())
+        {
+            var departmentId = reader.GetInt64(0);
+            var departmentName = reader.GetString(1);
+            if (!map.TryGetValue(departmentId, out var roster))
+            {
+                roster = new(departmentId, departmentName, []);
+                map[departmentId] = roster;
+            }
+            if (reader.IsDBNull(2)) continue;
+            var people = roster.Recipients.ToList();
+            people.Add(new(reader.GetInt64(2), reader.GetString(3), reader.GetString(4), reader.GetString(5),
+                reader.GetInt64(6), reader.GetString(7)));
+            map[departmentId] = roster with { Recipients = people };
+        }
+        return map.Values.OrderBy(r => r.Name, StringComparer.CurrentCulture).ToList();
     }
 
     public async Task<List<Person>> PeopleAsync()

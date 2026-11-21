@@ -11,6 +11,7 @@ namespace Amadban.Pages;
 public sealed class DispatchModel(Store store) : PageModel
 {
     public List<Department> Departments { get; private set; } = [];
+    public List<DepartmentRoster> Roster { get; private set; } = [];
     public List<(long Id, string Name)> WarehouseStaff { get; private set; } = [];
     public List<DispatchRecord> Recent { get; private set; } = [];
     public Guid Submission { get; private set; } = Guid.NewGuid();
@@ -20,6 +21,7 @@ public sealed class DispatchModel(Store store) : PageModel
     public async Task OnGetAsync()
     {
         Departments = await store.DepartmentsAsync();
+        Roster = await store.DepartmentRosterAsync();
         WarehouseStaff = await store.WarehouseStaffAsync();
         Recent = await store.RecentDispatchesAsync();
     }

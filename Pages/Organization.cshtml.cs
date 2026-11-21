@@ -20,6 +20,7 @@ public sealed class OrganizationModel(Store store) : PageModel
     };
     public Dictionary<string, string> Signers { get; private set; } = [];
     public List<Person> People { get; private set; } = [];
+    public List<Department> Departments { get; private set; } = [];
     [TempData] public string? Message { get; set; }
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -27,6 +28,7 @@ public sealed class OrganizationModel(Store store) : PageModel
     {
         Signers = await store.SignersAsync();
         People = await store.MeetingPeopleAsync();
+        Departments = await store.DepartmentsAsync();
     }
 
     public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank)

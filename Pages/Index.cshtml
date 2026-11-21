@@ -11,7 +11,7 @@
 <header class="hero">
     <div class="hero-main"><span class="hero-icon"><img src="/icon3d/@(Model.Report ? "chart" : "file-text").webp" width="82" height="82" alt=""></span>
         <div><div class="eyebrow">آماد و پشتیبانی</div><h1>@ViewData["Title"]</h1>
-        <p>@(Model.Report ? "تاریخ را بنویسید و دکمهٔ نمایش را بزنید." : "روی هر سطر کلیک کنید تا همان پرونده باز شود.")</p></div></div>
+        <p>@(Model.Report ? "تاریخ را بنویسید و دکمهٔ نمایش را بزنید." : "روی دکمهٔ «باز کردن پرونده» بزنید — یا روی خودِ ردیف جدول.")</p></div></div>
     @if (User.IsInRole("agent") || User.IsInRole("chief"))
     {
         <a class="button primary" asp-page="/Invoices/New"><svg aria-hidden="true"><use href="/icons.svg#plus"></use></svg> ثبت فاکتور</a>
@@ -83,7 +83,7 @@
               asp-route-From="@Model.From" asp-route-To="@Model.To">دریافت اکسل CSV از تمام ردیف‌های فیلترشده</a></p>
     }
     <div class="table-wrap">
-        <table>
+        <table data-clickable-rows>
             <thead><tr><th>سند</th><th>فروشنده و موضوع</th><th>تاریخ فاکتور</th><th>مبلغ (ریال)</th><th>وضعیت</th><th>اقدام</th></tr></thead>
             <tbody>
                 @foreach (var row in Model.Rows)

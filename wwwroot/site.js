@@ -1,14 +1,19 @@
 (() => {
     'use strict';
     const simpleKey = 'amadban-simple-ui';
-    const simpleOn = () => localStorage.getItem(simpleKey) === '1';
+    const simpleOn = () => {
+        const v = localStorage.getItem(simpleKey);
+        if (v === '0') return false;
+        return true;
+    };
     const syncSimpleToggle = () => {
         document.documentElement.classList.toggle('simple-ui', simpleOn());
         const on = simpleOn();
-        const label = 'متن بزرگ‌تر برای خواندن راحت‌تر';
+        const labelOff = 'حالت خوانایی آسان — برای حروف بزرگ‌تر بزنید';
+        const labelOn = 'حالت خوانایی آسان (روشن) — برای حالت معمولی دوباره بزنید';
         document.querySelectorAll('[data-simple-ui-toggle]').forEach(el => {
             el.setAttribute('aria-pressed', on ? 'true' : 'false');
-            el.textContent = on ? label + ' (روشن)' : label;
+            el.textContent = on ? labelOn : labelOff;
         });
     };
     syncSimpleToggle();
@@ -16,6 +21,26 @@
         localStorage.setItem(simpleKey, simpleOn() ? '0' : '1');
         syncSimpleToggle();
     }));
+
+    document.querySelectorAll('[data-confirm]').forEach(button => {
+        const form = button.closest('form');
+        if (!form) return;
+        form.addEventListener('submit', event => {
+            if (event.submitter !== button) return;
+            const message = button.getAttribute('data-confirm') || 'مطمئن هستید؟';
+            if (!window.confirm(message)) event.preventDefault();
+        });
+    });
+
+    document.querySelectorAll('table[data-clickable-rows] tbody tr').forEach(row => {
+        const open = row.querySelector('td a.button[href], td:last-child a[href]');
+        if (!open) return;
+        row.classList.add('row-openable');
+        row.addEventListener('click', event => {
+            if (event.target.closest('a, button, input, select, textarea, label')) return;
+            open.click();
+        });
+    });
 
     const printButton = document.querySelector('[data-print]');
     if (printButton) printButton.addEventListener('click', () => {

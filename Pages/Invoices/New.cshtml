@@ -44,7 +44,7 @@
                     <td><input asp-for="Lines[i].Unit" data-field="Unit" aria-label="واحد" placeholder="عدد" maxlength="30"></td>
                     <td><input asp-for="Lines[i].Quantity" data-field="Quantity" aria-label="تعداد" inputmode="decimal" maxlength="14"></td>
                     <td><input asp-for="Lines[i].Price" data-field="Price" aria-label="قیمت واحد" inputmode="numeric" maxlength="20"></td>
-                    <td><button class="button quiet" type="button" data-remove aria-label="حذف قلم">×</button></td>
+                    <td><button class="button button-remove" type="button" data-remove>حذف</button></td>
                 </tr>
             }
             </tbody>
@@ -56,7 +56,7 @@
             <td><input data-field="Unit" aria-label="واحد" placeholder="عدد" maxlength="30"></td>
             <td><input data-field="Quantity" aria-label="تعداد" inputmode="decimal" maxlength="14" value="1"></td>
             <td><input data-field="Price" aria-label="قیمت واحد" inputmode="numeric" maxlength="20"></td>
-            <td><button class="button quiet" type="button" data-remove aria-label="حذف قلم">×</button></td>
+            <td><button class="button button-remove" type="button" data-remove>حذف</button></td>
         </tr>
     </template>
     <div class="actions between">

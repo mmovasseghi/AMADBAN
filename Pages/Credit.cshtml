@@ -66,12 +66,12 @@
 @if (needInvoice)
 {
     <section class="card">
-        <h2>باز کردن پیش‌پرداخت یک سند</h2>
-        <p>شناسهٔ پرونده را از آدرس مرورگر بگیرید: <code>Invoices/Detail/42</code> یعنی شماره <strong>42</strong>.</p>
-        <form method="get" class="filters">
-            <label>شناسهٔ پرونده<input name="invoice" type="number" min="1" inputmode="numeric" required placeholder="مثلاً ۴۲"></label>
-            <button class="button primary" type="submit">ادامه</button>
-        </form>
+        <h2>پیش‌پرداخت یک سند — سه قدم</h2>
+        <ol class="print-order">
+            <li><a asp-page="/Index">صفحهٔ اصلی</a> — پرونده را در جدول پیدا کنید</li>
+            <li>دکمهٔ «باز کردن پرونده» را بزنید</li>
+            <li>بالای پرونده دکمهٔ سبز <strong>پیش‌پرداخت این سند</strong> را بزنید</li>
+        </ol>
     </section>
 }
 @if (onDocument)

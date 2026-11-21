@@ -8,6 +8,16 @@
     <link rel="icon" href="/amadban-mark.svg" type="image/svg+xml">
     <title>@ViewData["Title"] · آمادبان</title>
     <link rel="stylesheet" href="~/site.css" asp-append-version="true">
+    <script>
+        (function () {
+            try {
+                var v = localStorage.getItem('amadban-simple-ui');
+                if (v === null || v === '1') document.documentElement.classList.add('simple-ui');
+            } catch (_) {
+                document.documentElement.classList.add('simple-ui');
+            }
+        })();
+    </script>
     <script src="~/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
@@ -25,7 +35,7 @@
             </a>
             <nav aria-label="منو">
                 <span class="menu-caption">کارهای اصلی</span>
-                <a class="@(activePage == "/Index" && !Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index"><img class="menu-icon" src="/icon3d/cube.webp" width="30" height="30" alt=""> صفحهٔ اصلی</a>
+                <a class="@(activePage == "/Index" && !Context.Request.Query.ContainsKey("Report") ? "active" : "")" asp-page="/Index"><img class="menu-icon" src="/icon3d/cube.webp" width="30" height="30" alt=""> صفحهٔ اصلی (کارتابل)</a>
                 @if (User.IsInRole("agent") || User.IsInRole("chief"))
                 {
                     <a class="@(activePage == "/Invoices/New" ? "active" : "")" asp-page="/Invoices/New"><img class="menu-icon" src="/icon3d/file-text.webp" width="30" height="30" alt=""> ثبت فاکتور</a>
@@ -73,7 +83,7 @@
                 <div class="toolbar-actions">
                     @if (User.IsInRole("chief")) { <a class="toolbar-notify" asp-page="/Activity" aria-label="اطلاعیه‌های آماد"><img src="/icon3d/megaphone.webp" width="31" height="31" alt=""><span>اطلاعیه‌ها</span><b data-notification-badge hidden="@(unreadActivity==0)">@(unreadActivity>99 ? "۹۹+" : unreadActivity.ToString())</b></a> }
                     <span class="top-user"><img src="/icon3d/boy.webp" width="30" height="30" alt=""> @User.Identity.Name</span>
-                    <form method="post" asp-page="/Logout"><button class="button quiet" type="submit">خروج</button></form></div>
+                    <form method="post" asp-page="/Logout"><button class="button" type="submit">خروج</button></form></div>
             </header>
             <main id="content">
                 @{
@@ -82,12 +92,13 @@
                         || contentPage is "/PrintBank" or "/PrintForms" or "/PrintSettings" or "/BrandAsset";
                 }
                 @if (!isPrint && contentPage is "/Index") { <partial name="_EasyContext" /> }
+                else if (!isPrint && User.Identity?.IsAuthenticated == true) { <partial name="_EasyPageTip" /> }
                 @RenderBody()
             </main>
             @if (!isPrint)
             {
                 <footer class="workspace-foot" aria-label="تنظیمات نمایش">
-                    <button type="button" class="display-toggle" data-simple-ui-toggle aria-pressed="false">متن بزرگ‌تر برای خواندن راحت‌تر</button>
+                    <button type="button" class="display-toggle" data-simple-ui-toggle aria-pressed="true">حالت خوانایی آسان (روشن)</button>
                 </footer>
             }
         </div>

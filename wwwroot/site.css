@@ -1,3 +1,4 @@
+html{min-width:1024px}
 @font-face{font-family:Vazirmatn;src:url('/vazirmatn-fa.woff2') format('woff2');font-display:swap}
 :root{--navy:#14273a;--green:#14684f;--green-dark:#0d4f3c;--green-pale:#e6f3ed;--ink:#192e3b;--muted:#556a75;--line:#dce8e2;--paper:#fff;--bg:#f2f7f4;--motion:140ms cubic-bezier(.2,.75,.26,1)}
 *{box-sizing:border-box}

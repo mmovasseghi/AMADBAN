@@ -115,16 +115,6 @@ public sealed partial class Store
         return await FindPrepayment(conn, null, key, byInvoice);
     }
 
-    public async Task<List<Prepayment>> OpenProformasAsync()
-    {
-        await using var conn = await source.OpenConnectionAsync();
-        await using var cmd = Command(conn, null, PrepaymentSelect + " WHERE p.invoice_id IS NULL AND p.state<>'void' ORDER BY p.number DESC LIMIT 25");
-        await using var r = await cmd.ExecuteReaderAsync();
-        var list = new List<Prepayment>();
-        while (await r.ReadAsync()) list.Add(ReadPrepayment(r));
-        return list;
-    }
-
     public async Task<(long? Number, string Message)> ReserveAsync(Guid submission, long invoice, string proforma, string vendor, long code, string owner,
         string bank, string sheba, long amount, string permit, string permitDate, long tax, long actor)
     {
@@ -210,24 +200,6 @@ public sealed partial class Store
         return "تغییر ثبت شد.";
     }
 
-    public async Task<string> LinkProformaAsync(long number, long invoice, long actor)
-    {
-        await using var conn = await source.OpenConnectionAsync();
-        await using var tx = await conn.BeginTransactionAsync();
-        await LockCredit(conn, tx);
-        var pre = await FindPrepayment(conn, tx, number, byInvoice: false);
-        if (pre is null || pre.Invoice is not null || pre.State == "void") return "پیش‌پرداخت آزاد پیدا نشد.";
-        if (await Scalar(conn, tx, """
-            SELECT id FROM invoices WHERE id=$1 AND kind='credit' AND document_number IS NOT NULL
-            AND total=$2 AND lower(vendor)=lower($3) AND paid_at IS NULL AND delivery_state IN ('open','returned') FOR UPDATE
-            """, invoice, pre.Amount, pre.Vendor) is null || await FindPrepayment(conn, tx, invoice, true) is not null)
-            return "فروشنده، مبلغ یا وضعیت سند با پیش‌پرداخت هم‌خوانی ندارد.";
-        await Exec(conn, tx, "UPDATE prepayments SET invoice_id=$2 WHERE number=$1", number, invoice);
-        if (pre.State == "paid") await Exec(conn, tx, "UPDATE invoices SET paid_at=now(),paid_by=$2 WHERE id=$1", invoice, actor);
-        await Event(conn, tx, invoice, actor, $"اتصال پیش‌پرداخت {number} به سند");
-        await tx.CommitAsync();
-        return "پیش‌پرداخت به سند متصل شد.";
-    }
 
     private const string PrepaymentSelect = """
         SELECT p.number,p.invoice_id,p.proforma_number,p.vendor,p.code_id,c.code,c.title,p.owner,p.bank,p.sheba,p.amount,p.state,p.permit_number,p.permit_date,p.tax_amount,p.created_at

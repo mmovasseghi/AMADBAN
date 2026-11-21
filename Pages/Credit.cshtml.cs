@@ -12,7 +12,6 @@ public sealed class CreditModel(Store store) : PageModel
     public List<CreditBalance> Codes { get; private set; } = [];
     public List<CreditChange> History { get; private set; } = [];
     public List<string> Notices { get; private set; } = [];
-    public List<Prepayment> Proformas { get; private set; } = [];
     public sealed record PendingPayment(string Proforma, string Vendor, long Code, string Owner, string Bank,
         string Sheba, string? Amount, string Permit, string PermitDate, string? Tax);
     public PendingPayment? Pending { get; private set; }
@@ -32,7 +31,8 @@ public sealed class CreditModel(Store store) : PageModel
                 : null;
         }
     }
-    public bool ShowProformaForm => CanPrepay && Invoice is null && Payment is null;
+    /// <summary>صفحهٔ /Credit بدون پرونده — فقط راهنما برای باز کردن پیش‌پرداخت سند.</summary>
+    public bool ShowDocumentEntry => CanPrepay && Invoice is null && Payment is null;
     public bool ShowInvoiceForm => CanPrepay && Invoice is not null && Payment is null && InvoicePrepayNotice is null;
     public Guid Submission { get; } = Guid.NewGuid();
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -56,7 +56,6 @@ public sealed class CreditModel(Store store) : PageModel
         else
         {
             History = await store.CreditHistoryAsync();
-            Proformas = await store.OpenProformasAsync();
             if (!IsAgent) Notices = await store.NoticesAsync();
         }
     }
@@ -84,6 +83,11 @@ public sealed class CreditModel(Store store) : PageModel
         long code, string? owner, string? bank, string? sheba, string? amount, string? permit, string? permitDate, string? tax)
     {
         if (!CanPrepay) return Forbid();
+        if (invoice <= 0)
+        {
+            Message = "پیش‌پرداخت فقط روی پروندهٔ چکی با شماره سند است: کارتابل → پرونده → پیش‌پرداخت این سند.";
+            return RedirectToPage();
+        }
         proforma = Persian.Latin(proforma);
         vendor = vendor?.Trim() ?? "";
         owner = owner?.Trim() ?? "";

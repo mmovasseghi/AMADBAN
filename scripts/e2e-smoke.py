@@ -101,7 +101,7 @@ for user, role in USERS.items():
 
     if user == "ofis":
         _, credit = fetch(op, "/Credit")
-        if "پیش‌پرداخت روی سند" not in credit and "ثبت و چاپ" not in credit:
+        if "پیش‌پرداخت فقط از" not in credit and "ثبت و چاپ" not in credit and "باز کردن پیش‌پرداخت" not in credit:
             add("high", "ofis", "Credit page missing prepayment create form")
         for path in ("/Bank", "/Petty", "/Suppliers"):
             code, _ = fetch(op, path)

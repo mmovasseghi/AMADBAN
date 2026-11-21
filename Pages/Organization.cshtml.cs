@@ -23,19 +23,10 @@ public sealed class OrganizationModel(Store store) : PageModel
     [TempData] public string? Message { get; set; }
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    public bool DemoSeedAvailable { get; private set; }
-
     public async Task OnGetAsync()
     {
         Signers = await store.SignersAsync();
         People = await store.PeopleAsync();
-        DemoSeedAvailable = await store.IsDemoSeedAvailableAsync();
-    }
-
-    public async Task<IActionResult> OnPostSeedDemoAsync()
-    {
-        Message = await store.SeedPresentationAsync(Actor);
-        return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostPersonAsync(string? name, string? position, string? rank)

@@ -5,16 +5,6 @@
 }
 <header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/setting.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">برگه‌های رسمی</div><h1>نشان‌ها و نام امضاکنندگان</h1><p>شخص را یک‌بار تعریف کنید تا نام و سمت او در جای درست برگه‌های چاپی بیاید.</p></div></div></header>
 @if (Model.Message is not null) { <p class="notice" role="status">@Model.Message</p> }
-@if (Model.DemoSeedAvailable)
-{
-<section class="card">
-    <h2>بارگذاری سناریوی نمایشی (LAN)</h2>
-    <p>برای ارائه یا آموزش روی پایگاه خالی، کاربران نمونه، فاکتورها، انبار، حواله و تنخواه واقع‌نما ساخته می‌شوند. رمز همه حساب‌های نمایشی: <strong dir="ltr">amadban12345678</strong></p>
-    <form method="post" asp-page-handler="SeedDemo" onsubmit="return confirm('داده نمایشی یک‌بار برای این پایگاه ساخته می‌شود. ادامه می‌دهید؟');">
-        <button type="submit" class="button primary">ساخت داده نمایشی</button>
-    </form>
-</section>
-}
 <section class="card">
     <h2>فایل اصلی نشان</h2>
     <form method="post" asp-page-handler="Logo" enctype="multipart/form-data" class="filters">

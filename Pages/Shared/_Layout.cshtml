@@ -81,7 +81,7 @@
                     var isPrint = contentPage.Contains("/Print", StringComparison.OrdinalIgnoreCase)
                         || contentPage is "/PrintBank" or "/PrintForms" or "/PrintSettings" or "/BrandAsset";
                 }
-                @if (!isPrint && contentPage is not "/Invoices/Detail") { <partial name="_EasyContext" /> }
+                @if (!isPrint && contentPage is "/Index") { <partial name="_EasyContext" /> }
                 @RenderBody()
             </main>
             @if (!isPrint)

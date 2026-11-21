@@ -38,28 +38,47 @@
         </form>
     </section>
 }
-@if (Model.Advances.Count>0) { <section class="card"><h2>پیش‌پرداخت‌های تنخواه اخیر</h2>
-    <div class="table-wrap"><table><thead><tr><th>شماره پیش‌پرداخت</th><th>شماره فاکتور</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>چاپ / اصلاح</th></tr></thead><tbody>
-    @foreach (var advance in Model.Advances) { <tr><td>@advance.Number</td><td>@advance.InvoiceNumber</td><td>@Persian.Date(advance.Date)</td>
-        <td>@Persian.Money(advance.Amount) ریال</td><td>@(advance.State == "void" ? "باطل" : advance.Received ? "دریافت شده" : "در انتظار دریافت")</td>
-        <td><a class="button" asp-page="/PrintPettyAdvance" asp-route-number="@advance.Number">بازکردن برگه</a>
-            @if (!Model.IsChief && advance.State == "active" && !advance.Received && advance.Actor == User.Identity!.Name)
+@if (Model.Advances.Count>0) {
+    <section class="card"><h2>پیش‌پرداخت‌های تنخواه اخیر</h2>
+        <div class="table-wrap"><table><thead><tr><th>شماره پیش‌پرداخت</th><th>شماره فاکتور</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th><th>عملیات</th></tr></thead><tbody>
+        @foreach (var advance in Model.Advances) {
+            var canEdit = !Model.IsChief && advance.State == "active" && !advance.Received && advance.Actor == User.Identity!.Name;
+            <tr><td>@advance.Number</td><td>@advance.InvoiceNumber</td><td>@Persian.Date(advance.Date)</td>
+                <td>@Persian.Money(advance.Amount) ریال</td><td>@(advance.State == "void" ? "باطل" : advance.Received ? "دریافت شده" : "در انتظار دریافت")</td>
+                <td class="actions">
+                    <a class="button" asp-page="/PrintPettyAdvance" asp-route-number="@advance.Number">بازکردن برگه</a>
+                    @if (canEdit) { <a class="button" href="#petty-advance-@advance.Number">اصلاح</a> }
+                </td></tr> }
+        </tbody></table></div>
+    </section>
+    var editableAdvances = Model.Advances.Where(a => !Model.IsChief && a.State == "active" && !a.Received && a.Actor == User.Identity!.Name).ToList();
+    if (editableAdvances.Count > 0)
+    {
+        <section class="card"><h2>اصلاح پیش‌پرداخت تنخواه</h2>
+            <p>برای هر برگه، فرم اصلاح زیر جدول است — نه داخل ردیف جدول.</p>
+            @foreach (var advance in editableAdvances)
             {
-                <form method="post" asp-page-handler="CorrectAdvance" class="fields">
-                <input type="hidden" name="number" value="@advance.Number">
-                <label>تاریخ<input name="date" value="@Persian.Date(advance.Date)" required></label>
-                <label>مبلغ ریال<input name="amount" value="@advance.Amount" required></label>
-                <label>صاحب حساب<input name="owner" value="@advance.Owner" required></label>
-                <label>بانک<input name="bank" value="@advance.Bank" required></label>
-                <label>شبا<input name="sheba" value="@advance.Sheba" required></label>
-                <label>بابت<input name="description" value="@advance.Description" required></label>
-                <button class="button" type="submit">ذخیره اصلاح</button></form>
-                <form method="post" asp-page-handler="VoidAdvance"><input type="hidden" name="number" value="@advance.Number">
-                    <button class="button" type="submit" data-confirm="برگه تنخواه باطل شود؟">ابطال برگه</button></form>
+                <div class="stock-chief-panel" id="petty-advance-@advance.Number">
+                    <h3>پیش‌پرداخت @advance.Number · @Persian.Money(advance.Amount) ریال</h3>
+                    <form method="post" asp-page-handler="CorrectAdvance" class="fields">
+                        <input type="hidden" name="number" value="@advance.Number">
+                        <label>تاریخ<input name="date" value="@Persian.Date(advance.Date)" required></label>
+                        <label>مبلغ ریال<input name="amount" value="@advance.Amount" required></label>
+                        <label>صاحب حساب<input name="owner" value="@advance.Owner" required></label>
+                        <label>بانک<input name="bank" value="@advance.Bank" required></label>
+                        <label>شبا<input name="sheba" value="@advance.Sheba" required></label>
+                        <label>بابت<input name="description" value="@advance.Description" required></label>
+                        <button class="button" type="submit">ذخیره اصلاح</button>
+                    </form>
+                    <form method="post" asp-page-handler="VoidAdvance" class="actions">
+                        <input type="hidden" name="number" value="@advance.Number">
+                        <button class="button" type="submit" data-confirm="برگه تنخواه باطل شود؟">ابطال برگه</button>
+                    </form>
+                </div>
             }
-        </td></tr> }
-    </tbody></table></div>
-</section> }
+        </section>
+    }
+}
 <section class="card">
     <h2>گزارش بازه</h2>
     <form method="get" class="filters">

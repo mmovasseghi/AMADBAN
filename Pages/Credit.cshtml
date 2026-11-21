@@ -5,7 +5,7 @@
     var onDocument = Model.ShowInvoiceForm && Model.Invoice is not null;
     var needInvoice = Model.ShowDocumentEntry;
 }
-<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">اعتبار خرید</div><h1>@ViewData["Title"]</h1>
+<header class="hero"><div class="hero-main"><span class="hero-icon"><img src="/icon3d/money-bag.webp" width="82" height="82" alt=""></span><div><div class="eyebrow">@(onDocument || Model.Payment is not null ? "پیش‌پرداخت" : "اعتبار خرید")</div><h1>@ViewData["Title"]</h1>
         @if (onDocument)
         {
             <p>پیش‌پرداخت سند <strong>@Model.Invoice!.Summary.Document</strong> — فرم را پر کنید → <strong>ثبت و چاپ A4</strong>.</p>
@@ -107,13 +107,13 @@
             </div>
             <div class="actions between"><button class="button primary" type="submit">ثبت و چاپ برگه A4</button></div>
         </form>
-        @if (Model.Pending is not null)
-        {
-            <p><a asp-page="/Credit" target="_blank" rel="noopener">افزایش اعتبار در پنجرهٔ جدا</a></p>
-        }
     </section>
+    @if (Model.Pending is not null)
+    {
+        <p class="notice" role="status">اعتبار کافی نیست؟ <a asp-page="/Credit" target="_blank" rel="noopener">مدیریت کد اعتباری در پنجرهٔ جدا</a></p>
+    }
 }
-@if (Model.Payment is null)
+@if (Model.ShowCreditHub)
 {
     @if (Model.Notices.Count > 0)
     {

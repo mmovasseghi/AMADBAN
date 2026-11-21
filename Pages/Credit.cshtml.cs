@@ -34,6 +34,8 @@ public sealed class CreditModel(Store store) : PageModel
     /// <summary>صفحهٔ /Credit بدون پرونده — فقط راهنما برای باز کردن پیش‌پرداخت سند.</summary>
     public bool ShowDocumentEntry => CanPrepay && Invoice is null && Payment is null;
     public bool ShowInvoiceForm => CanPrepay && Invoice is not null && Payment is null && InvoicePrepayNotice is null;
+    /// <summary>صفحهٔ مدیریت کدهای اعتباری — نه هنگام فرم پیش‌پرداخت روی پرونده.</summary>
+    public bool ShowCreditHub => Payment is null && Invoice is null;
     public Guid Submission { get; } = Guid.NewGuid();
     private long Actor => long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private string Role => User.FindFirstValue(ClaimTypes.Role)!;

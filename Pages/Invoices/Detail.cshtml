@@ -152,10 +152,10 @@
         <p>با تیک «کالای جدید»، شناسه انبار خودکار ساخته می‌شود و نام قلم همان متن فاکتور می‌ماند.</p>
     </section>
 }
-<section class="card">
-    <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس و تحویل</h2>
-    @if (row.Warehouse)
-    {
+@if (row.Warehouse)
+{
+    <section class="card">
+        <h2><svg aria-hidden="true"><use href="/icons.svg#archive"></use></svg> کارتکس</h2>
         <p>مهلت کارتکس: <bdi>@Persian.Date(Persian.MonthEnd(row.Date))</bdi></p>
         @if (row.Kardex is not null) { <p>شماره کارتکس @row.Kardex @if (Model.Entry.KardexDate is DateOnly k && k > Persian.MonthEnd(row.Date)) { <span class="badge returned">ثبت با تأخیر</span> }</p> }
         else if (Persian.Today > Persian.MonthEnd(row.Date)) { <p class="badge returned">کارتکس از موعد گذشته است</p> }
@@ -167,31 +167,12 @@
                 <button class="button primary" type="submit">ثبت کارتکس</button>
             </form>
         }
-    }
-    @if (missing.Count > 0) { <p>مانده تا آماده تحویل</p><ul class="missing">@foreach (var item in missing) { <li>@item</li> }</ul> }
-    @if (Model.HandlesFinance && row.Document is not null)
-    {
-        <form method="post" asp-page-handler="Finance" class="actions">
-            @if (!row.Paid && Model.Editable && row.Kind == "cash" && User.IsInRole("agent")) { <button class="button" name="action" value="pay">ثبت پرداخت</button> }
-            @if (row.Delivery is "open" or "returned" && missing.Count == 0) { <button class="button primary" name="action" value="deliver">ثبت تحویل به مالی</button> }
-            @if (row.Paid && row.Kind == "credit" && Model.Editable)
-            {
-                @if (Model.Entry.Proxy) { <button class="button" name="action" value="clear-proxy">رفع نیاز به نیابتی</button> }
-                else { <button class="button" name="action" value="require-proxy">پرداخت گروهی در بانک</button> }
-            }
-            @if (row.Delivery == "delivered" && row.ReviewStage == "finance")
-            {
-                <button class="button" name="action" value="return-finance">برگشت از مالی</button>
-                <button class="button primary" name="action" value="send-deputy">ارسال به معاونت</button>
-            }
-            @if (row.Delivery == "delivered" && row.ReviewStage == "deputy")
-            {
-                <button class="button" name="action" value="return-deputy">برگشت از معاونت</button>
-                <button class="button primary" name="action" value="close">تأیید نهایی و بستن سند</button>
-            }
-        </form>
-    }
-</section>
+        else if (User.IsInRole("kardex") && !User.IsInRole("chief"))
+        {
+            <p><a class="button" asp-page="/KardexQueue">ثبت در صفحهٔ کارتکس</a></p>
+        }
+    </section>
+}
 <section class="card">
     <h2><svg aria-hidden="true"><use href="/icons.svg#file"></use></svg> مدارک پرونده</h2>
     @if (row.Kind == "cash" && Model.HandlesFinance && Model.Editable)
@@ -228,6 +209,32 @@
     }
 </section>
 </div>
+@if (Model.HandlesFinance && row.Document is not null)
+{
+    <section class="card">
+        <h2>گردش مالی و تحویل پرونده</h2>
+        @if (missing.Count > 0) { <p>مانده تا آماده تحویل</p><ul class="missing">@foreach (var item in missing) { <li>@item</li> }</ul> }
+        <form method="post" asp-page-handler="Finance" class="actions">
+            @if (!row.Paid && Model.Editable && row.Kind == "cash" && User.IsInRole("agent")) { <button class="button" name="action" value="pay">ثبت پرداخت</button> }
+            @if (row.Delivery is "open" or "returned" && missing.Count == 0) { <button class="button primary" name="action" value="deliver">ثبت تحویل به مالی</button> }
+            @if (row.Paid && row.Kind == "credit" && Model.Editable)
+            {
+                @if (Model.Entry.Proxy) { <button class="button" name="action" value="clear-proxy">رفع نیاز به نیابتی</button> }
+                else { <button class="button" name="action" value="require-proxy">پرداخت گروهی در بانک</button> }
+            }
+            @if (row.Delivery == "delivered" && row.ReviewStage == "finance")
+            {
+                <button class="button" name="action" value="return-finance">برگشت از مالی</button>
+                <button class="button primary" name="action" value="send-deputy">ارسال به معاونت</button>
+            }
+            @if (row.Delivery == "delivered" && row.ReviewStage == "deputy")
+            {
+                <button class="button" name="action" value="return-deputy">برگشت از معاونت</button>
+                <button class="button primary" name="action" value="close">تأیید نهایی و بستن سند</button>
+            }
+        </form>
+    </section>
+}
 
 <section class="card"><h2>سابقه پرونده</h2>
     <div class="table-wrap"><table><thead><tr><th>زمان</th><th>اقدام</th><th>ثبت‌کننده</th></tr></thead>

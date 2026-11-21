@@ -16,43 +16,6 @@
 {
     <section class="card">
         <h2>@product.Name · @product.Stock.ToString("0.###") @product.Unit</h2>
-        @if (Model.CanEditStock)
-        {
-        <div class="stock-chief-panel" id="edit-stock">
-            <h3>ویرایش دستی موجودی — @product.Name</h3>
-            <p class="form-note">ماندهٔ الان: <strong>@product.Stock.ToString("0.###") @product.Unit</strong>. برای اضافه یا کم کردن بدون فاکتور، نوع و مقدار را بنویسید و ثبت کنید.</p>
-            <form method="post" asp-page-handler="Move" class="filters">
-                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
-                <label>نوع<select name="kind"><option value="in">ورود (افزایش)</option><option value="out">خروج (کاهش)</option><option value="opening">شروع اولیه (فقط اگر هنوز گردشی نداشته)</option></select></label>
-                <label>مقدار<input name="quantity" inputmode="decimal" required placeholder="مثلاً ۱۰"></label>
-                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
-                <label>توضیح / بخش (اختیاری)<input name="department" maxlength="120" placeholder="دلیل یا نام بخش"></label>
-                <button class="button primary" type="submit">اعمال روی موجودی</button>
-            </form>
-        </div>
-        <div class="stock-chief-panel">
-            <h3>انبارگردانی — مانده را برابر شمارش واقعی کنید</h3>
-            <p>اگر در انبار شمردید و عدد با سیستم فرق دارد، موجودی واقعی را بنویسید.</p>
-            <form method="post" asp-page-handler="Count" class="filters">
-                <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
-                <label>موجودی واقعی شمارش‌شده<input name="counted" inputmode="decimal" required></label>
-                <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
-                <label>یادداشت<input name="note" maxlength="120"></label>
-                <button class="button" type="submit">ثبت شمارش</button>
-            </form>
-        </div>
-        <div class="stock-chief-panel">
-            <h3>اصلاح نام، کد یا واحد کالا</h3>
-            <form method="post" asp-page-handler="CorrectProduct" class="filters">
-                <input type="hidden" name="id" value="@product.Id">
-                <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
-                <label>نام کالا<input name="name" value="@product.Name" required maxlength="150"></label>
-                <label>واحد<input name="unit" value="@product.Unit" required maxlength="30"></label>
-                <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
-                <button type="submit" class="button">ذخیره مشخصات</button>
-            </form>
-        </div>
-        }
         <form method="get" class="filters">
             <input type="hidden" name="ProductId" value="@product.Id">
             <label>از تاریخ<input name="From" dir="ltr" value="@Model.From" placeholder="۱۴۰۵/۰۱/۰۱"></label>
@@ -67,6 +30,43 @@
                 <td>@(entry.Counted is decimal counted ? $"{counted:0.###} از {entry.Before:0.###}" : "—")</td><td>@(entry.Department ?? "—")</td><td>@entry.Actor</td>
                 <td>@if (entry.Invoice is long id) { <a asp-page="/Invoices/Detail" asp-route-id="@id">مشاهده</a> }</td></tr>
         }</tbody></table></div>
+        @if (Model.CanEditStock)
+        {
+            <div class="stock-chief-panel" id="edit-stock">
+                <h3>ویرایش دستی موجودی — @product.Name</h3>
+                <p class="form-note">ماندهٔ الان: <strong>@product.Stock.ToString("0.###") @product.Unit</strong>. برای اضافه یا کم کردن بدون فاکتور، نوع و مقدار را بنویسید و ثبت کنید.</p>
+                <form method="post" asp-page-handler="Move" class="filters">
+                    <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
+                    <label>نوع<select name="kind"><option value="in">ورود (افزایش)</option><option value="out">خروج (کاهش)</option><option value="opening">شروع اولیه (فقط اگر هنوز گردشی نداشته)</option></select></label>
+                    <label>مقدار<input name="quantity" inputmode="decimal" required placeholder="مثلاً ۱۰"></label>
+                    <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+                    <label>توضیح / بخش (اختیاری)<input name="department" maxlength="120" placeholder="دلیل یا نام بخش"></label>
+                    <button class="button primary" type="submit">اعمال روی موجودی</button>
+                </form>
+            </div>
+            <div class="stock-chief-panel">
+                <h3>انبارگردانی — مانده را برابر شمارش واقعی کنید</h3>
+                <p>اگر در انبار شمردید و عدد با سیستم فرق دارد، موجودی واقعی را بنویسید.</p>
+                <form method="post" asp-page-handler="Count" class="filters">
+                    <input type="hidden" name="productId" value="@product.Id"><input type="hidden" name="submission" value="@Model.Submission">
+                    <label>موجودی واقعی شمارش‌شده<input name="counted" inputmode="decimal" required></label>
+                    <label>تاریخ شمسی<input name="date" dir="ltr" value="@Persian.Date(Persian.Today)" required></label>
+                    <label>یادداشت<input name="note" maxlength="120"></label>
+                    <button class="button" type="submit">ثبت شمارش</button>
+                </form>
+            </div>
+            <div class="stock-chief-panel">
+                <h3>اصلاح نام، کد یا واحد کالا</h3>
+                <form method="post" asp-page-handler="CorrectProduct" class="filters">
+                    <input type="hidden" name="id" value="@product.Id">
+                    <label>کد کالا<input name="code" value="@product.Code" required maxlength="40"></label>
+                    <label>نام کالا<input name="name" value="@product.Name" required maxlength="150"></label>
+                    <label>واحد<input name="unit" value="@product.Unit" required maxlength="30"></label>
+                    <label>حداقل موجودی<input name="minimum" value="@product.Minimum" required inputmode="decimal"></label>
+                    <button type="submit" class="button">ذخیره مشخصات</button>
+                </form>
+            </div>
+        }
     </section>
 }
 <section class="card">

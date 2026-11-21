@@ -42,7 +42,10 @@
         @if (Model.P > 1) { <a class="button" asp-route-P="@(Model.P-1)">قبلی</a> }
         @if (Model.Checks.Count > 25) { <a class="button" asp-route-P="@(Model.P+1)">بعدی</a> }
     </nav>
-    <h2>اصلاح مشخصات چک‌های ثبت‌شده</h2>
+</section>
+<section class="card">
+    <h2>اصلاح مشخصات چک</h2>
+    <p>اول در جدول بالا چک را پیدا کنید؛ اینجا فقط اصلاح همان ردیف است.</p>
         @foreach (var c in Model.Checks.Take(25))
         {
             <div class="stock-chief-panel">

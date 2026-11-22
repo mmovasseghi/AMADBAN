@@ -16,20 +16,15 @@
 
 روی **سرور LAN هیچ چیز از اینترنت دانلود نمی‌شود**. یک بار روی PC متصل به نت بسته بسازید، USB ببرید، روی سرور فقط **یک بار کلیک**.
 
-### مرحله الف — ساخت USB (PC دارای .NET SDK و اینترنت)
+### مرحله الف — دانلود ZIP کامل از GitHub (پیشنهاد)
 
-```powershell
-git clone <AMADBAN> C:\AmadbanSrc
-cd C:\AmadbanSrc
-Set-ExecutionPolicy -Scope Process Bypass
-.\scripts\windows\offline\Build-OfflineBundle.ps1
-```
+همهٔ پیش‌نیازها داخل ZIP است؛ **نیازی به دانلود جداگانه PostgreSQL نیست.**
 
-1. فایل نصب PostgreSQL برای ویندوز x64 را از سایت سازنده بگیرید (مثلاً `postgresql-17.x-windows-x64.exe`).
-2. داخل پوشه خروجی کپی کنید: `dist\Amadban-Offline-*\postgres\`
-3. (اختیاری) `VC_redist.x64.exe` در `postgres\vcredist\` اگر سرور قدیمی است.
+1. [مخزن AMADBAN](https://github.com/mmovasseghi/AMADBAN) → **Actions** → **Build Windows offline flash bundle** → **Run workflow**
+2. بعد از اتمام → **Artifacts** → `Amadban-Offline-Windows.zip`
+3. ZIP را باز کنید و کل پوشه را روی **فلش** بگذارید.
 
-کل پوشه `Amadban-Offline-*` را روی فلش یا شبکه داخلی کپی کنید.
+(جایگزین: ساخت محلی با `.\scripts\windows\offline\Build-OfflineBundle.ps1 -DownloadPrerequisites`)
 
 ### مرحله ب — نصب روی Windows Server 2019 (فقط یک کلیک)
 

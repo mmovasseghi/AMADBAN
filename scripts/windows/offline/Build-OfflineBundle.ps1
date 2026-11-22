@@ -2,8 +2,12 @@
 param(
     [string]$RepoRoot = '',
     [string]$OutDir = '',
-    [string]$Version = ''
+    [string]$Version = '',
+    [switch]$DownloadPrerequisites
 )
+
+$PostgresUrl = 'https://get.enterprisedb.com/postgresql/postgresql-17.4-1-windows-x64.exe'
+$VcRedistUrl = 'https://aka.ms/vs/17/release/vc_redist.x64.exe'
 
 $ErrorActionPreference = 'Stop'
 
@@ -61,6 +65,21 @@ Copy-Item (Join-Path $RepoRoot 'bundle/README.md') (Join-Path $OutDir 'README.tx
   postgres\postgresql-17-windows-x64.exe
 (نام فایل می‌تواند postgresql-*-windows-x64.exe باشد)
 "@ | Set-Content -Path (Join-Path $postgresDir 'README-POSTGRES.txt') -Encoding UTF8
+
+if ($DownloadPrerequisites) {
+    $pgExe = Join-Path $postgresDir 'postgresql-17.4-1-windows-x64.exe'
+    $vcDir = Join-Path $postgresDir 'vcredist'
+    New-Item -ItemType Directory -Force -Path $vcDir | Out-Null
+    if (-not (Test-Path $pgExe)) {
+        Write-Host 'Downloading PostgreSQL installer...'
+        Invoke-WebRequest -Uri $PostgresUrl -OutFile $pgExe -UseBasicParsing
+    }
+    $vcExe = Join-Path $vcDir 'VC_redist.x64.exe'
+    if (-not (Test-Path $vcExe)) {
+        Write-Host 'Downloading VC++ redistributable...'
+        Invoke-WebRequest -Uri $VcRedistUrl -OutFile $vcExe -UseBasicParsing
+    }
+}
 
 Write-Host ""
 Write-Host "Bundle ready: $OutDir"

@@ -1,0 +1,53 @@
+name: Build Windows offline flash bundle
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+      - 'offline-*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build complete offline folder
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VER="${{ github.ref_name }}"
+          else
+            VER="snapshot-${{ github.sha }}"
+            VER="${VER:0:20}"
+          fi
+          chmod +x scripts/package-windows-offline.sh
+          scripts/package-windows-offline.sh "$VER"
+
+      - name: Create ZIP for USB
+        run: |
+          FOLDER="$(ls -d dist/Amadban-Offline-* | head -1)"
+          NAME="$(basename "$FOLDER")"
+          cd dist
+          zip -r "Amadban-Offline-Windows.zip" "$NAME"
+          ls -lah Amadban-Offline-Windows.zip
+
+      - name: Upload workflow artifact (download from Actions tab)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amadban-Offline-Windows
+          path: dist/Amadban-Offline-Windows.zip
+          retention-days: 90
+
+      - name: Publish GitHub Release (tags only)
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Amadban-Offline-Windows.zip
+          generate_release_notes: true

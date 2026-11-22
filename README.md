@@ -13,6 +13,16 @@ docker compose ps
 
 نشانی پیش‌فرض روی خود سرور `http://127.0.0.1:8088` و نام کاربری اولیه `admin` است. مدیر از منوی «کاربران»، حساب افسرعامل، انباردار و کارتکس می‌سازد. رمز اولیه فقط در ایجاد نخستین حساب روی پایگاه خالی استفاده می‌شود.
 
+## Windows Server 2019 — فلش آفلاین (یک کلیک)
+
+سرور **به اینترنت وصل نیست**؛ همه‌چیز را **یک بار از GitHub** می‌گیرید و روی فلش می‌ریزید:
+
+1. مخزن → **Actions** → **Build Windows offline flash bundle** → Run workflow  
+2. Artifact: **`Amadban-Offline-Windows.zip`** (برنامه + PostgreSQL + نصب)  
+3. روی سرور: **`نصب-آمادبان.bat`** با Administrator  
+
+جزئیات: [bundle/README.md](bundle/README.md) و [docs/deployment-windows-server-2019-lan.md](docs/deployment-windows-server-2019-lan.md).
+
 ## راه‌اندازی روی LAN ایزوله
 
 ایمیج‌ها را روی دستگاهی که به مخازن لازم برای ساخت دسترسی دارد بسازید. فایل `.env` واقعی هر محیط را روی همان میزبان نگه دارید.

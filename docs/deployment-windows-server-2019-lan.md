@@ -12,7 +12,37 @@
 | شبکه | کارت شبکه در LAN بیمارستان؛ IP ثابت برای سرور (مثال `192.168.10.50`) |
 | نام دامنه | اجباری نیست؛ با IP یا نام NetBIOS کار می‌کند |
 
-## پیش‌نیازهای نرم‌افزار (به ترتیب نصب)
+## نصب یک‌کلیک آفلاین (پیشنهاد برای سرور بدون اینترنت)
+
+روی **سرور LAN هیچ چیز از اینترنت دانلود نمی‌شود**. یک بار روی PC متصل به نت بسته بسازید، USB ببرید، روی سرور فقط **یک بار کلیک**.
+
+### مرحله الف — ساخت USB (PC دارای .NET SDK و اینترنت)
+
+```powershell
+git clone <AMADBAN> C:\AmadbanSrc
+cd C:\AmadbanSrc
+Set-ExecutionPolicy -Scope Process Bypass
+.\scripts\windows\offline\Build-OfflineBundle.ps1
+```
+
+1. فایل نصب PostgreSQL برای ویندوز x64 را از سایت سازنده بگیرید (مثلاً `postgresql-17.x-windows-x64.exe`).
+2. داخل پوشه خروجی کپی کنید: `dist\Amadban-Offline-*\postgres\`
+3. (اختیاری) `VC_redist.x64.exe` در `postgres\vcredist\` اگر سرور قدیمی است.
+
+کل پوشه `Amadban-Offline-*` را روی فلش یا شبکه داخلی کپی کنید.
+
+### مرحله ب — نصب روی Windows Server 2019 (فقط یک کلیک)
+
+1. پوشه را روی سرور باز کنید.
+2. **`نصب-آمادبان.bat`** → راست‌کلیک → **Run as administrator**
+3. منتظر بمانید تا PostgreSQL + سرویس **Amadban** + فایروال پورت **8088** آماده شود.
+4. از PCهای LAN: `http://<IP-ثابت-سرور>:8088/Login` — کاربر `admin`، رمز در `C:\Amadban\config\service.env`.
+
+جزئیات و ساختار بسته: [bundle/README.md](../bundle/README.md).
+
+---
+
+## پیش‌نیازهای نرم‌افزار (نصب دستی — اگر یک‌کلیک نمی‌خواهید)
 
 ### ۱) به‌روزرسانی ویتوز
 

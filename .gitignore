@@ -3,3 +3,6 @@ obj/
 .env
 *.user
 artifacts/
+dist/
+bundle/postgresql/*.exe
+bundle/postgresql/vcredist/

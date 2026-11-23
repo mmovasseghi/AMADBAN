@@ -50,7 +50,8 @@ $envVars['ASPNETCORE_URLS'] = "http://0.0.0.0:$LanPort"
 if (-not $envVars['AMADBAN_KEYS']) { $envVars['AMADBAN_KEYS'] = $Keys }
 if (-not $envVars['ASPNETCORE_ENVIRONMENT']) { $envVars['ASPNETCORE_ENVIRONMENT'] = 'Production' }
 
-$dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue)?.Source
+$dotnetCmd = Get-Command dotnet -ErrorAction SilentlyContinue
+$dotnet = if ($dotnetCmd) { $dotnetCmd.Source } else { $null }
 if (-not $dotnet) { throw 'dotnet not found. Install ASP.NET Core Runtime 10.x for Windows x64.' }
 
 Write-Host "Publishing to $Publish ..."

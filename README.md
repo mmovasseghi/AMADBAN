@@ -21,7 +21,7 @@ docker compose ps
 2. Artifact: **`Amadban-Offline-Windows.zip`** (برنامه + PostgreSQL + نصب)  
 3. روی سرور: **`نصب-آمادبان.bat`** با Administrator  
 
-جزئیات: [bundle/README.md](bundle/README.md) و [docs/deployment-windows-server-2019-lan.md](docs/deployment-windows-server-2019-lan.md).
+جزئیات: [docs/FLASH-USB.fa.md](docs/FLASH-USB.fa.md) · [bundle/README.md](bundle/README.md) · [deployment-windows-2019](docs/deployment-windows-server-2019-lan.md)
 
 ## راه‌اندازی روی LAN ایزوله
 

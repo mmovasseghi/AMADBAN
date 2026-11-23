@@ -1,0 +1,52 @@
+name: Build Windows offline patch (small ZIP)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'bundle/INSTALL.bat'
+      - 'scripts/windows/offline/**'
+      - 'scripts/package-windows-offline-patch.sh'
+      - '.github/workflows/build-windows-offline-patch.yml'
+    tags:
+      - 'offline-patch-*'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build patch ZIP
+        run: |
+          PATCH_VER="1.0.1"
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            PATCH_VER="${{ github.ref_name }}"
+            PATCH_VER="${PATCH_VER#offline-patch-}"
+          fi
+          chmod +x scripts/package-windows-offline-patch.sh
+          scripts/package-windows-offline-patch.sh "$PATCH_VER"
+
+      - name: Show patch size
+        run: ls -lah dist/Amadban-Offline-Patch*.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amadban-Offline-Patch
+          path: dist/Amadban-Offline-Patch*.zip
+          retention-days: 90
+
+      - name: Publish Release (offline-patch-* tags only)
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'offline-patch-')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Amadban-Offline-Patch*.zip
+          tag_name: ${{ github.ref_name }}
+          name: Amadban offline install patch ${{ github.ref_name }}
+          body: |
+            Small patch for existing **offline-v1.0.0** flash bundle. Extract inside your `Amadban-Offline-*` folder, then run **INSTALL.bat** as Administrator. No need to re-download the full ~400MB ZIP.
+          generate_release_notes: false

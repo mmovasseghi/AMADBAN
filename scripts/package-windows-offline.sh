@@ -55,5 +55,22 @@ pause
 BAT
 
 echo "$VERSION" > "$OUT/VERSION.txt"
+MANIFEST="$OUT/flash-bundle.manifest.txt"
+{
+  echo "Amadban offline flash bundle"
+  echo "version=$VERSION"
+  echo "built=$(date -u +%Y-%m-%dT%H:%MZ)"
+  echo "files:"
+  echo "  نصب-آمادبان.bat"
+  echo "  app/Amadban.exe"
+  echo "  install/Install-OneClick.ps1"
+  echo "  postgres/postgresql-17.4-1-windows-x64.exe"
+  echo "  postgres/vcredist/VC_redist.x64.exe"
+} > "$MANIFEST"
+
+ZIP="$ROOT/dist/Amadban-Offline-Windows.zip"
+rm -f "$ZIP"
+(cd "$ROOT/dist" && zip -qr "$(basename "$ZIP")" "$(basename "$OUT")")
 echo "Bundle: $OUT"
-echo "Zip for flash: dist/Amadban-Offline-$VERSION.zip"
+echo "ZIP (for GitHub / flash): $ZIP"
+ls -lah "$ZIP"

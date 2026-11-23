@@ -204,7 +204,8 @@ $exe = Join-Path $publish 'Amadban.exe'
 $dll = Join-Path $publish 'Amadban.dll'
 if (Test-Path $exe) { $binPath = "`"$exe`"" }
 elseif (Test-Path $dll) {
-    $dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue)?.Source
+    $dotnetCmd = Get-Command dotnet -ErrorAction SilentlyContinue
+    $dotnet = if ($dotnetCmd) { $dotnetCmd.Source } else { $null }
     if (-not $dotnet) { throw 'Amadban.dll publish requires dotnet on server; rebuild bundle with self-contained app.' }
     $binPath = "`"$dotnet`" `"$dll`""
 }

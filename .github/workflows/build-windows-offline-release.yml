@@ -2,9 +2,23 @@ name: Build Windows offline flash bundle
 on:
   workflow_dispatch:
   push:
+    branches: [main]
+    paths:
+      - 'Amadban.csproj'
+      - '**/*.cs'
+      - '**/*.cshtml'
+      - 'wwwroot/**'
+      - 'database/**'
+      - 'scripts/**'
+      - 'bundle/**'
+      - '.github/workflows/build-windows-offline-release.yml'
     tags:
       - 'v*'
       - 'offline-*'
+
+concurrency:
+  group: offline-flash-bundle
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -30,13 +44,8 @@ jobs:
           chmod +x scripts/package-windows-offline.sh
           scripts/package-windows-offline.sh "$VER"
 
-      - name: Create ZIP for USB
-        run: |
-          FOLDER="$(ls -d dist/Amadban-Offline-* | head -1)"
-          NAME="$(basename "$FOLDER")"
-          cd dist
-          zip -r "Amadban-Offline-Windows.zip" "$NAME"
-          ls -lah Amadban-Offline-Windows.zip
+      - name: Show ZIP for USB
+        run: ls -lah dist/Amadban-Offline-Windows.zip
 
       - name: Upload workflow artifact (download from Actions tab)
         uses: actions/upload-artifact@v4

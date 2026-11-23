@@ -14,7 +14,7 @@ on:
       - '.github/workflows/build-windows-offline-release.yml'
     tags:
       - 'v*'
-      - 'offline-*'
+      - 'offline-v*'
 
 concurrency:
   group: offline-flash-bundle

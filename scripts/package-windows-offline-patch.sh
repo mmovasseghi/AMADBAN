@@ -19,25 +19,28 @@ cp "$ROOT/scripts/windows/offline/Install-OneClick.ps1" "$OUT/install/Install-On
 cp "$ROOT/scripts/windows/offline/Verify-FlashBundle.ps1" "$OUT/install/Verify-FlashBundle.ps1"
 
 cat > "$OUT/README-PATCH.fa.txt" <<EOF
-پچ نصب آمادبان ${PATCH_VER} (روی بسته offline-v1.0.0)
-============================================
+پچ نصب آمادبان ${PATCH_VER} — فقط چند KB (نه 400MB)
+=====================================================
 
-حجم کم است — فقط فایل‌های نصب اصلاح‌شده.
+برای کسانی که Amadban-Offline-Windows.zip نسخه v1.0.0 را دارند.
 
-روی VPS یا فلش:
-1. همان پوشه Amadban-Offline-... که از v1.0.0 دارید را باز کنید.
-2. فایل‌های این ZIP را Extract کنید داخل همان پوشه (جایگزین شود).
-3. app و postgres را دست نزنید.
-4. RUN: INSTALL.bat (Administrator) یا install\\Run-Install.ps1
+جایگزینی (Replace) روی ویندوز:
+1. پوشه فلش را باز کن: داخلش app و install و postgres باشد.
+2. فایل Amadban-Offline-Patch-${PATCH_VER}.zip را کپی کن داخل همان پوشه.
+3. راست کلیک روی ZIP → Extract All → Extract
+   (یا WinRAR: Extract here — وقتی پرسید Replace file? بزن Yes to All)
+4. INSTALL.bat → Run as administrator
 
-فایل‌های پچ:
+فقط این فایل‌ها عوض می‌شوند:
   INSTALL.bat
   نصب-آمادبان.bat
-  install\\Run-Install.ps1
-  install\\Install-OneClick.ps1
+  install/Run-Install.ps1
+  install/Install-OneClick.ps1
+
+app/ و postgres/ دست نخورده می‌مانند.
 
 built=${STAMP}
-applies_to=offline-v1.0.0
+applies_to=offline-v1.0.0_and_v1.0.1_flash_folder
 EOF
 
 echo "patch=${PATCH_VER}" > "$OUT/PATCH-VERSION.txt"
@@ -45,7 +48,8 @@ echo "applies_to=offline-v1.0.0" >> "$OUT/PATCH-VERSION.txt"
 echo "built=$(date -u +%Y-%m-%dT%H:%MZ)" >> "$OUT/PATCH-VERSION.txt"
 
 rm -f "$ZIP"
-(cd "$ROOT/dist" && zip -qr "$(basename "$ZIP")" "$(basename "$OUT")")
+# ZIP root = INSTALL.bat, install/, ... (extract inside flash folder → replace in place)
+(cd "$OUT" && zip -qr "$ZIP" .)
 ls -lah "$ZIP"
 echo "Patch folder: $OUT"
 echo "Patch ZIP: $ZIP"

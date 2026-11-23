@@ -48,5 +48,11 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Amadban offline install patch ${{ github.ref_name }}
           body: |
-            Small patch for existing **offline-v1.0.0** flash bundle. Extract inside your `Amadban-Offline-*` folder, then run **INSTALL.bat** as Administrator. No need to re-download the full ~400MB ZIP.
+            **~7 KB only** — not the 400 MB bundle.
+
+            Download **Amadban-Offline-Patch-*.zip** from Assets below (ignore any other file).
+
+            1. Open your existing flash folder (has `app`, `postgres`, `install`).
+            2. Copy this ZIP into that folder → Extract here → **Replace all**.
+            3. Run **INSTALL.bat** as Administrator.
           generate_release_notes: false

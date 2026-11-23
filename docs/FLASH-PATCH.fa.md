@@ -1,16 +1,15 @@
-# پچ کوچک نصب (روی offline-v1.0.0)
+# پچ کوچک نصب (~۷ KB) — جایگزین روی v1.0.0
 
-اگر **بسته کامل v1.0.0** را دارید و فقط اسکریپت نصب خراب بود، این ZIP (~چند ده KB) کافی است.
+**نه** `offline-v1.0.1` با حجم ۴۰۶ MB — فقط این فایل:
 
-## دانلود
+| دانلود | حجم |
+|--------|-----|
+| **Release `offline-patch-1.0.2`** → `Amadban-Offline-Patch-1.0.2.zip` | ~۷ KB |
+| Release `offline-v1.0.x` → `Amadban-Offline-Windows.zip` | ~۴۰۶ MB (کل بسته) |
 
-- **Release:** برچسب `offline-patch-1.0.1` → `Amadban-Offline-Patch-1.0.1.zip`
-- یا **Actions** → workflow **Build Windows offline patch** → Artifact
+## جایگزینی (Replace)
 
-## استفاده
-
-1. پوشهٔ قدیمی روی فلش/سرور را باز کنید (همان که `app` و `postgres` دارد).
-2. ZIP پچ را **داخل همان پوشه** Extract کنید (replace).
-3. **`INSTALL.bat`** → Run as administrator.
-
-`app/` و `postgres/` را عوض نکنید.
+1. پوشه فلش (همان که از v1.0.0 دارید؛ داخلش `app`، `install`، `postgres`).
+2. ZIP پچ را **داخل همان پوشه** بگذار.
+3. Extract → وقتی پرسید **Replace / جایگزین** → Yes to all.
+4. **`INSTALL.bat`** → Run as administrator.

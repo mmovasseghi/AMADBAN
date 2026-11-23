@@ -11,7 +11,7 @@ else {
 $missing = @()
 
 $required = @(
-    (Join-Path $BundleRoot 'نصب-آمادبان.bat'),
+    (Join-Path $BundleRoot 'INSTALL.bat'),
     (Join-Path $BundleRoot 'install\Install-OneClick.ps1'),
     (Join-Path $BundleRoot 'app\Amadban.exe')
 )

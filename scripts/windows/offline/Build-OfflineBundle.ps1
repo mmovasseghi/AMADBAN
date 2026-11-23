@@ -39,25 +39,8 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($LASTEXITCODE)" }
 $offlineScripts = Join-Path $PSScriptRoot '*'
 Copy-Item -Path $offlineScripts -Destination $installDir -Recurse -Force
 
-$bat = @"
-@echo off
-chcp 65001 >nul
-title نصب آمادبان
-echo.
-echo   نصب آمادبان روی Windows Server (بدون اینترنت)
-echo   لطفاً صبر کنید...
-echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install\Install-OneClick.ps1" -BundleRoot "%~dp0"
-if errorlevel 1 (
-  echo.
-  echo نصب ناموفق بود. پنجره را بخوانید یا Event Viewer را چک کنید.
-  pause
-  exit /b 1
-)
-echo.
-pause
-"@
-Set-Content -Path (Join-Path $OutDir 'نصب-آمادبان.bat') -Value $bat -Encoding UTF8
+Copy-Item (Join-Path $RepoRoot 'bundle/INSTALL.bat') (Join-Path $OutDir 'INSTALL.bat') -Force
+'@echo off' + "`r`n" + 'call "%~dp0INSTALL.bat"' | Set-Content -Path (Join-Path $OutDir 'نصب-آمادبان.bat') -Encoding Ascii
 
 Copy-Item (Join-Path $RepoRoot 'bundle/README.md') (Join-Path $OutDir 'README.txt') -Force -ErrorAction SilentlyContinue
 @"

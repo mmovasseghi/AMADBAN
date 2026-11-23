@@ -32,7 +32,7 @@
 ## ۳) سرور (یک کلیک)
 
 1. پوشه فلش را کپی کنید.
-2. **`نصب-آمادبان.bat`** → Run as Administrator
+2. **`INSTALL.bat`** (یا `نصب-آمادبان.bat`) → Run as Administrator — روی Server 2019 حتماً **INSTALL.bat**
 3. `http://<IP>:8088/Login` — `admin` / رمز در `C:\Amadban\config\service.env`
 
 ## داخل ZIP چه هست؟

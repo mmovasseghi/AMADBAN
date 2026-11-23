@@ -35,24 +35,9 @@ if [[ ! -f "$VC_EXE" ]]; then
   curl -fsSL --retry 3 --retry-delay 5 -o "$VC_EXE" "$VCREDIST_URL"
 fi
 
-cat > "$OUT/نصب-آمادبان.bat" <<'BAT'
-@echo off
-chcp 65001 >nul
-title نصب آمادبان
-echo.
-echo   نصب آمادبان — بدون اینترنت روی سرور
-echo   همه فایل ها از همین فلش است.
-echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install\Install-OneClick.ps1" -BundleRoot "%~dp0"
-if errorlevel 1 (
-  echo.
-  echo نصب ناموفق. Event Viewer یا متن بالا را ببینید.
-  pause
-  exit /b 1
-)
-echo.
-pause
-BAT
+cp "$ROOT/bundle/INSTALL.bat" "$OUT/INSTALL.bat"
+# UTF-8 Persian .bat breaks cmd.exe on Server 2019; thin wrapper calls ASCII INSTALL.bat
+printf '%s\r\n' '@echo off' 'call "%~dp0INSTALL.bat"' > "$OUT/نصب-آمادبان.bat"
 
 echo "$VERSION" > "$OUT/VERSION.txt"
 MANIFEST="$OUT/flash-bundle.manifest.txt"
@@ -61,6 +46,7 @@ MANIFEST="$OUT/flash-bundle.manifest.txt"
   echo "version=$VERSION"
   echo "built=$(date -u +%Y-%m-%dT%H:%MZ)"
   echo "files:"
+  echo "  INSTALL.bat"
   echo "  نصب-آمادبان.bat"
   echo "  app/Amadban.exe"
   echo "  install/Install-OneClick.ps1"
